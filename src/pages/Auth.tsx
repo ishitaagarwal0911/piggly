@@ -5,17 +5,16 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
+
 import { Mail, ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
 
 const Auth = () => {
-  const { user, loading, sendOTP, verifyOTP } = useAuth();
+  const { user, loading, sendOTP } = useAuth();
   const navigate = useNavigate();
-  const [step, setStep] = useState<'email' | 'otp'>('email');
   const [email, setEmail] = useState('');
-  const [otp, setOtp] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [linkSent, setLinkSent] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -23,7 +22,7 @@ const Auth = () => {
     }
   }, [user, navigate]);
 
-  const handleSendOTP = async (e: React.FormEvent) => {
+  const handleSendMagicLink = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email.trim() || !email.includes('@')) {
       toast.error('Please enter a valid email address');
@@ -33,51 +32,31 @@ const Auth = () => {
     setIsLoading(true);
     try {
       await sendOTP(email);
-      setStep('otp');
-      toast.success('Check your email for the verification code');
+      setLinkSent(true);
+      toast.success('Check your email for the sign-in link');
     } catch (error: any) {
-      toast.error(error.message || 'Failed to send verification code');
+      toast.error(error.message || 'Failed to send sign-in link');
       console.error(error);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleVerifyOTP = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (otp.length !== 6) {
-      toast.error('Please enter the 6-digit code');
-      return;
-    }
-
-    setIsLoading(true);
-    try {
-      await verifyOTP(email, otp);
-      toast.success('Successfully signed in!');
-    } catch (error: any) {
-      toast.error(error.message || 'Invalid verification code');
-      console.error(error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleResendOTP = async () => {
+  const handleResend = async () => {
     setIsLoading(true);
     try {
       await sendOTP(email);
-      toast.success('Code resent to your email');
-      setOtp('');
+      toast.success('Sign-in link resent to your email');
     } catch (error: any) {
-      toast.error(error.message || 'Failed to resend code');
+      toast.error(error.message || 'Failed to resend link');
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleChangeEmail = () => {
-    setStep('email');
-    setOtp('');
+  const handleBack = () => {
+    setLinkSent(false);
+    setEmail('');
   };
 
   if (loading) {
@@ -90,18 +69,18 @@ const Auth = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-6">
-      <div className="w-full max-w-md bg-card rounded-2xl p-8 shadow-notion space-y-6">
+      <div className="w-full max-w-md bg-card rounded-2xl p-8 shadow-notion border border-border/50 space-y-6">
         <div className="text-center space-y-2">
-          <h1 className="text-3xl font-semibold">Welcome</h1>
+          <h1 className="text-3xl font-semibold tracking-tight">Welcome</h1>
           <p className="text-sm text-muted-foreground">
-            {step === 'email' 
-              ? 'Enter your email to get started' 
-              : 'Enter the code we sent to your email'}
+            {linkSent 
+              ? 'Check your email to continue' 
+              : 'Sign in with your email'}
           </p>
         </div>
 
-        {step === 'email' ? (
-          <form onSubmit={handleSendOTP} className="space-y-4">
+        {!linkSent ? (
+          <form onSubmit={handleSendMagicLink} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input
@@ -112,62 +91,61 @@ const Auth = () => {
                 onChange={(e) => setEmail(e.target.value)}
                 disabled={isLoading}
                 required
+                className="transition-smooth"
               />
             </div>
 
             <Button type="submit" size="lg" className="w-full gap-2" disabled={isLoading}>
               <Mail className="w-5 h-5" />
-              {isLoading ? 'Sending...' : 'Send Verification Code'}
+              {isLoading ? 'Sending...' : 'Send Sign-In Link'}
             </Button>
           </form>
         ) : (
-          <form onSubmit={handleVerifyOTP} className="space-y-6">
-            <div className="space-y-2">
-              <Label>Verification Code</Label>
-              <p className="text-sm text-muted-foreground mb-4">
-                We sent a code to <span className="font-medium text-foreground">{email}</span>
-              </p>
-              <div className="flex justify-center">
-                <InputOTP maxLength={6} value={otp} onChange={setOtp} disabled={isLoading}>
-                  <InputOTPGroup>
-                    <InputOTPSlot index={0} />
-                    <InputOTPSlot index={1} />
-                    <InputOTPSlot index={2} />
-                    <InputOTPSlot index={3} />
-                    <InputOTPSlot index={4} />
-                    <InputOTPSlot index={5} />
-                  </InputOTPGroup>
-                </InputOTP>
+          <div className="space-y-6">
+            <div className="bg-muted/50 rounded-xl p-4 space-y-3">
+              <div className="flex items-center justify-center w-12 h-12 rounded-full bg-primary/10 mx-auto">
+                <Mail className="w-6 h-6 text-primary" />
+              </div>
+              <div className="text-center space-y-1">
+                <p className="text-sm font-medium">Sign-in link sent!</p>
+                <p className="text-xs text-muted-foreground">
+                  We sent a secure sign-in link to
+                </p>
+                <p className="text-sm font-medium text-foreground">{email}</p>
               </div>
             </div>
 
-            <Button type="submit" size="lg" className="w-full" disabled={isLoading || otp.length !== 6}>
-              {isLoading ? 'Verifying...' : 'Verify Code'}
-            </Button>
+            <div className="space-y-3">
+              <div className="text-xs text-muted-foreground space-y-2">
+                <p>• Click the link in your email to sign in</p>
+                <p>• The link expires in 1 hour</p>
+                <p>• You can close this window</p>
+              </div>
 
-            <div className="flex items-center justify-between text-sm">
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={handleChangeEmail}
-                disabled={isLoading}
-                className="gap-1"
-              >
-                <ArrowLeft className="w-4 h-4" />
-                Change Email
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={handleResendOTP}
-                disabled={isLoading}
-              >
-                Resend Code
-              </Button>
+              <div className="flex items-center justify-between pt-2">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleBack}
+                  disabled={isLoading}
+                  className="gap-1"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                  Back
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleResend}
+                  disabled={isLoading}
+                >
+                  Resend Link
+                </Button>
+              </div>
             </div>
-          </form>
+          </div>
         )}
 
         <p className="text-xs text-center text-muted-foreground">

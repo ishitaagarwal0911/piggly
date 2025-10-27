@@ -163,9 +163,9 @@ export const AddTransactionDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-hidden flex flex-col">
+      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-hidden flex flex-col animate-in fade-in-0 zoom-in-95 duration-200">
         <DialogHeader>
-          <DialogTitle>{editingTransaction ? 'Edit Transaction' : 'Add Transaction'}</DialogTitle>
+          <DialogTitle className="tracking-tight">{editingTransaction ? 'Edit Transaction' : 'Add Transaction'}</DialogTitle>
         </DialogHeader>
 
         <div className="overflow-y-auto flex-1 space-y-6 px-1">

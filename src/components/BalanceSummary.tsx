@@ -40,26 +40,26 @@ export const BalanceSummary = ({ transactions, onExpenseClick, onIncomeClick }: 
       <div className="grid grid-cols-2 gap-4">
         <button
           onClick={onIncomeClick}
-          className="bg-success/10 rounded-xl p-4 text-left transition-all hover:bg-success/20 hover:scale-[1.02] active:scale-[0.98]"
+          className="bg-success/10 rounded-xl p-4 text-left transition-all duration-200 hover:bg-success/15 hover:scale-[1.01] active:scale-[0.99] border border-success/10"
         >
           <div className="flex items-center gap-2 mb-1">
             <TrendingUp className="w-4 h-4 text-success" />
             <p className="text-xs text-muted-foreground">Income</p>
           </div>
-          <p className="text-xl font-semibold text-success">
+          <p className="text-xl font-semibold text-success tracking-tight">
             +{currency}{income.toFixed(2)}
           </p>
         </button>
         
         <button
           onClick={onExpenseClick}
-          className="bg-destructive/10 rounded-xl p-4 text-left transition-all hover:bg-destructive/20 hover:scale-[1.02] active:scale-[0.98]"
+          className="bg-destructive/10 rounded-xl p-4 text-left transition-all duration-200 hover:bg-destructive/15 hover:scale-[1.01] active:scale-[0.99] border border-destructive/10"
         >
           <div className="flex items-center gap-2 mb-1">
             <TrendingDown className="w-4 h-4 text-destructive" />
             <p className="text-xs text-muted-foreground">Expenses</p>
           </div>
-          <p className="text-xl font-semibold text-destructive">
+          <p className="text-xl font-semibold text-destructive tracking-tight">
             -{currency}{expenses.toFixed(2)}
           </p>
         </button>
