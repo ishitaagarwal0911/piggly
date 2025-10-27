@@ -125,7 +125,7 @@ const Index = () => {
     <div className="min-h-screen bg-background pb-32">
       {/* Header */}
       <header className="bg-background border-b border-border">
-        <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
+        <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-center relative">
           <PeriodSelector
             currentDate={currentDate}
             viewType={viewType}
@@ -133,7 +133,9 @@ const Index = () => {
             onNext={handleNext}
             onDateSelect={handleDateSelect}
           />
-          <SettingsSheet onSettingsChange={handleSettingsChange} />
+          <div className="absolute right-4">
+            <SettingsSheet onSettingsChange={handleSettingsChange} />
+          </div>
         </div>
       </header>
 
