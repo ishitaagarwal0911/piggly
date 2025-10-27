@@ -29,7 +29,7 @@ export type Database = {
           color: string
           created_at?: string
           icon: string
-          id?: string
+          id: string
           name: string
           order_index: number
           type: string
