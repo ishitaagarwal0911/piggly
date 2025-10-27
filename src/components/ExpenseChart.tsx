@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { Transaction } from '@/types/transaction';
 import { getCategoryInfo } from '@/lib/categories';
 import { loadSettings } from '@/lib/settings';
+import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
 
 interface ExpenseChartProps {
   transactions: Transaction[];
@@ -58,10 +59,38 @@ export const ExpenseChart = ({ transactions, onCategoryClick }: ExpenseChartProp
   }
 
   const maxAmount = Math.max(...expensesByCategory.map(c => c.amount));
+  const totalExpenses = expensesByCategory.reduce((sum, c) => sum + c.amount, 0);
 
   return (
     <div className="bg-card rounded-2xl p-6 shadow-notion">
       <h3 className="text-sm font-medium mb-4">Spending by Category</h3>
+      
+      {/* Ring Chart */}
+      <div className="relative mb-6">
+        <ResponsiveContainer width="100%" height={200}>
+          <PieChart>
+            <Pie
+              data={expensesByCategory}
+              cx="50%"
+              cy="50%"
+              innerRadius={60}
+              outerRadius={80}
+              paddingAngle={2}
+              dataKey="amount"
+            >
+              {expensesByCategory.map((entry, index) => (
+                <Cell key={`cell-${index}`} fill={entry.color} />
+              ))}
+            </Pie>
+          </PieChart>
+        </ResponsiveContainer>
+        <div className="absolute inset-0 flex flex-col items-center justify-center">
+          <p className="text-xs text-muted-foreground">Total</p>
+          <p className="text-2xl font-semibold">{currency}{totalExpenses.toFixed(2)}</p>
+        </div>
+      </div>
+
+      {/* Category List */}
       <div className="space-y-4">
         {expensesByCategory.map(({ category, name, icon, color, amount, percentage }) => (
           <button

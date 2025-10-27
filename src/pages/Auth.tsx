@@ -89,11 +89,11 @@ const Auth = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      <Card className="w-full max-w-md p-8 space-y-6">
+    <div className="min-h-screen flex items-center justify-center bg-background p-6">
+      <div className="w-full max-w-md bg-card rounded-2xl p-8 shadow-notion space-y-6">
         <div className="text-center space-y-2">
-          <h1 className="text-3xl font-bold">Welcome</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-3xl font-semibold">Welcome</h1>
+          <p className="text-sm text-muted-foreground">
             {step === 'email' 
               ? 'Enter your email to get started' 
               : 'Enter the code we sent to your email'}
@@ -173,7 +173,7 @@ const Auth = () => {
         <p className="text-xs text-center text-muted-foreground">
           Your data is securely synced and encrypted
         </p>
-      </Card>
+      </div>
     </div>
   );
 };
