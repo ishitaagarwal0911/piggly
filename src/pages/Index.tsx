@@ -104,15 +104,12 @@ const Index = () => {
   const filteredTransactions = getFilteredTransactions(transactions, currentDate, viewType);
 
   return (
-    <div className="min-h-screen bg-background pb-24">
+    <div className="min-h-screen bg-background pb-32">
       {/* Header */}
       <header className="sticky top-0 z-10 bg-background/80 backdrop-blur-md border-b border-border">
-        <div className="max-w-2xl mx-auto px-4 py-4 flex items-center justify-between">
-          <h1 className="text-xl font-semibold">Expenses</h1>
-          <div className="flex items-center gap-2">
-            <ThemeToggle />
-            <SettingsSheet onSettingsChange={handleSettingsChange} />
-          </div>
+        <div className="max-w-2xl mx-auto px-4 py-4 flex items-center justify-end gap-2">
+          <ThemeToggle />
+          <SettingsSheet onSettingsChange={handleSettingsChange} />
         </div>
       </header>
 
@@ -137,7 +134,7 @@ const Index = () => {
       </main>
 
       {/* Floating Add Button */}
-      <div className="fixed bottom-6 left-0 right-0 flex justify-center pointer-events-none">
+      <div className="fixed bottom-8 left-0 right-0 flex justify-center pointer-events-none">
         <Button
           size="lg"
           className="rounded-full w-14 h-14 shadow-notion-hover pointer-events-auto transition-transform hover:scale-105 active:scale-95"

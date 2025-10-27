@@ -47,23 +47,40 @@ const getAvailableColor = (emoji: string, existingColors: string[]): string => {
   const MIN_DISTANCE = 30;
   let suggestedColor = getColorFromEmoji(emoji);
   
+  // If no existing colors, return suggested color
+  if (existingColors.length === 0) {
+    return suggestedColor;
+  }
+  
   // Check if suggested color is too similar to existing ones
   const isTooSimilar = existingColors.some(
     existing => colorDistance(suggestedColor, existing) < MIN_DISTANCE
   );
   
   if (isTooSimilar) {
-    // Find first available color from DEFAULT_COLORS that's not too similar
+    // Find the color with maximum minimum distance from all existing colors
+    let bestColor = suggestedColor;
+    let maxMinDistance = 0;
+    
     for (const color of DEFAULT_COLORS) {
-      const isAvailable = !existingColors.some(
-        existing => colorDistance(color, existing) < MIN_DISTANCE
+      // Skip if this color is already used
+      if (existingColors.includes(color)) continue;
+      
+      // Calculate minimum distance to any existing color
+      const minDistance = Math.min(
+        ...existingColors.map(existing => colorDistance(color, existing))
       );
-      if (isAvailable) {
-        return color;
+      
+      if (minDistance > maxMinDistance) {
+        maxMinDistance = minDistance;
+        bestColor = color;
       }
     }
-    // If all colors are taken, return suggested color anyway
-    return suggestedColor;
+    
+    // Only use the best color if it meets the minimum distance threshold
+    if (maxMinDistance >= MIN_DISTANCE) {
+      return bestColor;
+    }
   }
   
   return suggestedColor;
@@ -73,38 +90,61 @@ const getAvailableColor = (emoji: string, existingColors: string[]): string => {
 export const getColorFromEmoji = (emoji: string): string => {
   const emojiMaps: Record<string, string> = {
     // Food & Drinks
-    '🍽️': '#FFD4B2', '🍕': '#FFD4B2', '🍔': '#FFD4B2', '🥗': '#FFD4B2', '🍜': '#FFD4B2', 
-    '☕': '#FFE4CC', '🍰': '#FFEAA7', '🍺': '#FFF5BA', '🥘': '#FFD4B2',
+    '🍽️': '#FFD4B2', '🍕': '#FFD4B2', '🍔': '#FFD4B2', '🥗': '#D4F4DD', '🍜': '#FFD4B2', 
+    '☕': '#FFE4CC', '🍰': '#FFEAA7', '🍺': '#FFF5BA', '🥘': '#FFD4B2', '🍣': '#FFE5EC',
+    '🍱': '#FFD4B2', '🥐': '#FFEAA7', '🧃': '#CCE5FF', '🧋': '#E6D7FF', '🍦': '#FFC1CC',
     
     // Transport & Travel
     '🚗': '#A3C4F3', '✈️': '#B3D9FF', '🚕': '#CCE5FF', '🚌': '#A3C4F3', 
-    '🚇': '#B3D9FF', '🚲': '#CCE5FF', '🛫': '#A3C4F3',
+    '🚇': '#B3D9FF', '🚲': '#C8E6C9', '🛫': '#A3C4F3', '🚂': '#B3D9FF',
+    '🚖': '#FFEAA7', '🏍️': '#E8E8E8', '⛽': '#FFD4B2', '🚘': '#CCE5FF',
     
     // Shopping & Clothes
     '🛍️': '#FFB3D9', '👕': '#FFC1CC', '👠': '#FFE5EC', '💄': '#FFB3D9', 
-    '🎁': '#FFC1CC', '👗': '#FFE5EC', '🏪': '#FFB3D9',
+    '🎁': '#FFC1CC', '👗': '#FFE5EC', '🏪': '#FFB3D9', '🛒': '#FFE5EC',
+    '👜': '#FFB3D9', '👔': '#A3C4F3', '🧥': '#D4D4D4', '👟': '#E8E8E8',
     
     // Bills & Utilities
     '💡': '#FFF5BA', '🏠': '#FFFACD', '📱': '#FFF8DC', '💳': '#FFF5BA',
-    '🔌': '#FFFACD', '💧': '#FFF8DC',
+    '🔌': '#FFFACD', '💧': '#CCE5FF', '🔥': '#FFD4B2', '📡': '#B3D9FF',
+    '🏡': '#D4F4DD', '🔑': '#FFEAA7', '🚿': '#A3C4F3',
     
     // Entertainment & Fun
     '🎬': '#D4BBFF', '🎮': '#E6D7FF', '🎵': '#C9B3FF', '🎪': '#D4BBFF',
-    '🎨': '#E6D7FF', '📚': '#C9B3FF',
+    '🎨': '#E6D7FF', '📚': '#C9B3FF', '🎭': '#FFE5EC', '🎤': '#D4BBFF',
+    '🎧': '#E6D7FF', '🎸': '#C9B3FF', '🎹': '#E8E8E8', '🎺': '#FFEAA7',
     
     // Health & Fitness
     '💊': '#D4F4DD', '🏥': '#C8E6C9', '💪': '#D4F4DD', '🧘': '#C8E6C9',
-    '⚕️': '#D4F4DD',
+    '⚕️': '#D4F4DD', '🏋️': '#B2EBB4', '🤸': '#D4F4DD', '🧘‍♀️': '#C8E6C9',
+    '🩺': '#FFE5EC', '💉': '#FFC1CC', '🦷': '#FFFACD',
     
     // Money & Income
     '💰': '#B2EBB4', '💵': '#C8E6C9', '💸': '#D4F4DD', '🤝': '#B2EBB4',
-    '📈': '#C8E6C9', '🏦': '#D4F4DD',
+    '📈': '#C8E6C9', '🏦': '#D4F4DD', '💲': '#B2EBB4', '💴': '#B2EBB4',
+    '💶': '#C8E6C9', '💷': '#D4F4DD', '💹': '#B2EBB4',
     
     // Business & Work
     '💼': '#E8E8E8', '📊': '#D4D4D4', '🖥️': '#C9C9C9', '📧': '#E8E8E8',
+    '📝': '#FFF8DC', '🖊️': '#A3C4F3', '📎': '#D4D4D4', '📁': '#FFEAA7',
+    '🖨️': '#C9C9C9', '⌨️': '#E8E8E8', '🖱️': '#D4D4D4',
+    
+    // Symbols & Checks
+    '✅': '#B2EBB4', '✔️': '#C8E6C9', '☑️': '#D4F4DD', '❌': '#FFD4B2',
+    '⭐': '#FFEAA7', '🌟': '#FFF5BA', '💫': '#D4BBFF', '✨': '#E6D7FF',
+    '❤️': '#FFC1CC', '💕': '#FFE5EC', '💖': '#FFB3D9',
+    
+    // Nature & Animals
+    '🌳': '#C8E6C9', '🌲': '#B2EBB4', '🌱': '#D4F4DD', '🌿': '#C8E6C9',
+    '🐕': '#FFE4CC', '🐈': '#E8E8E8', '🦜': '#D4BBFF', '🐠': '#CCE5FF',
+    
+    // Education
+    '📖': '#C9B3FF', '✏️': '#FFEAA7', '📐': '#D4D4D4', '🎓': '#E6D7FF',
+    '🏫': '#A3C4F3', '👨‍🎓': '#B3D9FF',
     
     // Miscellaneous
-    '📦': '#D4D4D4', '⭐': '#FFEAA7', '❓': '#E8E8E8', '🔧': '#C9C9C9',
+    '📦': '#D4D4D4', '❓': '#E8E8E8', '🔧': '#C9C9C9', '🔨': '#FFD4B2',
+    '⚙️': '#C9C9C9', '🎯': '#FFD4B2', '🎲': '#E8E8E8', '🧩': '#D4BBFF',
   };
   
   if (emojiMaps[emoji]) {

@@ -29,6 +29,7 @@ export const AddTransactionDialog = ({
   const [category, setCategory] = useState<string>(editingTransaction?.category || allCategories.find(c => c.type === 'expense')?.id || '');
   const [note, setNote] = useState(editingTransaction?.note || '');
   const [date, setDate] = useState<Date>(editingTransaction?.date || new Date());
+  const [isFirstKeystroke, setIsFirstKeystroke] = useState(false);
 
   // Sync form state when editingTransaction changes
   useEffect(() => {
@@ -38,6 +39,7 @@ export const AddTransactionDialog = ({
       setCategory(editingTransaction.category);
       setNote(editingTransaction.note);
       setDate(editingTransaction.date);
+      setIsFirstKeystroke(true); // Enable first keystroke replacement for editing
     } else if (!open) {
       // Reset form when dialog closes
       setAmount('');
@@ -46,17 +48,26 @@ export const AddTransactionDialog = ({
       const defaultCategory = allCategories.find(c => c.type === 'expense');
       setCategory(defaultCategory?.id || '');
       setType('expense');
+      setIsFirstKeystroke(false);
     }
   }, [open, editingTransaction, allCategories]);
 
   const handleNumberClick = (num: string) => {
     if (num === '.' && amount.includes('.')) return;
     if (amount.includes('.') && amount.split('.')[1].length >= 2) return;
-    setAmount(prev => prev + num);
+    
+    // If editing and this is the first keystroke, replace the amount instead of appending
+    if (isFirstKeystroke) {
+      setAmount(num);
+      setIsFirstKeystroke(false);
+    } else {
+      setAmount(prev => prev + num);
+    }
   };
 
   const handleBackspace = () => {
     setAmount(prev => prev.slice(0, -1));
+    setIsFirstKeystroke(false); // Disable first keystroke mode after backspace
   };
 
   const handleSubmit = () => {

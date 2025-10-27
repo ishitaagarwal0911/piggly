@@ -105,7 +105,7 @@ export const SettingsSheet = ({ onSettingsChange }: SettingsSheetProps) => {
           <SheetTitle>Settings</SheetTitle>
         </SheetHeader>
 
-        <Accordion type="multiple" defaultValue={["categories"]} className="mt-6">
+        <Accordion type="multiple" defaultValue={[]} className="mt-6">
           <AccordionItem value="categories">
             <AccordionTrigger className="text-base font-medium">Categories</AccordionTrigger>
             <AccordionContent className="pt-4">

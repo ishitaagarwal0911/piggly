@@ -38,6 +38,13 @@ export const TransactionDetailSheet = ({
     if (filterCategory && t.category !== filterCategory) return false;
     return true;
   });
+  
+  // For "By Category" view, when a specific category is clicked,
+  // show all categories of that type, not just the filtered one
+  const byCategoryFiltered = transactions.filter(t => {
+    if (filterType && t.type !== filterType) return false;
+    return true;
+  });
 
   // Group by date
   const byDate = filtered.reduce((acc, t) => {
@@ -51,8 +58,8 @@ export const TransactionDetailSheet = ({
 
   const sortedDates = Object.keys(byDate).sort((a, b) => b.localeCompare(a));
 
-  // Group by category
-  const byCategory = filtered.reduce((acc, t) => {
+  // Group by category - use byCategoryFiltered to show all categories
+  const byCategory = byCategoryFiltered.reduce((acc, t) => {
     if (!acc[t.category]) {
       acc[t.category] = [];
     }
