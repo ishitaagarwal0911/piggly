@@ -84,7 +84,6 @@ const Index = () => {
           ? { ...editingTransaction, ...newTransaction }
           : t
       );
-      setTransactions(updated);
       await saveTransactions(updated);
       toast.success('Transaction updated');
       setEditingTransaction(null);
@@ -97,7 +96,6 @@ const Index = () => {
       };
 
       const updated = [transaction, ...transactions];
-      setTransactions(updated);
       await saveTransactions(updated);
       
       toast.success('Transaction added', {
@@ -148,7 +146,6 @@ const Index = () => {
 
   const handleDeleteTransaction = async (id: string) => {
     const updated = transactions.filter(t => t.id !== id);
-    setTransactions(updated);
     await saveTransactions(updated);
     toast.success('Transaction deleted');
     setEditingTransaction(null);

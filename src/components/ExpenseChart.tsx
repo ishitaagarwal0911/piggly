@@ -79,6 +79,7 @@ export const ExpenseChart = ({ transactions, onCategoryClick }: ExpenseChartProp
               dataKey="amount"
               animationDuration={600}
               animationBegin={0}
+              stroke="none"
             >
               {expensesByCategory.map((entry, index) => (
                 <Cell 

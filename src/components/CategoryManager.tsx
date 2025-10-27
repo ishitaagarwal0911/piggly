@@ -64,9 +64,9 @@ export const CategoryManager = ({ onCategoriesChange }: CategoryManagerProps) =>
         toast.success('Category added');
       }
 
+      resetForm();
       await loadSettings(); // Reload to refresh cache
       onCategoriesChange();
-      resetForm();
     } catch (error) {
       toast.error('Failed to save category');
     }
