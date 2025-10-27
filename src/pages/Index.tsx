@@ -20,6 +20,7 @@ const Index = () => {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [dataLoading, setDataLoading] = useState(true);
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [transactionType, setTransactionType] = useState<'income' | 'expense'>('expense');
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -42,22 +43,44 @@ const Index = () => {
     const loadData = async () => {
       if (!user) return;
       
+      setDataLoading(true);
       const loaded = await loadTransactions();
       setTransactions(loaded);
       const settings = await loadSettings();
       setViewType(settings.defaultView);
       setCurrency(settings.currency.symbol);
+      setDataLoading(false);
     };
     loadData();
   }, [refreshKey, user]);
 
-  // Real-time sync with immediate state updates
+  // Real-time sync with proper data transformation
   useRealtimeSync(
     (payload) => {
       if (payload.eventType === 'INSERT') {
-        setTransactions(prev => [payload.new, ...prev]);
+        const newTransaction: Transaction = {
+          id: payload.new.id,
+          amount: parseFloat(String(payload.new.amount)),
+          type: payload.new.type,
+          category: payload.new.category,
+          note: payload.new.note || '',
+          date: new Date(payload.new.date),
+          createdAt: new Date(payload.new.created_at),
+          updatedAt: payload.new.updated_at ? new Date(payload.new.updated_at) : undefined,
+        };
+        setTransactions(prev => [newTransaction, ...prev]);
       } else if (payload.eventType === 'UPDATE') {
-        setTransactions(prev => prev.map(t => t.id === payload.new.id ? payload.new : t));
+        const updatedTransaction: Transaction = {
+          id: payload.new.id,
+          amount: parseFloat(String(payload.new.amount)),
+          type: payload.new.type,
+          category: payload.new.category,
+          note: payload.new.note || '',
+          date: new Date(payload.new.date),
+          createdAt: new Date(payload.new.created_at),
+          updatedAt: payload.new.updated_at ? new Date(payload.new.updated_at) : undefined,
+        };
+        setTransactions(prev => prev.map(t => t.id === updatedTransaction.id ? updatedTransaction : t));
       } else if (payload.eventType === 'DELETE') {
         setTransactions(prev => prev.filter(t => t.id !== payload.old.id));
       }
@@ -66,7 +89,7 @@ const Index = () => {
     () => setRefreshKey(prev => prev + 1)
   );
 
-  if (loading) {
+  if (loading || dataLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>

@@ -93,7 +93,7 @@ export const ExpenseChart = ({ transactions, onCategoryClick }: ExpenseChartProp
         </ResponsiveContainer>
         <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
           <p className="text-xs text-muted-foreground mb-1">Total</p>
-          <p className="text-3xl font-semibold tracking-tight">{currency}{totalExpenses.toFixed(2)}</p>
+          <p className="text-2xl font-semibold tracking-tight">{currency}{Math.round(totalExpenses)}</p>
         </div>
       </div>
 

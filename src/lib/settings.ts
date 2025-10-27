@@ -2,8 +2,8 @@ import { AppSettings, CustomCategory, CurrencyOption, CURRENCY_OPTIONS, DEFAULT_
 import { getDefaultCategories, setCategoriesCache } from './categories';
 import { supabase } from '@/integrations/supabase/client';
 
-// Convert hex color to rgba with 25% opacity for Notion-style soft colors
-const hexToRgba = (hex: string, alpha: number = 0.25): string => {
+// Convert hex color to rgba with 70% opacity for vibrant colors
+const hexToRgba = (hex: string, alpha: number = 0.70): string => {
   const r = parseInt(hex.slice(1, 3), 16);
   const g = parseInt(hex.slice(3, 5), 16);
   const b = parseInt(hex.slice(5, 7), 16);
@@ -64,8 +64,8 @@ const getColorForEmoji = (emoji: string): string => {
     baseColor = DEFAULT_COLORS[Math.floor(Math.random() * DEFAULT_COLORS.length)];
   }
   
-  // Return color with 25% transparency for Notion-style aesthetic
-  return hexToRgba(baseColor, 0.25);
+  // Return color with 70% transparency for vibrant aesthetic
+  return hexToRgba(baseColor, 0.70);
 };
 
 const getDefaultSettings = (): AppSettings => ({
