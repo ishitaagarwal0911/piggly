@@ -72,6 +72,13 @@ export const CategoryManager = ({ onCategoriesChange }: CategoryManagerProps) =>
     }
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSave();
+    }
+  };
+
   const handleDelete = async () => {
     if (deletingCategory) {
       await deleteCategory(deletingCategory.id);
@@ -192,6 +199,7 @@ export const CategoryManager = ({ onCategoriesChange }: CategoryManagerProps) =>
               <Input
                 value={name}
                 onChange={(e) => setName(e.target.value)}
+                onKeyDown={handleKeyDown}
                 placeholder="e.g., Groceries"
                 maxLength={30}
               />
@@ -202,9 +210,13 @@ export const CategoryManager = ({ onCategoriesChange }: CategoryManagerProps) =>
               <Input
                 value={icon}
                 onChange={(e) => setIcon(e.target.value)}
+                onKeyDown={handleKeyDown}
                 placeholder="🛒"
                 maxLength={5}
+                inputMode="text"
+                className="text-2xl text-center"
               />
+              <p className="text-xs text-muted-foreground mt-1">Tap to enter emoji</p>
             </div>
 
             <div>

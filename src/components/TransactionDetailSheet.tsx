@@ -151,33 +151,41 @@ export const TransactionDetailSheet = ({
             <TabsTrigger value="by-category" className="flex-1">By Category</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="by-date" className="mt-4 space-y-4">
+          <TabsContent value="by-date" className="mt-4">
             {sortedDates.length === 0 ? (
               <div className="text-center py-8">
                 <p className="text-muted-foreground text-sm">No transactions</p>
               </div>
             ) : (
-              sortedDates.map(dateKey => {
-                const date = new Date(dateKey);
-                const txs = groupedByDate[dateKey];
-                const dayTotal = txs.reduce((sum, t) => sum + t.amount, 0);
+              <Accordion 
+                type="multiple" 
+                defaultValue={sortedDates.slice(0, 1)}
+                className="space-y-2"
+              >
+                {sortedDates.map(dateKey => {
+                  const date = new Date(dateKey);
+                  const txs = groupedByDate[dateKey];
+                  const dayTotal = txs.reduce((sum, t) => sum + t.amount, 0);
 
-                return (
-                  <div key={dateKey} className="space-y-2">
-                    <div className="flex items-center justify-between px-2 py-1">
-                      <h3 className="text-sm font-medium">
-                        {isSameDay(date, new Date()) ? 'Today' : format(date, 'MMM d, yyyy')}
-                      </h3>
-                      <span className="text-sm text-muted-foreground">
-                        {currency}{dayTotal.toFixed(2)}
-                      </span>
-                    </div>
-                    <div className="space-y-1">
-                      {txs.map(renderTransaction)}
-                    </div>
-                  </div>
-                );
-              })
+                  return (
+                    <AccordionItem key={dateKey} value={dateKey} className="border rounded-lg px-4">
+                      <AccordionTrigger className="hover:no-underline py-3">
+                        <div className="flex items-center justify-between flex-1 pr-2">
+                          <h3 className="text-sm font-medium">
+                            {isSameDay(date, new Date()) ? 'Today' : format(date, 'MMM d, yyyy')}
+                          </h3>
+                          <span className="text-sm text-muted-foreground">
+                            {currency}{dayTotal.toFixed(2)}
+                          </span>
+                        </div>
+                      </AccordionTrigger>
+                      <AccordionContent className="pt-2 pb-3 space-y-1">
+                        {txs.map(renderTransaction)}
+                      </AccordionContent>
+                    </AccordionItem>
+                  );
+                })}
+              </Accordion>
             )}
           </TabsContent>
 

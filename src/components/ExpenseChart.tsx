@@ -48,11 +48,28 @@ export const ExpenseChart = ({ transactions, onCategoryClick }: ExpenseChartProp
     return (
       <div className="bg-card rounded-2xl p-6 shadow-notion">
         <h3 className="text-sm font-medium mb-4">Spending by Category</h3>
-        <div className="text-center py-8">
-          <p className="text-muted-foreground text-sm">No expenses yet</p>
-          <p className="text-xs text-muted-foreground mt-1">
-            Start tracking your expenses to see the breakdown
-          </p>
+        <div className="relative mb-6">
+          <ResponsiveContainer width="100%" height={220}>
+            <PieChart>
+              <Pie
+                data={[{ name: 'No Data', value: 1 }]}
+                cx="50%"
+                cy="50%"
+                innerRadius={70}
+                outerRadius={90}
+                paddingAngle={0}
+                dataKey="value"
+                animationDuration={600}
+                stroke="none"
+              >
+                <Cell fill="rgba(212, 212, 212, 0.15)" />
+              </Pie>
+            </PieChart>
+          </ResponsiveContainer>
+          <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+            <p className="text-xs text-muted-foreground mb-1">Total</p>
+            <p className="text-2xl font-semibold tracking-tight">{currency}0</p>
+          </div>
         </div>
       </div>
     );
