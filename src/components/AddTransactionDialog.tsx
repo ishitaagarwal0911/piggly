@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
-import { CalendarIcon, X } from 'lucide-react';
+import { CalendarIcon } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface AddTransactionDialogProps {
@@ -33,15 +33,19 @@ export const AddTransactionDialog = ({
 
   // Sync form state when editingTransaction changes
   useEffect(() => {
-    if (open && editingTransaction) {
+    if (editingTransaction) {
       setType(editingTransaction.type);
       setAmount(editingTransaction.amount.toString());
       setCategory(editingTransaction.category);
       setNote(editingTransaction.note);
       setDate(editingTransaction.date);
       setIsFirstKeystroke(true); // Enable first keystroke replacement for editing
-    } else if (!open) {
-      // Reset form when dialog closes
+    }
+  }, [editingTransaction]);
+
+  // Reset form when dialog closes
+  useEffect(() => {
+    if (!open) {
       setAmount('');
       setNote('');
       setDate(new Date());
@@ -50,12 +54,9 @@ export const AddTransactionDialog = ({
       setType('expense');
       setIsFirstKeystroke(false);
     }
-  }, [open, editingTransaction, allCategories]);
+  }, [open, allCategories]);
 
   const handleNumberClick = (num: string) => {
-    if (num === '.' && amount.includes('.')) return;
-    if (amount.includes('.') && amount.split('.')[1].length >= 2) return;
-    
     // If editing and this is the first keystroke, replace the amount instead of appending
     if (isFirstKeystroke) {
       setAmount(num);
@@ -94,7 +95,7 @@ export const AddTransactionDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{editingTransaction ? 'Edit Transaction' : 'Add Transaction'}</DialogTitle>
         </DialogHeader>
@@ -117,24 +118,29 @@ export const AddTransactionDialog = ({
           </div>
 
           {/* Numeric Keypad */}
-          <div className="grid grid-cols-3 gap-2">
-            {['1', '2', '3', '4', '5', '6', '7', '8', '9', '.', '0'].map(num => (
-              <Button
-                key={num}
-                variant="secondary"
-                className="h-12 text-lg font-medium"
-                onClick={() => handleNumberClick(num)}
-              >
-                {num}
-              </Button>
-            ))}
-            <Button
-              variant="secondary"
-              className="h-12"
-              onClick={handleBackspace}
-            >
-              <X className="w-5 h-5" />
-            </Button>
+          <div className="grid grid-cols-4 gap-2">
+            {['7', '8', '9', '⌫', '4', '5', '6', '×', '1', '2', '3', '+', '00', '0', '-', '='].map((btn, idx) => {
+              const isBackspace = btn === '⌫';
+              const isNumber = !isNaN(Number(btn)) || btn === '00';
+              
+              return (
+                <Button
+                  key={idx}
+                  variant={isNumber || isBackspace ? "secondary" : "outline"}
+                  className="h-12 text-lg font-medium"
+                  onClick={() => {
+                    if (isBackspace) {
+                      handleBackspace();
+                    } else if (isNumber) {
+                      handleNumberClick(btn);
+                    }
+                  }}
+                  disabled={!isNumber && !isBackspace}
+                >
+                  {btn}
+                </Button>
+              );
+            })}
           </div>
 
           {/* Category Selector */}

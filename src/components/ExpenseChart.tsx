@@ -25,11 +25,20 @@ export const ExpenseChart = ({ transactions, onCategoryClick }: ExpenseChartProp
     
     return Object.entries(grouped).map(([category, amount]) => {
       const info = getCategoryInfo(category);
+      // Handle deleted categories - check if ID looks like a UUID
+      const isDeletedCategory = !info && category.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i);
       return {
         category,
         amount,
         percentage: (amount / total) * 100,
-        info: info || { id: category, name: category, icon: '📦', color: '#6B7280', type: 'expense' as const, order: 999 },
+        info: info || { 
+          id: category, 
+          name: isDeletedCategory ? 'Deleted Category' : category, 
+          icon: '📦', 
+          color: '#9E9E9E', 
+          type: 'expense' as const, 
+          order: 999 
+        },
       };
     }).sort((a, b) => b.amount - a.amount);
   }, [transactions]);
@@ -95,19 +104,19 @@ export const ExpenseChart = ({ transactions, onCategoryClick }: ExpenseChartProp
         {expensesByCategory.map(cat => (
           <div 
             key={cat.category} 
-            className="flex items-center justify-between cursor-pointer hover:bg-secondary/30 p-2 rounded-lg transition-smooth"
+            className="flex items-center justify-between gap-3 cursor-pointer hover:bg-secondary/30 p-2 rounded-lg transition-smooth"
             onClick={() => onCategoryClick?.(cat.category)}
           >
-            <div className="flex items-center gap-2 flex-1">
+            <div className="flex items-center gap-2 min-w-0 flex-1">
               <div 
                 className="w-3 h-3 rounded-full flex-shrink-0"
                 style={{ backgroundColor: cat.info.color }}
               />
-              <span className="text-sm truncate">{cat.info.name}</span>
+              <span className="text-sm line-clamp-2 min-w-0">{cat.info.name}</span>
             </div>
-            <div className="text-right">
-              <p className="text-sm font-medium">{currency}{cat.amount.toFixed(2)}</p>
-              <p className="text-xs text-muted-foreground">{cat.percentage.toFixed(0)}%</p>
+            <div className="text-right flex-shrink-0">
+              <p className="text-sm font-medium whitespace-nowrap">{currency}{cat.amount.toFixed(2)}</p>
+              <p className="text-xs text-muted-foreground whitespace-nowrap">{cat.percentage.toFixed(0)}%</p>
             </div>
           </div>
         ))}
