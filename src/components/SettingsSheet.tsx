@@ -8,7 +8,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { CategoryManager } from './CategoryManager';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { loadSettings, saveSettings } from '@/lib/settings';
-import { CURRENCY_OPTIONS } from '@/types/settings';
+import { CURRENCY_OPTIONS, AppSettings } from '@/types/settings';
 import { exportData, importData, importCSV } from '@/lib/storage';
 import { useAuth } from '@/contexts/AuthContext';
 import { Menu, Download, Upload } from 'lucide-react';
@@ -21,7 +21,12 @@ interface SettingsSheetProps {
 
 export const SettingsSheet = ({ onSettingsChange }: SettingsSheetProps) => {
   const [open, setOpen] = useState(false);
-  const [settings, setSettings] = useState(loadSettings());
+  const [settings, setSettings] = useState<AppSettings>({
+    categories: [],
+    currency: CURRENCY_OPTIONS[0],
+    defaultView: 'monthly',
+    theme: 'system',
+  });
   const { user, signOut } = useAuth();
 
   useEffect(() => {

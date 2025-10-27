@@ -1,4 +1,7 @@
 import { CustomCategory } from '@/types/settings';
+import { loadSettings } from './settings';
+
+let cachedCategories: CustomCategory[] | null = null;
 
 export const getDefaultCategories = (): CustomCategory[] => [
   { id: 'food', name: 'Food & Drinks', icon: '🍽️', color: '#FFD4B2', type: 'expense', order: 0 },
@@ -10,3 +13,19 @@ export const getDefaultCategories = (): CustomCategory[] => [
   { id: 'income', name: 'Income', icon: '💰', color: '#B2EBB4', type: 'income', order: 6 },
   { id: 'other', name: 'Other', icon: '📦', color: '#D4D4D4', type: 'expense', order: 7 },
 ];
+
+// Synchronous accessor for cached categories
+export const categories = (): CustomCategory[] => {
+  return cachedCategories || getDefaultCategories();
+};
+
+// Update cache when settings are loaded
+export const setCategoriesCache = (cats: CustomCategory[]) => {
+  cachedCategories = cats;
+};
+
+// Get category info by ID or name
+export const getCategoryInfo = (categoryIdOrName: string): CustomCategory | undefined => {
+  const allCategories = categories();
+  return allCategories.find(c => c.id === categoryIdOrName || c.name === categoryIdOrName);
+};

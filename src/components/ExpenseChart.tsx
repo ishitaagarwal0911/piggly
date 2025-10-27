@@ -1,7 +1,7 @@
+import { useState, useEffect, useMemo } from 'react';
 import { Transaction } from '@/types/transaction';
 import { getCategoryInfo } from '@/lib/categories';
 import { loadSettings } from '@/lib/settings';
-import { useMemo } from 'react';
 
 interface ExpenseChartProps {
   transactions: Transaction[];
@@ -9,8 +9,13 @@ interface ExpenseChartProps {
 }
 
 export const ExpenseChart = ({ transactions, onCategoryClick }: ExpenseChartProps) => {
-  const settings = loadSettings();
-  const currency = settings.currency.symbol;
+  const [currency, setCurrency] = useState('₹');
+  
+  useEffect(() => {
+    loadSettings().then(settings => {
+      setCurrency(settings.currency.symbol);
+    });
+  }, []);
   
   const expensesByCategory = useMemo(() => {
     const expenses = transactions.filter(t => t.type === 'expense');
@@ -29,96 +34,72 @@ export const ExpenseChart = ({ transactions, onCategoryClick }: ExpenseChartProp
       const isDeletedCategory = !info && category.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i);
       return {
         category,
+        name: info?.name || (isDeletedCategory ? 'Deleted Category' : category),
+        icon: info?.icon || '📦',
+        color: info?.color || '#D4D4D4',
         amount,
         percentage: (amount / total) * 100,
-        info: info || { 
-          id: category, 
-          name: isDeletedCategory ? 'Deleted Category' : category, 
-          icon: '📦', 
-          color: '#9E9E9E', 
-          type: 'expense' as const, 
-          order: 999 
-        },
       };
     }).sort((a, b) => b.amount - a.amount);
   }, [transactions]);
 
-  const total = expensesByCategory.reduce((sum, cat) => sum + cat.amount, 0);
-
   if (expensesByCategory.length === 0) {
     return (
-      <div className="bg-card rounded-2xl p-8 shadow-notion">
-        <div className="text-center text-muted-foreground">
-          <div className="w-48 h-48 mx-auto mb-4 rounded-full bg-secondary/50 flex items-center justify-center">
-            <span className="text-5xl">📊</span>
-          </div>
-          <p className="text-sm">No expenses yet</p>
+      <div className="bg-card rounded-2xl p-6 shadow-notion">
+        <h3 className="text-sm font-medium mb-4">Spending by Category</h3>
+        <div className="text-center py-8">
+          <p className="text-muted-foreground text-sm">No expenses yet</p>
+          <p className="text-xs text-muted-foreground mt-1">
+            Start tracking your expenses to see the breakdown
+          </p>
         </div>
       </div>
     );
   }
 
+  const maxAmount = Math.max(...expensesByCategory.map(c => c.amount));
+
   return (
     <div className="bg-card rounded-2xl p-6 shadow-notion">
-      <h3 className="text-sm font-medium mb-6">Expenses by Category</h3>
-      
-      {/* Donut Chart */}
-      <div className="relative w-48 h-48 mx-auto mb-6">
-        <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
-          {expensesByCategory.reduce((acc, cat, idx) => {
-            const startAngle = acc.offset;
-            const angle = (cat.percentage / 100) * 360;
-            const largeArcFlag = angle > 180 ? 1 : 0;
-            
-            const startX = 50 + 40 * Math.cos((startAngle * Math.PI) / 180);
-            const startY = 50 + 40 * Math.sin((startAngle * Math.PI) / 180);
-            const endX = 50 + 40 * Math.cos(((startAngle + angle) * Math.PI) / 180);
-            const endY = 50 + 40 * Math.sin(((startAngle + angle) * Math.PI) / 180);
-            
-            acc.elements.push(
-              <path
-                key={cat.category}
-                d={`M 50 50 L ${startX} ${startY} A 40 40 0 ${largeArcFlag} 1 ${endX} ${endY} Z`}
-                className="transition-all hover:opacity-80 cursor-pointer"
-                style={{ fill: cat.info.color }}
-                onClick={() => onCategoryClick?.(cat.category)}
-              />
-            );
-            
-            acc.offset += angle;
-            return acc;
-          }, { elements: [] as JSX.Element[], offset: 0 }).elements}
-          
-          {/* Center hole for donut effect */}
-          <circle cx="50" cy="50" r="25" className="fill-background" />
-        </svg>
-        
-        <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <p className="text-xs text-muted-foreground">Total</p>
-          <p className="text-lg font-semibold">{currency}{total.toFixed(0)}</p>
-        </div>
-      </div>
-      
-      {/* Category List */}
-      <div className="space-y-2">
-        {expensesByCategory.map(cat => (
-          <div 
-            key={cat.category} 
-            className="flex items-center justify-between gap-3 cursor-pointer hover:bg-secondary/30 p-2 rounded-lg transition-smooth"
-            onClick={() => onCategoryClick?.(cat.category)}
+      <h3 className="text-sm font-medium mb-4">Spending by Category</h3>
+      <div className="space-y-4">
+        {expensesByCategory.map(({ category, name, icon, color, amount, percentage }) => (
+          <button
+            key={category}
+            onClick={() => onCategoryClick?.(category)}
+            className="w-full text-left transition-all hover:scale-[1.02] active:scale-[0.98]"
           >
-            <div className="flex items-center gap-2 min-w-0 flex-1">
+            <div className="flex items-center gap-3 mb-2">
               <div 
-                className="w-3 h-3 rounded-full flex-shrink-0"
-                style={{ backgroundColor: cat.info.color }}
-              />
-              <span className="text-sm line-clamp-2 min-w-0">{cat.info.name}</span>
+                className="w-10 h-10 rounded-xl flex items-center justify-center text-lg shadow-sm flex-shrink-0"
+                style={{ backgroundColor: color }}
+              >
+                {icon}
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between gap-2 mb-1">
+                  <span className="text-sm font-medium truncate">{name}</span>
+                  <span className="text-sm font-semibold whitespace-nowrap">
+                    {currency}{amount.toFixed(2)}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
+                    <div
+                      className="h-full rounded-full transition-all duration-500 ease-out"
+                      style={{
+                        width: `${(amount / maxAmount) * 100}%`,
+                        backgroundColor: color,
+                      }}
+                    />
+                  </div>
+                  <span className="text-xs text-muted-foreground whitespace-nowrap">
+                    {percentage.toFixed(0)}%
+                  </span>
+                </div>
+              </div>
             </div>
-            <div className="text-right flex-shrink-0">
-              <p className="text-sm font-medium whitespace-nowrap">{currency}{cat.amount.toFixed(2)}</p>
-              <p className="text-xs text-muted-foreground whitespace-nowrap">{cat.percentage.toFixed(0)}%</p>
-            </div>
-          </div>
+          </button>
         ))}
       </div>
     </div>

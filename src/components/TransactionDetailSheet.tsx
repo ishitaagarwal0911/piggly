@@ -1,8 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Transaction } from '@/types/transaction';
-import { getCategoryById } from '@/lib/settings';
+import { getCategoryInfo } from '@/lib/categories';
 import { loadSettings } from '@/lib/settings';
 import { format, isSameDay } from 'date-fns';
 import { ChevronDown, ChevronRight, Plus } from 'lucide-react';
@@ -32,8 +32,13 @@ export const TransactionDetailSheet = ({
   defaultTab,
   defaultOpenCategory,
 }: TransactionDetailSheetProps) => {
-  const settings = loadSettings();
-  const currency = settings.currency.symbol;
+  const [currency, setCurrency] = useState('₹');
+  
+  useEffect(() => {
+    loadSettings().then(settings => {
+      setCurrency(settings.currency.symbol);
+    });
+  }, []);
 
   // Filter transactions
   const filtered = transactions.filter(t => {
@@ -41,202 +46,176 @@ export const TransactionDetailSheet = ({
     if (filterCategory && t.category !== filterCategory) return false;
     return true;
   });
-  
-  // For "By Category" view, when a specific category is clicked,
-  // show all categories of that type, not just the filtered one
-  const byCategoryFiltered = transactions.filter(t => {
-    if (filterType && t.type !== filterType) return false;
-    return true;
-  });
 
   // Group by date
-  const byDate = filtered.reduce((acc, t) => {
+  const groupedByDate = filtered.reduce((acc, t) => {
     const dateKey = format(t.date, 'yyyy-MM-dd');
-    if (!acc[dateKey]) {
-      acc[dateKey] = [];
-    }
+    if (!acc[dateKey]) acc[dateKey] = [];
     acc[dateKey].push(t);
     return acc;
   }, {} as Record<string, Transaction[]>);
 
-  const sortedDates = Object.keys(byDate).sort((a, b) => b.localeCompare(a));
+  const sortedDates = Object.keys(groupedByDate).sort((a, b) => 
+    new Date(b).getTime() - new Date(a).getTime()
+  );
 
-  // Group by category - use byCategoryFiltered to show all categories
-  const byCategory = byCategoryFiltered.reduce((acc, t) => {
-    if (!acc[t.category]) {
-      acc[t.category] = [];
-    }
+  // Group by category
+  const groupedByCategory = filtered.reduce((acc, t) => {
+    if (!acc[t.category]) acc[t.category] = [];
     acc[t.category].push(t);
     return acc;
   }, {} as Record<string, Transaction[]>);
 
-  const sortedCategories = Object.entries(byCategory)
-    .map(([category, txns]) => ({
+  const categoriesWithTotals = Object.entries(groupedByCategory).map(([category, txs]) => {
+    const info = getCategoryInfo(category);
+    const total = txs.reduce((sum, t) => sum + t.amount, 0);
+    return {
       category,
-      transactions: txns,
-      total: txns.reduce((sum, t) => sum + t.amount, 0),
-      count: txns.length,
-    }))
-    .sort((a, b) => b.total - a.total);
+      name: info?.name || category,
+      icon: info?.icon || '📦',
+      color: info?.color || '#D4D4D4',
+      transactions: txs.sort((a, b) => b.date.getTime() - a.date.getTime()),
+      total,
+    };
+  }).sort((a, b) => b.total - a.total);
 
-  const title = filterType === 'expense' ? 'Expenses' : filterType === 'income' ? 'Income' : 'Transactions';
+  const total = filtered.reduce((sum, t) => sum + t.amount, 0);
+
+  const renderTransaction = (transaction: Transaction) => {
+    const categoryInfo = getCategoryInfo(transaction.category);
+    return (
+      <button
+        key={transaction.id}
+        onClick={() => onEdit?.(transaction)}
+        className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-muted/50 transition-colors text-left"
+      >
+        <div 
+          className="w-10 h-10 rounded-xl flex items-center justify-center text-lg flex-shrink-0"
+          style={{ backgroundColor: categoryInfo?.color || '#D4D4D4' }}
+        >
+          {categoryInfo?.icon || '📦'}
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-medium truncate">{transaction.note || 'No description'}</p>
+          <p className="text-xs text-muted-foreground">
+            {format(transaction.date, 'h:mm a')}
+          </p>
+        </div>
+        <span className={`text-sm font-semibold whitespace-nowrap ${
+          transaction.type === 'income' ? 'text-success' : 'text-destructive'
+        }`}>
+          {transaction.type === 'income' ? '+' : '-'}{currency}{transaction.amount.toFixed(2)}
+        </span>
+      </button>
+    );
+  };
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
-        <SheetHeader className="mb-4">
-          <SheetTitle>{title}</SheetTitle>
-          <p className="text-sm text-muted-foreground">
-            {filtered.length} transaction{filtered.length !== 1 ? 's' : ''}
-          </p>
+        <SheetHeader>
+          <SheetTitle>
+            {filterCategory ? getCategoryInfo(filterCategory)?.name : 
+             filterType === 'income' ? 'Income' : 'Expenses'}
+          </SheetTitle>
         </SheetHeader>
 
-        <Tabs defaultValue={defaultTab || "by-date"} className="w-full">
-          <TabsList className="grid w-full grid-cols-2 mb-4">
-            <TabsTrigger value="by-date">By Date</TabsTrigger>
-            <TabsTrigger value="by-category">By Category</TabsTrigger>
+        <div className="mt-6 mb-4 flex items-center justify-between">
+          <div>
+            <p className="text-sm text-muted-foreground">Total</p>
+            <p className="text-2xl font-semibold">
+              {currency}{total.toFixed(2)}
+            </p>
+          </div>
+          {onAddClick && (
+            <Button 
+              size="sm" 
+              onClick={() => onAddClick(filterType || 'expense')}
+              className="gap-2"
+            >
+              <Plus className="w-4 h-4" />
+              Add
+            </Button>
+          )}
+        </div>
+
+        <Tabs defaultValue={defaultTab || "by-date"} className="mt-6">
+          <TabsList className="w-full">
+            <TabsTrigger value="by-date" className="flex-1">By Date</TabsTrigger>
+            <TabsTrigger value="by-category" className="flex-1">By Category</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="by-date" className="space-y-4">
+          <TabsContent value="by-date" className="mt-4 space-y-4">
             {sortedDates.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-8">No transactions found</p>
+              <div className="text-center py-8">
+                <p className="text-muted-foreground text-sm">No transactions</p>
+              </div>
             ) : (
-              <Accordion type="multiple" defaultValue={[sortedDates[0]]} className="space-y-2">
-                {sortedDates.map(dateKey => {
-                  const txns = byDate[dateKey];
-                  const total = txns.reduce((sum, t) => sum + t.amount, 0);
-                  const date = new Date(dateKey);
-                  const isToday = isSameDay(date, new Date());
-                  const displayDate = isToday ? 'Today' : format(date, 'd MMMM yyyy');
+              sortedDates.map(dateKey => {
+                const date = new Date(dateKey);
+                const txs = groupedByDate[dateKey];
+                const dayTotal = txs.reduce((sum, t) => sum + t.amount, 0);
 
-                  return (
-                    <AccordionItem key={dateKey} value={dateKey} className="border rounded-lg px-4 transition-smooth">
-                      <AccordionTrigger className="hover:no-underline py-3">
-                        <div className="flex justify-between items-center w-full pr-2">
-                          <div>
-                            <p className="text-sm font-medium">{displayDate}</p>
-                            <p className="text-xs text-muted-foreground">
-                              {txns.length} transaction{txns.length !== 1 ? 's' : ''}
-                            </p>
-                          </div>
-                          <p className="text-sm font-semibold">
-                            {currency}{total.toFixed(2)}
-                          </p>
-                        </div>
-                      </AccordionTrigger>
-                      <AccordionContent className="pt-2 pb-3">
-                        <div className="space-y-2">
-                          {txns.map(t => {
-                            const category = getCategoryById(t.category);
-                            return (
-                              <div
-                                key={t.id}
-                                onClick={() => onEdit?.(t)}
-                                className="flex justify-between items-start p-3 rounded-lg bg-secondary/30 hover:bg-secondary/50 transition-smooth cursor-pointer"
-                              >
-                                <div className="flex items-start gap-2 flex-1">
-                                  <span className="text-xl">{category?.icon || '📦'}</span>
-                                  <div className="flex-1 min-w-0">
-                                    <p className="text-sm font-medium">{category?.name || t.category}</p>
-                                    {t.note && (
-                                      <p className="text-xs text-muted-foreground truncate">{t.note}</p>
-                                    )}
-                                  </div>
-                                </div>
-                                <p className="text-sm font-semibold whitespace-nowrap ml-2">
-                                  {currency}{t.amount.toFixed(2)}
-                                </p>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </AccordionContent>
-                    </AccordionItem>
-                  );
-                })}
-              </Accordion>
+                return (
+                  <div key={dateKey} className="space-y-2">
+                    <div className="flex items-center justify-between px-2 py-1">
+                      <h3 className="text-sm font-medium">
+                        {isSameDay(date, new Date()) ? 'Today' : format(date, 'MMM d, yyyy')}
+                      </h3>
+                      <span className="text-sm text-muted-foreground">
+                        {currency}{dayTotal.toFixed(2)}
+                      </span>
+                    </div>
+                    <div className="space-y-1">
+                      {txs.map(renderTransaction)}
+                    </div>
+                  </div>
+                );
+              })
             )}
           </TabsContent>
 
-          <TabsContent value="by-category" className="space-y-2">
-            {sortedCategories.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-8">No transactions found</p>
+          <TabsContent value="by-category" className="mt-4">
+            {categoriesWithTotals.length === 0 ? (
+              <div className="text-center py-8">
+                <p className="text-muted-foreground text-sm">No transactions</p>
+              </div>
             ) : (
               <Accordion 
                 type="multiple" 
                 defaultValue={defaultOpenCategory ? [defaultOpenCategory] : []}
                 className="space-y-2"
               >
-                {sortedCategories.map(({ category, transactions: txns, total, count }) => {
-                  const categoryInfo = getCategoryById(category);
-                  const isSelected = category === defaultOpenCategory;
-                  
-                  return (
-                    <AccordionItem 
-                      key={category} 
-                      value={category} 
-                      className={`border rounded-lg px-4 transition-smooth ${
-                        isSelected ? 'ring-2 ring-primary' : ''
-                      }`}
-                    >
-                      <AccordionTrigger className="hover:no-underline py-3">
-                        <div className="flex justify-between items-center w-full pr-2">
-                          <div className="flex items-center gap-2 flex-1">
-                            <span className="text-xl">{categoryInfo?.icon || '📦'}</span>
-                            <div className="text-left">
-                              <p className="text-sm font-medium">{categoryInfo?.name || category}</p>
-                              <div className="flex items-center gap-2">
-                                <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-primary/10 text-[10px] font-medium">
-                                  {count}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                          <p className="text-sm font-semibold">
-                            {currency}{total.toFixed(2)}
+                {categoriesWithTotals.map(({ category, name, icon, color, transactions, total }) => (
+                  <AccordionItem key={category} value={category} className="border rounded-lg px-4">
+                    <AccordionTrigger className="hover:no-underline py-3">
+                      <div className="flex items-center gap-3 flex-1">
+                        <div 
+                          className="w-10 h-10 rounded-xl flex items-center justify-center text-lg flex-shrink-0"
+                          style={{ backgroundColor: color }}
+                        >
+                          {icon}
+                        </div>
+                        <div className="flex-1 text-left">
+                          <p className="text-sm font-medium">{name}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {transactions.length} {transactions.length === 1 ? 'transaction' : 'transactions'}
                           </p>
                         </div>
-                      </AccordionTrigger>
-                      <AccordionContent className="pt-2 pb-3">
-                        <div className="space-y-2">
-                          {txns.map(t => (
-                            <div
-                              key={t.id}
-                              onClick={() => onEdit?.(t)}
-                              className="flex justify-between items-start p-3 rounded-lg bg-secondary/30 hover:bg-secondary/50 transition-smooth cursor-pointer"
-                            >
-                              <div className="flex-1">
-                                <p className="text-sm font-medium">
-                                  {format(t.date, 'd MMM yyyy')}
-                                </p>
-                                {t.note && (
-                                  <p className="text-xs text-muted-foreground">{t.note}</p>
-                                )}
-                              </div>
-                              <p className="text-sm font-semibold whitespace-nowrap ml-2">
-                                {currency}{t.amount.toFixed(2)}
-                              </p>
-                            </div>
-                          ))}
-                        </div>
-                      </AccordionContent>
-                    </AccordionItem>
-                  );
-                })}
+                        <span className="text-sm font-semibold">
+                          {currency}{total.toFixed(2)}
+                        </span>
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="pt-2 pb-3 space-y-1">
+                      {transactions.map(renderTransaction)}
+                    </AccordionContent>
+                  </AccordionItem>
+                ))}
               </Accordion>
             )}
           </TabsContent>
         </Tabs>
-
-        {onAddClick && filterType && (
-          <Button
-            size="lg"
-            className="fixed bottom-8 right-8 rounded-full w-14 h-14 shadow-lg z-50"
-            onClick={() => onAddClick(filterType)}
-          >
-            <Plus className="w-6 h-6" />
-          </Button>
-        )}
       </SheetContent>
     </Sheet>
   );

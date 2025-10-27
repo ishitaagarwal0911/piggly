@@ -1,5 +1,5 @@
 import { AppSettings, CustomCategory, CurrencyOption, CURRENCY_OPTIONS } from '@/types/settings';
-import { getDefaultCategories } from './categories';
+import { getDefaultCategories, setCategoriesCache } from './categories';
 import { supabase } from '@/integrations/supabase/client';
 
 const getDefaultSettings = (): AppSettings => ({
@@ -35,6 +35,11 @@ export const loadSettings = async (): Promise<AppSettings> => {
       order: c.order_index,
     }));
 
+    const finalCategories = categories.length > 0 ? categories : getDefaultCategories();
+    
+    // Update categories cache for synchronous access
+    setCategoriesCache(finalCategories);
+
     const currency: CurrencyOption = {
       code: settingsData?.currency_code || 'INR',
       symbol: settingsData?.currency_symbol || '₹',
@@ -42,7 +47,7 @@ export const loadSettings = async (): Promise<AppSettings> => {
     };
 
     return {
-      categories: categories.length > 0 ? categories : getDefaultCategories(),
+      categories: finalCategories,
       currency,
       defaultView: (settingsData?.default_view as 'daily' | 'weekly' | 'monthly') || 'monthly',
       theme: (settingsData?.theme as 'light' | 'dark' | 'system') || 'system',
@@ -51,6 +56,11 @@ export const loadSettings = async (): Promise<AppSettings> => {
     console.error('Failed to load settings:', error);
     return getDefaultSettings();
   }
+};
+
+export const getCategoryById = (id: string): CustomCategory | undefined => {
+  const settings = getDefaultSettings();
+  return settings.categories.find(c => c.id === id);
 };
 
 export const saveSettings = async (settings: AppSettings): Promise<void> => {
@@ -69,18 +79,27 @@ export const saveSettings = async (settings: AppSettings): Promise<void> => {
     });
 };
 
-export const addCategory = async (category: CustomCategory): Promise<void> => {
+export const addCategory = async (category: Omit<CustomCategory, 'id' | 'order' | 'color'>): Promise<void> => {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('Not authenticated');
 
+  // Get existing categories to determine order
+  const { data: existingCategories } = await supabase
+    .from('categories')
+    .select('*')
+    .eq('user_id', user.id);
+
+  const order = existingCategories?.length || 0;
+  const color = '#D4D4D4'; // Default color
+
   await supabase.from('categories').insert({
-    id: category.id,
+    id: crypto.randomUUID(),
     user_id: user.id,
     name: category.name,
     icon: category.icon,
-    color: category.color,
+    color,
     type: category.type,
-    order_index: category.order,
+    order_index: order,
   });
 };
 

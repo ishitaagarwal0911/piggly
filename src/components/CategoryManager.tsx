@@ -49,22 +49,26 @@ export const CategoryManager = ({ onCategoriesChange }: CategoryManagerProps) =>
     setIsAddingNew(true);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!name.trim() || !icon.trim()) {
       toast.error('Please fill all fields');
       return;
     }
 
-    if (editingCategory) {
-      updateCategory(editingCategory.id, { name: name.trim(), icon: icon.trim(), type });
-      toast.success('Category updated');
-    } else {
-      addCategory({ name: name.trim(), icon: icon.trim(), type });
-      toast.success('Category added');
-    }
+    try {
+      if (editingCategory) {
+        await updateCategory({ ...editingCategory, name: name.trim(), icon: icon.trim(), type });
+        toast.success('Category updated');
+      } else {
+        await addCategory({ name: name.trim(), icon: icon.trim(), type });
+        toast.success('Category added');
+      }
 
-    onCategoriesChange();
-    resetForm();
+      onCategoriesChange();
+      resetForm();
+    } catch (error) {
+      toast.error('Failed to save category');
+    }
   };
 
   const handleDelete = () => {
