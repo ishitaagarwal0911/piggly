@@ -15,6 +15,8 @@ interface TransactionDetailSheetProps {
   filterType?: 'expense' | 'income';
   filterCategory?: string;
   onEdit?: (transaction: Transaction) => void;
+  defaultTab?: string;
+  defaultOpenCategory?: string;
 }
 
 export const TransactionDetailSheet = ({
@@ -24,6 +26,8 @@ export const TransactionDetailSheet = ({
   filterType,
   filterCategory,
   onEdit,
+  defaultTab,
+  defaultOpenCategory,
 }: TransactionDetailSheetProps) => {
   const settings = loadSettings();
   const currency = settings.currency.symbol;
@@ -77,7 +81,7 @@ export const TransactionDetailSheet = ({
           </p>
         </SheetHeader>
 
-        <Tabs defaultValue="by-date" className="w-full">
+        <Tabs defaultValue={defaultTab || "by-date"} className="w-full">
           <TabsList className="grid w-full grid-cols-2 mb-4">
             <TabsTrigger value="by-date">By Date</TabsTrigger>
             <TabsTrigger value="by-category">By Category</TabsTrigger>
@@ -148,12 +152,23 @@ export const TransactionDetailSheet = ({
             {sortedCategories.length === 0 ? (
               <p className="text-sm text-muted-foreground text-center py-8">No transactions found</p>
             ) : (
-              <Accordion type="multiple" className="space-y-2">
+              <Accordion 
+                type="multiple" 
+                defaultValue={defaultOpenCategory ? [defaultOpenCategory] : []}
+                className="space-y-2"
+              >
                 {sortedCategories.map(({ category, transactions: txns, total, count }) => {
                   const categoryInfo = getCategoryById(category);
+                  const isSelected = category === defaultOpenCategory;
                   
                   return (
-                    <AccordionItem key={category} value={category} className="border rounded-lg px-4 transition-smooth">
+                    <AccordionItem 
+                      key={category} 
+                      value={category} 
+                      className={`border rounded-lg px-4 transition-smooth ${
+                        isSelected ? 'ring-2 ring-primary' : ''
+                      }`}
+                    >
                       <AccordionTrigger className="hover:no-underline py-3">
                         <div className="flex justify-between items-center w-full pr-2">
                           <div className="flex items-center gap-2 flex-1">

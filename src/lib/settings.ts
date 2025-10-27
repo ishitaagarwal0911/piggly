@@ -2,6 +2,73 @@ import { AppSettings, CustomCategory, CURRENCY_OPTIONS, DEFAULT_COLORS } from '@
 
 const SETTINGS_KEY = 'expense_tracker_settings';
 
+// Convert hex color to HSL
+const hexToHSL = (hex: string): [number, number, number] => {
+  const r = parseInt(hex.slice(1, 3), 16) / 255;
+  const g = parseInt(hex.slice(3, 5), 16) / 255;
+  const b = parseInt(hex.slice(5, 7), 16) / 255;
+
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  let h = 0, s = 0, l = (max + min) / 2;
+
+  if (max !== min) {
+    const d = max - min;
+    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+    
+    switch (max) {
+      case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break;
+      case g: h = ((b - r) / d + 2) / 6; break;
+      case b: h = ((r - g) / d + 4) / 6; break;
+    }
+  }
+
+  return [h * 360, s * 100, l * 100];
+};
+
+// Calculate color distance in HSL space
+const colorDistance = (color1: string, color2: string): number => {
+  const [h1, s1, l1] = hexToHSL(color1);
+  const [h2, s2, l2] = hexToHSL(color2);
+  
+  // Normalize hue difference (circular)
+  let hueDiff = Math.abs(h1 - h2);
+  if (hueDiff > 180) hueDiff = 360 - hueDiff;
+  
+  return Math.sqrt(
+    Math.pow(hueDiff / 2, 2) + 
+    Math.pow(s1 - s2, 2) + 
+    Math.pow(l1 - l2, 2)
+  );
+};
+
+// Get available color that's not too similar to existing ones
+const getAvailableColor = (emoji: string, existingColors: string[]): string => {
+  const MIN_DISTANCE = 30;
+  let suggestedColor = getColorFromEmoji(emoji);
+  
+  // Check if suggested color is too similar to existing ones
+  const isTooSimilar = existingColors.some(
+    existing => colorDistance(suggestedColor, existing) < MIN_DISTANCE
+  );
+  
+  if (isTooSimilar) {
+    // Find first available color from DEFAULT_COLORS that's not too similar
+    for (const color of DEFAULT_COLORS) {
+      const isAvailable = !existingColors.some(
+        existing => colorDistance(color, existing) < MIN_DISTANCE
+      );
+      if (isAvailable) {
+        return color;
+      }
+    }
+    // If all colors are taken, return suggested color anyway
+    return suggestedColor;
+  }
+  
+  return suggestedColor;
+};
+
 // Emoji to color mapping for auto-assignment
 export const getColorFromEmoji = (emoji: string): string => {
   const emojiMaps: Record<string, string> = {
@@ -106,11 +173,13 @@ export const getCategoryById = (id: string): CustomCategory | undefined => {
 
 export const addCategory = (category: Omit<CustomCategory, 'id' | 'order' | 'color'>): void => {
   const settings = loadSettings();
+  const existingColors = settings.categories.map(c => c.color);
+  
   const newCategory: CustomCategory = {
     ...category,
     id: crypto.randomUUID(),
     order: settings.categories.length,
-    color: getColorFromEmoji(category.icon),
+    color: getAvailableColor(category.icon, existingColors),
   };
   settings.categories.push(newCategory);
   saveSettings(settings);

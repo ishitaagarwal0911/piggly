@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Transaction, TransactionType } from '@/types/transaction';
 import { categories, getCategoryInfo } from '@/lib/categories';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -29,6 +29,25 @@ export const AddTransactionDialog = ({
   const [category, setCategory] = useState<string>(editingTransaction?.category || allCategories.find(c => c.type === 'expense')?.id || '');
   const [note, setNote] = useState(editingTransaction?.note || '');
   const [date, setDate] = useState<Date>(editingTransaction?.date || new Date());
+
+  // Sync form state when editingTransaction changes
+  useEffect(() => {
+    if (open && editingTransaction) {
+      setType(editingTransaction.type);
+      setAmount(editingTransaction.amount.toString());
+      setCategory(editingTransaction.category);
+      setNote(editingTransaction.note);
+      setDate(editingTransaction.date);
+    } else if (!open) {
+      // Reset form when dialog closes
+      setAmount('');
+      setNote('');
+      setDate(new Date());
+      const defaultCategory = allCategories.find(c => c.type === 'expense');
+      setCategory(defaultCategory?.id || '');
+      setType('expense');
+    }
+  }, [open, editingTransaction, allCategories]);
 
   const handleNumberClick = (num: string) => {
     if (num === '.' && amount.includes('.')) return;

@@ -6,6 +6,7 @@ import { AddTransactionDialog } from '@/components/AddTransactionDialog';
 import { SettingsSheet } from '@/components/SettingsSheet';
 import { PeriodSelector } from '@/components/PeriodSelector';
 import { TransactionDetailSheet } from '@/components/TransactionDetailSheet';
+import { ThemeToggle } from '@/components/ThemeToggle';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 import { loadTransactions, saveTransactions } from '@/lib/storage';
@@ -108,7 +109,10 @@ const Index = () => {
       <header className="sticky top-0 z-10 bg-background/80 backdrop-blur-md border-b border-border">
         <div className="max-w-2xl mx-auto px-4 py-4 flex items-center justify-between">
           <h1 className="text-xl font-semibold">Expenses</h1>
-          <SettingsSheet onSettingsChange={handleSettingsChange} />
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
+            <SettingsSheet onSettingsChange={handleSettingsChange} />
+          </div>
         </div>
       </header>
 
@@ -158,6 +162,8 @@ const Index = () => {
         filterType={detailFilter.type}
         filterCategory={detailFilter.category}
         onEdit={handleEditTransaction}
+        defaultTab={detailFilter.category ? "by-category" : undefined}
+        defaultOpenCategory={detailFilter.category}
       />
     </div>
   );
