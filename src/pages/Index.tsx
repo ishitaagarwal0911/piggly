@@ -1,12 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Transaction } from '@/types/transaction';
 import { BalanceSummary } from '@/components/BalanceSummary';
 import { ExpenseChart } from '@/components/ExpenseChart';
-import { AddTransactionDialog } from '@/components/AddTransactionDialog';
 import { SettingsSheet } from '@/components/SettingsSheet';
 import { PeriodSelector } from '@/components/PeriodSelector';
-import { TransactionDetailSheet } from '@/components/TransactionDetailSheet';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 import { loadTransactions, saveTransactions, deleteTransaction } from '@/lib/storage';
@@ -15,6 +13,10 @@ import { getFilteredTransactions, getPreviousPeriod, getNextPeriod, ViewType } f
 import { useAuth } from '@/contexts/AuthContext';
 import { useRealtimeSync } from '@/hooks/useRealtimeSync';
 import { toast } from 'sonner';
+
+// Lazy load heavy components for faster initial load
+const AddTransactionDialog = lazy(() => import('@/components/AddTransactionDialog'));
+const TransactionDetailSheet = lazy(() => import('@/components/TransactionDetailSheet'));
 
 const Index = () => {
   const { user, loading, isInitialized } = useAuth();
@@ -38,15 +40,20 @@ const Index = () => {
     }
   }, [user, loading, isInitialized, navigate]);
 
-  // Load initial data
+  // Load initial data with parallel loading
   useEffect(() => {
     const loadData = async () => {
       if (!user) return;
       
       setDataLoading(true);
-      const loaded = await loadTransactions();
+      
+      // Load transactions and settings in parallel for faster loading
+      const [loaded, settings] = await Promise.all([
+        loadTransactions(),
+        loadSettings()
+      ]);
+      
       setTransactions(loaded);
-      const settings = await loadSettings();
       
       // Only set viewType on INITIAL load (refreshKey === 0), not on subsequent refreshes
       // This prevents race conditions when settings are updated
@@ -95,10 +102,29 @@ const Index = () => {
     () => setRefreshKey(prev => prev + 1)
   );
 
+  // App shell pattern - show skeleton while loading for better perceived performance
   if (loading || dataLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      <div className="min-h-screen bg-background">
+        <header className="bg-background border-b border-border">
+          <div className="max-w-2xl mx-auto px-4 py-3 h-14" />
+        </header>
+        <main className="max-w-2xl mx-auto px-4 py-6 space-y-6">
+          {/* Balance summary skeleton */}
+          <div className="bg-card rounded-lg p-4 space-y-3 animate-pulse">
+            <div className="h-4 bg-muted rounded w-1/3" />
+            <div className="h-8 bg-muted rounded w-1/2" />
+            <div className="flex gap-2">
+              <div className="h-16 bg-muted rounded flex-1" />
+              <div className="h-16 bg-muted rounded flex-1" />
+            </div>
+          </div>
+          {/* Chart skeleton */}
+          <div className="bg-card rounded-lg p-4 space-y-3 animate-pulse">
+            <div className="h-4 bg-muted rounded w-1/4" />
+            <div className="h-64 bg-muted rounded" />
+          </div>
+        </main>
       </div>
     );
   }
@@ -241,27 +267,31 @@ const Index = () => {
         </Button>
       </div>
 
-      {/* Add Transaction Dialog */}
-      <AddTransactionDialog
-        open={showAddDialog}
-        onOpenChange={handleDialogClose}
-        onAdd={handleAddTransaction}
-        onDelete={handleDeleteTransaction}
-        editingTransaction={editingTransaction}
-        initialType={transactionType}
-      />
+      {/* Add Transaction Dialog - Lazy loaded */}
+      <Suspense fallback={null}>
+        <AddTransactionDialog
+          open={showAddDialog}
+          onOpenChange={handleDialogClose}
+          onAdd={handleAddTransaction}
+          onDelete={handleDeleteTransaction}
+          editingTransaction={editingTransaction}
+          initialType={transactionType}
+        />
+      </Suspense>
 
-      <TransactionDetailSheet
-        open={detailSheetOpen}
-        onOpenChange={setDetailSheetOpen}
-        transactions={filteredTransactions}
-        filterType={detailFilter.type}
-        filterCategory={detailFilter.category}
-        onEdit={handleEditTransaction}
-        onAddClick={handleDetailSheetAddClick}
-        defaultTab={detailFilter.category ? "by-category" : undefined}
-        defaultOpenCategory={detailFilter.category}
-      />
+      <Suspense fallback={null}>
+        <TransactionDetailSheet
+          open={detailSheetOpen}
+          onOpenChange={setDetailSheetOpen}
+          transactions={filteredTransactions}
+          filterType={detailFilter.type}
+          filterCategory={detailFilter.category}
+          onEdit={handleEditTransaction}
+          onAddClick={handleDetailSheetAddClick}
+          defaultTab={detailFilter.category ? "by-category" : undefined}
+          defaultOpenCategory={detailFilter.category}
+        />
+      </Suspense>
     </div>
   );
 };

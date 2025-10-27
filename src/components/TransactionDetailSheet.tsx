@@ -234,3 +234,5 @@ export const TransactionDetailSheet = ({
     </Sheet>
   );
 };
+
+export default TransactionDetailSheet;
