@@ -193,7 +193,7 @@ export const updateCategory = async (category: CustomCategory): Promise<void> =>
       type: category.type,
       order_index: category.order,
     }, {
-      onConflict: 'id,user_id'
+      onConflict: 'id'
     });
 
   if (error) throw error;

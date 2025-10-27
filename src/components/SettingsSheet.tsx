@@ -52,8 +52,11 @@ export const SettingsSheet = ({ onSettingsChange }: SettingsSheetProps) => {
     const newSettings = { ...settings, defaultView: view };
     await saveSettings(newSettings);
     setSettings(newSettings);
-    onSettingsChange();
     toast.success('Default view updated');
+    // Small delay to ensure DB write completes
+    setTimeout(() => {
+      onSettingsChange();
+    }, 100);
   };
 
   const handleExport = async () => {

@@ -188,7 +188,7 @@ export const CategoryManager = ({ onCategoriesChange }: CategoryManagerProps) =>
 
       {/* Add/Edit Dialog */}
       <Dialog open={isAddingNew || editingCategory !== null} onOpenChange={(open) => !open && resetForm()}>
-        <DialogContent>
+        <DialogContent centered={false}>
           <DialogHeader>
             <DialogTitle>{editingCategory ? 'Edit Category' : 'Add Category'}</DialogTitle>
           </DialogHeader>
