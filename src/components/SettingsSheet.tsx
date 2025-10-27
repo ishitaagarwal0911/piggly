@@ -56,7 +56,7 @@ export const SettingsSheet = ({ onSettingsChange }: SettingsSheetProps) => {
     // Small delay to ensure DB write completes
     setTimeout(() => {
       onSettingsChange();
-    }, 100);
+    }, 300);
   };
 
   const handleExport = async () => {
