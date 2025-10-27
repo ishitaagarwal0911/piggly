@@ -8,17 +8,17 @@ import { toast } from 'sonner';
 import piggyImage from '@/assets/piggy.png';
 
 const Auth = () => {
-  const { user, loading, sendOTP } = useAuth();
+  const { user, loading, isInitialized, sendOTP } = useAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [linkSent, setLinkSent] = useState(false);
 
   useEffect(() => {
-    if (user) {
-      navigate('/');
+    if (user && isInitialized) {
+      navigate('/', { replace: true });
     }
-  }, [user, navigate]);
+  }, [user, isInitialized, navigate]);
 
   const handleSendMagicLink = async (e: React.FormEvent) => {
     e.preventDefault();

@@ -17,7 +17,7 @@ import { useRealtimeSync } from '@/hooks/useRealtimeSync';
 import { toast } from 'sonner';
 
 const Index = () => {
-  const { user, loading } = useAuth();
+  const { user, loading, isInitialized } = useAuth();
   const navigate = useNavigate();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [dataLoading, setDataLoading] = useState(true);
@@ -33,10 +33,10 @@ const Index = () => {
 
   // Redirect to auth if not authenticated
   useEffect(() => {
-    if (!loading && !user) {
-      navigate('/auth');
+    if (!loading && !user && isInitialized) {
+      navigate('/auth', { replace: true });
     }
-  }, [user, loading, navigate]);
+  }, [user, loading, isInitialized, navigate]);
 
   // Load initial data
   useEffect(() => {
