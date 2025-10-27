@@ -1,11 +1,12 @@
 import { useState } from 'react';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetClose } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetHeader, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { CategoryManager } from './CategoryManager';
+import { ThemeToggle } from '@/components/ThemeToggle';
 import { loadSettings, saveSettings } from '@/lib/settings';
 import { CURRENCY_OPTIONS } from '@/types/settings';
 import { exportData, importData, importCSV } from '@/lib/storage';
@@ -96,11 +97,11 @@ export const SettingsSheet = ({ onSettingsChange }: SettingsSheetProps) => {
         </Button>
       </SheetTrigger>
       <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
-        <SheetHeader>
-          <SheetTitle>Settings</SheetTitle>
+        <SheetHeader className="flex flex-row items-center justify-between pb-4">
+          <ThemeToggle />
         </SheetHeader>
 
-        <Accordion type="multiple" defaultValue={[]} className="mt-6">
+        <Accordion type="multiple" defaultValue={[]} className="mt-2">
           <AccordionItem value="categories">
             <AccordionTrigger className="text-base font-medium">Categories</AccordionTrigger>
             <AccordionContent className="pt-4">

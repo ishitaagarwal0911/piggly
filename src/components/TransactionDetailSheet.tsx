@@ -5,8 +5,9 @@ import { Transaction } from '@/types/transaction';
 import { getCategoryById } from '@/lib/settings';
 import { loadSettings } from '@/lib/settings';
 import { format, isSameDay } from 'date-fns';
-import { ChevronDown, ChevronRight } from 'lucide-react';
+import { ChevronDown, ChevronRight, Plus } from 'lucide-react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { Button } from '@/components/ui/button';
 
 interface TransactionDetailSheetProps {
   open: boolean;
@@ -15,6 +16,7 @@ interface TransactionDetailSheetProps {
   filterType?: 'expense' | 'income';
   filterCategory?: string;
   onEdit?: (transaction: Transaction) => void;
+  onAddClick?: (type: 'income' | 'expense') => void;
   defaultTab?: string;
   defaultOpenCategory?: string;
 }
@@ -26,6 +28,7 @@ export const TransactionDetailSheet = ({
   filterType,
   filterCategory,
   onEdit,
+  onAddClick,
   defaultTab,
   defaultOpenCategory,
 }: TransactionDetailSheetProps) => {
@@ -224,6 +227,16 @@ export const TransactionDetailSheet = ({
             )}
           </TabsContent>
         </Tabs>
+
+        {onAddClick && filterType && (
+          <Button
+            size="lg"
+            className="fixed bottom-8 right-8 rounded-full w-14 h-14 shadow-lg z-50"
+            onClick={() => onAddClick(filterType)}
+          >
+            <Plus className="w-6 h-6" />
+          </Button>
+        )}
       </SheetContent>
     </Sheet>
   );

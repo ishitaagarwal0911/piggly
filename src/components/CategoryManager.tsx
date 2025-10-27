@@ -81,10 +81,9 @@ export const CategoryManager = ({ onCategoriesChange }: CategoryManagerProps) =>
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold">Manage Categories</h3>
-        <Button onClick={handleAdd} size="icon" variant="ghost" className="rounded-full w-8 h-8 transition-smooth hover:scale-105">
-          <Plus className="w-5 h-5" />
+      <div className="flex items-center justify-end mb-4">
+        <Button onClick={handleAdd} size="icon" variant="default" className="rounded-full w-12 h-12 transition-smooth hover:scale-105 shadow-lg">
+          <Plus className="w-6 h-6" />
         </Button>
       </div>
 

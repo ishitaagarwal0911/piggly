@@ -16,6 +16,7 @@ interface AddTransactionDialogProps {
   onAdd: (transaction: Omit<Transaction, 'id' | 'createdAt'>) => void;
   onDelete?: (id: string) => void;
   editingTransaction?: Transaction | null;
+  initialType?: 'income' | 'expense';
 }
 
 export const AddTransactionDialog = ({
@@ -24,9 +25,10 @@ export const AddTransactionDialog = ({
   onAdd,
   onDelete,
   editingTransaction,
+  initialType = 'expense',
 }: AddTransactionDialogProps) => {
   const allCategories = categories();
-  const [type, setType] = useState<TransactionType>(editingTransaction?.type || 'expense');
+  const [type, setType] = useState<TransactionType>(editingTransaction?.type || initialType);
   const [amount, setAmount] = useState(editingTransaction?.amount.toString() || '');
   const [category, setCategory] = useState<string>(editingTransaction?.category || allCategories.find(c => c.type === 'expense')?.id || '');
   const [note, setNote] = useState(editingTransaction?.note || '');
@@ -57,15 +59,15 @@ export const AddTransactionDialog = ({
       setAmount('');
       setNote('');
       setDate(new Date());
-      const defaultCategory = allCategories.find(c => c.type === 'expense');
+      const defaultCategory = allCategories.find(c => c.type === initialType);
       setCategory(defaultCategory?.id || '');
-      setType('expense');
+      setType(initialType);
       setIsFirstKeystroke(false);
       setFirstOperand(null);
       setOperator(null);
       setWaitingForSecondOperand(false);
     }
-  }, [open, allCategories]);
+  }, [open, allCategories, initialType]);
 
   const performCalculation = (a: number, b: number, op: string): number => {
     switch (op) {
@@ -131,7 +133,7 @@ export const AddTransactionDialog = ({
   };
 
   const handleSubmit = () => {
-    if (!amount || parseFloat(amount) === 0 || !note.trim() || !category) return;
+    if (!amount || parseFloat(amount) === 0 || !category) return;
 
     onAdd({
       type,
@@ -240,7 +242,7 @@ export const AddTransactionDialog = ({
 
           {/* Note Input */}
           <div>
-            <p className="text-sm font-medium mb-2">Note *</p>
+            <p className="text-sm font-medium mb-2">Note</p>
             <Input
               placeholder="What's this for?"
               value={note}
@@ -277,7 +279,7 @@ export const AddTransactionDialog = ({
             className="w-full"
             size="lg"
             onClick={handleSubmit}
-            disabled={!amount || parseFloat(amount) === 0 || !note.trim()}
+            disabled={!amount || parseFloat(amount) === 0}
           >
             {editingTransaction ? 'Save Changes' : 'Add Transaction'}
           </Button>

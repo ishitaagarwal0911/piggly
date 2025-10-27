@@ -6,7 +6,6 @@ import { AddTransactionDialog } from '@/components/AddTransactionDialog';
 import { SettingsSheet } from '@/components/SettingsSheet';
 import { PeriodSelector } from '@/components/PeriodSelector';
 import { TransactionDetailSheet } from '@/components/TransactionDetailSheet';
-import { ThemeToggle } from '@/components/ThemeToggle';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 import { loadTransactions, saveTransactions } from '@/lib/storage';
@@ -17,6 +16,7 @@ import { toast } from 'sonner';
 const Index = () => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [showAddDialog, setShowAddDialog] = useState(false);
+  const [transactionType, setTransactionType] = useState<'income' | 'expense'>('expense');
   const [currentDate, setCurrentDate] = useState(new Date());
   const [viewType, setViewType] = useState<ViewType>('monthly');
   const [refreshKey, setRefreshKey] = useState(0);
@@ -109,27 +109,36 @@ const Index = () => {
     setEditingTransaction(null);
   };
 
+  const handleDetailSheetAddClick = (type: 'income' | 'expense') => {
+    setDetailSheetOpen(false);
+    setTransactionType(type);
+    setShowAddDialog(true);
+  };
+
+  const handleDateSelect = (date: Date) => {
+    setCurrentDate(date);
+  };
+
   const filteredTransactions = getFilteredTransactions(transactions, currentDate, viewType);
 
   return (
     <div className="min-h-screen bg-background pb-32">
       {/* Header */}
-      <header className="sticky top-0 z-10 bg-background/80 backdrop-blur-md border-b border-border">
-        <div className="max-w-2xl mx-auto px-4 py-4 flex items-center justify-end gap-2">
-          <ThemeToggle />
+      <header className="bg-background border-b border-border">
+        <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
+          <PeriodSelector
+            currentDate={currentDate}
+            viewType={viewType}
+            onPrevious={handlePrevious}
+            onNext={handleNext}
+            onDateSelect={handleDateSelect}
+          />
           <SettingsSheet onSettingsChange={handleSettingsChange} />
         </div>
       </header>
 
       {/* Main Content */}
       <main className="max-w-2xl mx-auto px-4 py-6 space-y-6">
-        <PeriodSelector
-          currentDate={currentDate}
-          viewType={viewType}
-          onPrevious={handlePrevious}
-          onNext={handleNext}
-          onDateSelect={setCurrentDate}
-        />
         <BalanceSummary 
           transactions={filteredTransactions}
           onExpenseClick={handleExpenseClick}
@@ -159,6 +168,7 @@ const Index = () => {
         onAdd={handleAddTransaction}
         onDelete={handleDeleteTransaction}
         editingTransaction={editingTransaction}
+        initialType={transactionType}
       />
 
       <TransactionDetailSheet
@@ -168,6 +178,7 @@ const Index = () => {
         filterType={detailFilter.type}
         filterCategory={detailFilter.category}
         onEdit={handleEditTransaction}
+        onAddClick={handleDetailSheetAddClick}
         defaultTab={detailFilter.category ? "by-category" : undefined}
         defaultOpenCategory={detailFilter.category}
       />
