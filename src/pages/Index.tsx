@@ -28,6 +28,7 @@ const Index = () => {
   const [detailSheetOpen, setDetailSheetOpen] = useState(false);
   const [detailFilter, setDetailFilter] = useState<{ type?: 'expense' | 'income'; category?: string }>({});
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
+  const [currency, setCurrency] = useState('₹');
 
   // Redirect to auth if not authenticated
   useEffect(() => {
@@ -45,13 +46,22 @@ const Index = () => {
       setTransactions(loaded);
       const settings = await loadSettings();
       setViewType(settings.defaultView);
+      setCurrency(settings.currency.symbol);
     };
     loadData();
   }, [refreshKey, user]);
 
-  // Real-time sync
+  // Real-time sync with immediate state updates
   useRealtimeSync(
-    () => setRefreshKey(prev => prev + 1),
+    (payload) => {
+      if (payload.eventType === 'INSERT') {
+        setTransactions(prev => [payload.new, ...prev]);
+      } else if (payload.eventType === 'UPDATE') {
+        setTransactions(prev => prev.map(t => t.id === payload.new.id ? payload.new : t));
+      } else if (payload.eventType === 'DELETE') {
+        setTransactions(prev => prev.filter(t => t.id !== payload.old.id));
+      }
+    },
     () => setRefreshKey(prev => prev + 1),
     () => setRefreshKey(prev => prev + 1)
   );
@@ -91,7 +101,7 @@ const Index = () => {
       await saveTransactions(updated);
       
       toast.success('Transaction added', {
-        description: `${newTransaction.type === 'income' ? '+' : '-'}$${newTransaction.amount.toFixed(2)} ${newTransaction.note}`,
+        description: `${newTransaction.type === 'income' ? '+' : '-'}${currency}${newTransaction.amount.toFixed(2)} ${newTransaction.note}`,
       });
     }
   };

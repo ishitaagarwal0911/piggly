@@ -53,7 +53,7 @@ export const AddTransactionDialog = ({
     }
   }, [editingTransaction]);
 
-  // Reset form when dialog closes
+  // Reset form when dialog closes or sync type when opening
   useEffect(() => {
     if (!open) {
       setAmount('');
@@ -66,6 +66,11 @@ export const AddTransactionDialog = ({
       setFirstOperand(null);
       setOperator(null);
       setWaitingForSecondOperand(false);
+    } else {
+      // When opening, use initialType
+      setType(initialType);
+      const defaultCategory = allCategories.find(c => c.type === initialType);
+      setCategory(defaultCategory?.id || '');
     }
   }, [open, allCategories, initialType]);
 

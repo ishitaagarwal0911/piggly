@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 
-export const useRealtimeSync = (onTransactionChange: () => void, onCategoryChange: () => void, onSettingsChange: () => void) => {
+export const useRealtimeSync = (onTransactionChange: (payload: any) => void, onCategoryChange: () => void, onSettingsChange: () => void) => {
   const { user } = useAuth();
 
   useEffect(() => {
@@ -19,8 +19,8 @@ export const useRealtimeSync = (onTransactionChange: () => void, onCategoryChang
           table: 'transactions',
           filter: `user_id=eq.${user.id}`,
         },
-        () => {
-          onTransactionChange();
+        (payload) => {
+          onTransactionChange(payload);
         }
       )
       .subscribe();
