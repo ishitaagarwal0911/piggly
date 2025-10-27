@@ -9,7 +9,7 @@ import { CategoryManager } from './CategoryManager';
 import { loadSettings, saveSettings } from '@/lib/settings';
 import { CURRENCY_OPTIONS } from '@/types/settings';
 import { exportData, importData, importCSV } from '@/lib/storage';
-import { Menu, Download, Upload, X } from 'lucide-react';
+import { Menu, Download, Upload } from 'lucide-react';
 import { toast } from 'sonner';
 import { ViewType } from '@/lib/dateUtils';
 
@@ -96,12 +96,7 @@ export const SettingsSheet = ({ onSettingsChange }: SettingsSheetProps) => {
         </Button>
       </SheetTrigger>
       <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
-        <SheetClose className="absolute left-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-secondary">
-          <X className="h-4 w-4" />
-          <span className="sr-only">Close</span>
-        </SheetClose>
-        
-        <SheetHeader className="pl-8">
+        <SheetHeader>
           <SheetTitle>Settings</SheetTitle>
         </SheetHeader>
 

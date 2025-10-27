@@ -101,6 +101,14 @@ const Index = () => {
     }
   };
 
+  const handleDeleteTransaction = (id: string) => {
+    const updated = transactions.filter(t => t.id !== id);
+    setTransactions(updated);
+    saveTransactions(updated);
+    toast.success('Transaction deleted');
+    setEditingTransaction(null);
+  };
+
   const filteredTransactions = getFilteredTransactions(transactions, currentDate, viewType);
 
   return (
@@ -134,7 +142,7 @@ const Index = () => {
       </main>
 
       {/* Floating Add Button */}
-      <div className="fixed bottom-8 left-0 right-0 flex justify-center pointer-events-none">
+      <div className="fixed bottom-8 left-0 right-0 flex justify-center pointer-events-none z-50">
         <Button
           size="lg"
           className="rounded-full w-14 h-14 shadow-notion-hover pointer-events-auto transition-transform hover:scale-105 active:scale-95"
@@ -149,6 +157,7 @@ const Index = () => {
         open={showAddDialog}
         onOpenChange={handleDialogClose}
         onAdd={handleAddTransaction}
+        onDelete={handleDeleteTransaction}
         editingTransaction={editingTransaction}
       />
 

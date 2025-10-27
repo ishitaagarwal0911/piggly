@@ -14,6 +14,7 @@ interface AddTransactionDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onAdd: (transaction: Omit<Transaction, 'id' | 'createdAt'>) => void;
+  onDelete?: (id: string) => void;
   editingTransaction?: Transaction | null;
 }
 
@@ -21,6 +22,7 @@ export const AddTransactionDialog = ({
   open,
   onOpenChange,
   onAdd,
+  onDelete,
   editingTransaction,
 }: AddTransactionDialogProps) => {
   const allCategories = categories();
@@ -30,6 +32,9 @@ export const AddTransactionDialog = ({
   const [note, setNote] = useState(editingTransaction?.note || '');
   const [date, setDate] = useState<Date>(editingTransaction?.date || new Date());
   const [isFirstKeystroke, setIsFirstKeystroke] = useState(false);
+  const [firstOperand, setFirstOperand] = useState<number | null>(null);
+  const [operator, setOperator] = useState<string | null>(null);
+  const [waitingForSecondOperand, setWaitingForSecondOperand] = useState(false);
 
   // Sync form state when editingTransaction changes
   useEffect(() => {
@@ -39,7 +44,10 @@ export const AddTransactionDialog = ({
       setCategory(editingTransaction.category);
       setNote(editingTransaction.note);
       setDate(editingTransaction.date);
-      setIsFirstKeystroke(true); // Enable first keystroke replacement for editing
+      setIsFirstKeystroke(true);
+      setFirstOperand(null);
+      setOperator(null);
+      setWaitingForSecondOperand(false);
     }
   }, [editingTransaction]);
 
@@ -53,12 +61,26 @@ export const AddTransactionDialog = ({
       setCategory(defaultCategory?.id || '');
       setType('expense');
       setIsFirstKeystroke(false);
+      setFirstOperand(null);
+      setOperator(null);
+      setWaitingForSecondOperand(false);
     }
   }, [open, allCategories]);
 
+  const performCalculation = (a: number, b: number, op: string): number => {
+    switch (op) {
+      case '+': return a + b;
+      case '-': return a - b;
+      case '×': return a * b;
+      default: return b;
+    }
+  };
+
   const handleNumberClick = (num: string) => {
-    // If editing and this is the first keystroke, replace the amount instead of appending
-    if (isFirstKeystroke) {
+    if (waitingForSecondOperand) {
+      setAmount(num);
+      setWaitingForSecondOperand(false);
+    } else if (isFirstKeystroke) {
       setAmount(num);
       setIsFirstKeystroke(false);
     } else {
@@ -68,7 +90,44 @@ export const AddTransactionDialog = ({
 
   const handleBackspace = () => {
     setAmount(prev => prev.slice(0, -1));
-    setIsFirstKeystroke(false); // Disable first keystroke mode after backspace
+    setIsFirstKeystroke(false);
+  };
+
+  const handleDecimal = () => {
+    if (waitingForSecondOperand) {
+      setAmount('0.');
+      setWaitingForSecondOperand(false);
+    } else if (!amount.includes('.')) {
+      setAmount(prev => (prev || '0') + '.');
+    }
+  };
+
+  const handleOperatorClick = (op: string) => {
+    const currentValue = parseFloat(amount) || 0;
+    
+    if (firstOperand === null) {
+      setFirstOperand(currentValue);
+      setOperator(op);
+      setWaitingForSecondOperand(true);
+    } else if (operator) {
+      const result = performCalculation(firstOperand, currentValue, operator);
+      setAmount(result.toString());
+      setFirstOperand(result);
+      setOperator(op);
+      setWaitingForSecondOperand(true);
+    }
+    setIsFirstKeystroke(false);
+  };
+
+  const handleEquals = () => {
+    if (firstOperand !== null && operator) {
+      const currentValue = parseFloat(amount) || 0;
+      const result = performCalculation(firstOperand, currentValue, operator);
+      setAmount(result.toString());
+      setFirstOperand(null);
+      setOperator(null);
+      setWaitingForSecondOperand(false);
+    }
   };
 
   const handleSubmit = () => {
@@ -91,16 +150,23 @@ export const AddTransactionDialog = ({
     onOpenChange(false);
   };
 
+  const handleDelete = () => {
+    if (editingTransaction && onDelete) {
+      onDelete(editingTransaction.id);
+      onOpenChange(false);
+    }
+  };
+
   const displayCategories = allCategories.filter(cat => cat.type === type);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle>{editingTransaction ? 'Edit Transaction' : 'Add Transaction'}</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-6">
+        <div className="overflow-y-auto flex-1 space-y-6 px-1">
           {/* Type Selector */}
           <Tabs value={type} onValueChange={(v) => setType(v as TransactionType)}>
             <TabsList className="grid w-full grid-cols-2">
@@ -119,23 +185,25 @@ export const AddTransactionDialog = ({
 
           {/* Numeric Keypad */}
           <div className="grid grid-cols-4 gap-2">
-            {['7', '8', '9', '⌫', '4', '5', '6', '×', '1', '2', '3', '+', '00', '0', '-', '='].map((btn, idx) => {
+            {['7', '8', '9', '⌫', '4', '5', '6', '×', '1', '2', '3', '+', '.', '0', '=', '-'].map((btn, idx) => {
               const isBackspace = btn === '⌫';
-              const isNumber = !isNaN(Number(btn)) || btn === '00';
+              const isDecimal = btn === '.';
+              const isEquals = btn === '=';
+              const isOperator = ['+', '-', '×'].includes(btn);
+              const isNumber = !isNaN(Number(btn));
               
               return (
                 <Button
                   key={idx}
-                  variant={isNumber || isBackspace ? "secondary" : "outline"}
+                  variant={isOperator || isEquals ? "default" : "secondary"}
                   className="h-12 text-lg font-medium"
                   onClick={() => {
-                    if (isBackspace) {
-                      handleBackspace();
-                    } else if (isNumber) {
-                      handleNumberClick(btn);
-                    }
+                    if (isBackspace) handleBackspace();
+                    else if (isDecimal) handleDecimal();
+                    else if (isEquals) handleEquals();
+                    else if (isOperator) handleOperatorClick(btn);
+                    else if (isNumber) handleNumberClick(btn);
                   }}
-                  disabled={!isNumber && !isBackspace}
                 >
                   {btn}
                 </Button>
@@ -199,10 +267,12 @@ export const AddTransactionDialog = ({
                   initialFocus
                 />
               </PopoverContent>
-            </Popover>
+          </Popover>
           </div>
+        </div>
 
-          {/* Submit Button */}
+        {/* Sticky Footer */}
+        <div className="sticky bottom-0 bg-background border-t pt-4 space-y-2 mt-4">
           <Button
             className="w-full"
             size="lg"
@@ -211,6 +281,17 @@ export const AddTransactionDialog = ({
           >
             {editingTransaction ? 'Save Changes' : 'Add Transaction'}
           </Button>
+          
+          {editingTransaction && onDelete && (
+            <Button
+              variant="destructive"
+              className="w-full"
+              size="lg"
+              onClick={handleDelete}
+            >
+              Delete Transaction
+            </Button>
+          )}
         </div>
       </DialogContent>
     </Dialog>
