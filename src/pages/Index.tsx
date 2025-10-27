@@ -21,6 +21,7 @@ const Index = () => {
   const [refreshKey, setRefreshKey] = useState(0);
   const [detailSheetOpen, setDetailSheetOpen] = useState(false);
   const [detailFilter, setDetailFilter] = useState<{ type?: 'expense' | 'income'; category?: string }>({});
+  const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
 
   useEffect(() => {
     const loaded = loadTransactions();
@@ -30,19 +31,33 @@ const Index = () => {
   }, [refreshKey]);
 
   const handleAddTransaction = (newTransaction: Omit<Transaction, 'id' | 'createdAt'>) => {
-    const transaction: Transaction = {
-      ...newTransaction,
-      id: crypto.randomUUID(),
-      createdAt: new Date(),
-    };
+    if (editingTransaction) {
+      // Update existing transaction
+      const updated = transactions.map(t =>
+        t.id === editingTransaction.id
+          ? { ...editingTransaction, ...newTransaction }
+          : t
+      );
+      setTransactions(updated);
+      saveTransactions(updated);
+      toast.success('Transaction updated');
+      setEditingTransaction(null);
+    } else {
+      // Add new transaction
+      const transaction: Transaction = {
+        ...newTransaction,
+        id: crypto.randomUUID(),
+        createdAt: new Date(),
+      };
 
-    const updated = [transaction, ...transactions];
-    setTransactions(updated);
-    saveTransactions(updated);
-    
-    toast.success('Transaction added', {
-      description: `${newTransaction.type === 'income' ? '+' : '-'}$${newTransaction.amount.toFixed(2)} ${newTransaction.note}`,
-    });
+      const updated = [transaction, ...transactions];
+      setTransactions(updated);
+      saveTransactions(updated);
+      
+      toast.success('Transaction added', {
+        description: `${newTransaction.type === 'income' ? '+' : '-'}$${newTransaction.amount.toFixed(2)} ${newTransaction.note}`,
+      });
+    }
   };
 
   const handlePrevious = () => {
@@ -70,6 +85,19 @@ const Index = () => {
   const handleIncomeClick = () => {
     setDetailFilter({ type: 'income' });
     setDetailSheetOpen(true);
+  };
+
+  const handleEditTransaction = (transaction: Transaction) => {
+    setEditingTransaction(transaction);
+    setShowAddDialog(true);
+    setDetailSheetOpen(false);
+  };
+
+  const handleDialogClose = (open: boolean) => {
+    setShowAddDialog(open);
+    if (!open) {
+      setEditingTransaction(null);
+    }
   };
 
   const filteredTransactions = getFilteredTransactions(transactions, currentDate, viewType);
@@ -118,8 +146,9 @@ const Index = () => {
       {/* Add Transaction Dialog */}
       <AddTransactionDialog
         open={showAddDialog}
-        onOpenChange={setShowAddDialog}
+        onOpenChange={handleDialogClose}
         onAdd={handleAddTransaction}
+        editingTransaction={editingTransaction}
       />
 
       <TransactionDetailSheet
@@ -128,6 +157,7 @@ const Index = () => {
         transactions={filteredTransactions}
         filterType={detailFilter.type}
         filterCategory={detailFilter.category}
+        onEdit={handleEditTransaction}
       />
     </div>
   );

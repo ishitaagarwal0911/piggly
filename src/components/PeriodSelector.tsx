@@ -25,22 +25,28 @@ export const PeriodSelector = ({
         <ChevronLeft className="w-5 h-5" />
       </Button>
 
-      <Popover>
-        <PopoverTrigger asChild>
-          <Button variant="ghost" className="text-lg font-semibold">
-            {formatPeriod(currentDate, viewType)}
-            <CalendarIcon className="ml-2 w-4 h-4" />
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent className="w-auto p-0" align="center">
-          <Calendar
-            mode="single"
-            selected={currentDate}
-            onSelect={(date) => date && onDateSelect(date)}
-            initialFocus
-          />
-        </PopoverContent>
-      </Popover>
+      {viewType === 'monthly' ? (
+        <div className="text-lg font-semibold">
+          {formatPeriod(currentDate, viewType)}
+        </div>
+      ) : (
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button variant="ghost" className="text-lg font-semibold">
+              {formatPeriod(currentDate, viewType)}
+              <CalendarIcon className="ml-2 w-4 h-4" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0" align="center">
+            <Calendar
+              mode="single"
+              selected={currentDate}
+              onSelect={(date) => date && onDateSelect(date)}
+              initialFocus
+            />
+          </PopoverContent>
+        </Popover>
+      )}
 
       <Button variant="ghost" size="sm" onClick={onNext}>
         <ChevronRight className="w-5 h-5" />

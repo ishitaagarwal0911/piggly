@@ -15,7 +15,6 @@ interface TransactionDetailSheetProps {
   filterType?: 'expense' | 'income';
   filterCategory?: string;
   onEdit?: (transaction: Transaction) => void;
-  onDelete?: (id: string) => void;
 }
 
 export const TransactionDetailSheet = ({
@@ -24,6 +23,7 @@ export const TransactionDetailSheet = ({
   transactions,
   filterType,
   filterCategory,
+  onEdit,
 }: TransactionDetailSheetProps) => {
   const settings = loadSettings();
   const currency = settings.currency.symbol;
@@ -117,6 +117,7 @@ export const TransactionDetailSheet = ({
                             return (
                               <div
                                 key={t.id}
+                                onClick={() => onEdit?.(t)}
                                 className="flex justify-between items-start p-3 rounded-lg bg-secondary/30 hover:bg-secondary/50 transition-smooth cursor-pointer"
                               >
                                 <div className="flex items-start gap-2 flex-1">
@@ -176,6 +177,7 @@ export const TransactionDetailSheet = ({
                           {txns.map(t => (
                             <div
                               key={t.id}
+                              onClick={() => onEdit?.(t)}
                               className="flex justify-between items-start p-3 rounded-lg bg-secondary/30 hover:bg-secondary/50 transition-smooth cursor-pointer"
                             >
                               <div className="flex-1">

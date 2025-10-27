@@ -70,8 +70,9 @@ export const ExpenseChart = ({ transactions, onCategoryClick }: ExpenseChartProp
               <path
                 key={cat.category}
                 d={`M 50 50 L ${startX} ${startY} A 40 40 0 ${largeArcFlag} 1 ${endX} ${endY} Z`}
-                className="transition-all hover:opacity-80"
+                className="transition-all hover:opacity-80 cursor-pointer"
                 style={{ fill: cat.info.color }}
+                onClick={() => onCategoryClick?.(cat.category)}
               />
             );
             
@@ -92,7 +93,11 @@ export const ExpenseChart = ({ transactions, onCategoryClick }: ExpenseChartProp
       {/* Category List */}
       <div className="space-y-2">
         {expensesByCategory.map(cat => (
-          <div key={cat.category} className="flex items-center justify-between">
+          <div 
+            key={cat.category} 
+            className="flex items-center justify-between cursor-pointer hover:bg-secondary/30 p-2 rounded-lg transition-smooth"
+            onClick={() => onCategoryClick?.(cat.category)}
+          >
             <div className="flex items-center gap-2 flex-1">
               <div 
                 className="w-3 h-3 rounded-full flex-shrink-0"

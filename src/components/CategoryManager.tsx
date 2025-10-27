@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Pencil, Trash2, Plus } from 'lucide-react';
+import { Trash2, Plus } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface CategoryManagerProps {
@@ -42,8 +42,11 @@ export const CategoryManager = ({ onCategoriesChange }: CategoryManagerProps) =>
   };
 
   const handleAdd = () => {
+    setName('');
+    setIcon('');
+    setType('expense');
+    setEditingCategory(null);
     setIsAddingNew(true);
-    resetForm();
   };
 
   const handleSave = () => {
@@ -92,7 +95,8 @@ export const CategoryManager = ({ onCategoriesChange }: CategoryManagerProps) =>
           {expenseCategories.map((cat) => (
             <div
               key={cat.id}
-              className="flex items-center justify-between p-3 rounded-lg bg-secondary/50 hover:bg-secondary transition-smooth"
+              onClick={() => handleEdit(cat)}
+              className="flex items-center justify-between p-3 rounded-lg bg-secondary/50 hover:bg-secondary transition-smooth cursor-pointer relative"
             >
               <div className="flex items-center gap-3">
                 <div
@@ -111,24 +115,17 @@ export const CategoryManager = ({ onCategoriesChange }: CategoryManagerProps) =>
                   </div>
                 </div>
               </div>
-              <div className="flex gap-2">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => handleEdit(cat)}
-                  className="transition-smooth"
-                >
-                  <Pencil className="w-4 h-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setDeletingCategory(cat)}
-                  className="transition-smooth"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </Button>
-              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setDeletingCategory(cat);
+                }}
+                className="transition-smooth"
+              >
+                <Trash2 className="w-4 h-4" />
+              </Button>
             </div>
           ))}
         </div>
@@ -141,7 +138,8 @@ export const CategoryManager = ({ onCategoriesChange }: CategoryManagerProps) =>
           {incomeCategories.map((cat) => (
             <div
               key={cat.id}
-              className="flex items-center justify-between p-3 rounded-lg bg-secondary/50 hover:bg-secondary transition-smooth"
+              onClick={() => handleEdit(cat)}
+              className="flex items-center justify-between p-3 rounded-lg bg-secondary/50 hover:bg-secondary transition-smooth cursor-pointer relative"
             >
               <div className="flex items-center gap-3">
                 <div
@@ -160,24 +158,17 @@ export const CategoryManager = ({ onCategoriesChange }: CategoryManagerProps) =>
                   </div>
                 </div>
               </div>
-              <div className="flex gap-2">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => handleEdit(cat)}
-                  className="transition-smooth"
-                >
-                  <Pencil className="w-4 h-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setDeletingCategory(cat)}
-                  className="transition-smooth"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </Button>
-              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setDeletingCategory(cat);
+                }}
+                className="transition-smooth"
+              >
+                <Trash2 className="w-4 h-4" />
+              </Button>
             </div>
           ))}
         </div>

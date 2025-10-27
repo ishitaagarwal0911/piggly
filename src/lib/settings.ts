@@ -63,9 +63,9 @@ const DEFAULT_CATEGORIES: CustomCategory[] = [
 
 const DEFAULT_SETTINGS: AppSettings = {
   categories: DEFAULT_CATEGORIES,
-  currency: CURRENCY_OPTIONS[0], // USD
+  currency: CURRENCY_OPTIONS.find(c => c.code === 'INR') || CURRENCY_OPTIONS[0], // INR
   defaultView: 'monthly',
-  theme: 'system',
+  theme: 'light',
 };
 
 export const saveSettings = (settings: AppSettings): void => {

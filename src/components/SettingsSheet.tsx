@@ -5,12 +5,12 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { Switch } from '@/components/ui/switch';
 import { CategoryManager } from './CategoryManager';
 import { loadSettings, saveSettings } from '@/lib/settings';
 import { CURRENCY_OPTIONS, CurrencyOption } from '@/types/settings';
 import { exportData, importData, importCSV } from '@/lib/storage';
-import { Menu, Download, Upload, Moon, Sun, Monitor } from 'lucide-react';
+import { Menu, Download, Upload, Moon, Sun } from 'lucide-react';
 import { toast } from 'sonner';
 import { ViewType } from '@/lib/dateUtils';
 import { useTheme } from 'next-themes';
@@ -121,81 +121,58 @@ export const SettingsSheet = ({ onSettingsChange }: SettingsSheetProps) => {
             <CategoryManager onCategoriesChange={onSettingsChange} />
           </TabsContent>
 
-          <TabsContent value="preferences" className="mt-6">
-            <Accordion type="multiple" className="space-y-2">
-              <AccordionItem value="currency" className="border rounded-lg px-4 transition-smooth">
-                <AccordionTrigger className="hover:no-underline py-4">
-                  <span className="text-sm font-medium">Currency</span>
-                </AccordionTrigger>
-                <AccordionContent className="pb-4">
-                  <Select value={settings.currency.code} onValueChange={handleCurrencyChange}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {CURRENCY_OPTIONS.map((currency) => (
-                        <SelectItem key={currency.code} value={currency.code}>
-                          {currency.symbol} {currency.name} ({currency.code})
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </AccordionContent>
-              </AccordionItem>
+          <TabsContent value="preferences" className="mt-6 space-y-6">
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">Currency</Label>
+              <Select value={settings.currency.code} onValueChange={handleCurrencyChange}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {CURRENCY_OPTIONS.map((currency) => (
+                    <SelectItem key={currency.code} value={currency.code}>
+                      {currency.symbol} {currency.name} ({currency.code})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-              <AccordionItem value="view" className="border rounded-lg px-4 transition-smooth">
-                <AccordionTrigger className="hover:no-underline py-4">
-                  <span className="text-sm font-medium">Default View</span>
-                </AccordionTrigger>
-                <AccordionContent className="pb-4">
-                  <RadioGroup value={settings.defaultView} onValueChange={(v) => handleViewChange(v as ViewType)}>
-                    <div className="flex items-center space-x-2 py-2">
-                      <RadioGroupItem value="daily" id="daily" />
-                      <Label htmlFor="daily" className="font-normal cursor-pointer">Daily</Label>
-                    </div>
-                    <div className="flex items-center space-x-2 py-2">
-                      <RadioGroupItem value="weekly" id="weekly" />
-                      <Label htmlFor="weekly" className="font-normal cursor-pointer">Weekly</Label>
-                    </div>
-                    <div className="flex items-center space-x-2 py-2">
-                      <RadioGroupItem value="monthly" id="monthly" />
-                      <Label htmlFor="monthly" className="font-normal cursor-pointer">Monthly</Label>
-                    </div>
-                  </RadioGroup>
-                </AccordionContent>
-              </AccordionItem>
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">Default View</Label>
+              <RadioGroup value={settings.defaultView} onValueChange={(v) => handleViewChange(v as ViewType)}>
+                <div className="flex items-center space-x-2 py-2">
+                  <RadioGroupItem value="daily" id="daily" />
+                  <Label htmlFor="daily" className="font-normal cursor-pointer">Daily</Label>
+                </div>
+                <div className="flex items-center space-x-2 py-2">
+                  <RadioGroupItem value="weekly" id="weekly" />
+                  <Label htmlFor="weekly" className="font-normal cursor-pointer">Weekly</Label>
+                </div>
+                <div className="flex items-center space-x-2 py-2">
+                  <RadioGroupItem value="monthly" id="monthly" />
+                  <Label htmlFor="monthly" className="font-normal cursor-pointer">Monthly</Label>
+                </div>
+              </RadioGroup>
+            </div>
 
-              <AccordionItem value="theme" className="border rounded-lg px-4 transition-smooth">
-                <AccordionTrigger className="hover:no-underline py-4">
-                  <span className="text-sm font-medium">Theme</span>
-                </AccordionTrigger>
-                <AccordionContent className="pb-4">
-                  <RadioGroup value={theme} onValueChange={handleThemeChange}>
-                    <div className="flex items-center space-x-2 py-2">
-                      <RadioGroupItem value="light" id="light" />
-                      <Label htmlFor="light" className="font-normal cursor-pointer flex items-center gap-2">
-                        <Sun className="w-4 h-4" />
-                        Light
-                      </Label>
-                    </div>
-                    <div className="flex items-center space-x-2 py-2">
-                      <RadioGroupItem value="dark" id="dark" />
-                      <Label htmlFor="dark" className="font-normal cursor-pointer flex items-center gap-2">
-                        <Moon className="w-4 h-4" />
-                        Dark
-                      </Label>
-                    </div>
-                    <div className="flex items-center space-x-2 py-2">
-                      <RadioGroupItem value="system" id="system" />
-                      <Label htmlFor="system" className="font-normal cursor-pointer flex items-center gap-2">
-                        <Monitor className="w-4 h-4" />
-                        System
-                      </Label>
-                    </div>
-                  </RadioGroup>
-                </AccordionContent>
-              </AccordionItem>
-            </Accordion>
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">Theme</Label>
+              <div className="flex items-center justify-between p-3 rounded-lg border">
+                <div className="flex items-center gap-2">
+                  <Sun className="w-4 h-4 text-muted-foreground" />
+                  <span className="text-sm">Light</span>
+                </div>
+                <Switch
+                  checked={theme === 'dark'}
+                  onCheckedChange={(checked) => handleThemeChange(checked ? 'dark' : 'light')}
+                />
+                <div className="flex items-center gap-2">
+                  <span className="text-sm">Dark</span>
+                  <Moon className="w-4 h-4 text-muted-foreground" />
+                </div>
+              </div>
+            </div>
           </TabsContent>
 
           <TabsContent value="data" className="space-y-4 mt-6">

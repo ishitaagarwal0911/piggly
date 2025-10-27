@@ -14,19 +14,21 @@ interface AddTransactionDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onAdd: (transaction: Omit<Transaction, 'id' | 'createdAt'>) => void;
+  editingTransaction?: Transaction | null;
 }
 
 export const AddTransactionDialog = ({
   open,
   onOpenChange,
   onAdd,
+  editingTransaction,
 }: AddTransactionDialogProps) => {
   const allCategories = categories();
-  const [type, setType] = useState<TransactionType>('expense');
-  const [amount, setAmount] = useState('');
-  const [category, setCategory] = useState<string>(allCategories.find(c => c.type === 'expense')?.id || '');
-  const [note, setNote] = useState('');
-  const [date, setDate] = useState<Date>(new Date());
+  const [type, setType] = useState<TransactionType>(editingTransaction?.type || 'expense');
+  const [amount, setAmount] = useState(editingTransaction?.amount.toString() || '');
+  const [category, setCategory] = useState<string>(editingTransaction?.category || allCategories.find(c => c.type === 'expense')?.id || '');
+  const [note, setNote] = useState(editingTransaction?.note || '');
+  const [date, setDate] = useState<Date>(editingTransaction?.date || new Date());
 
   const handleNumberClick = (num: string) => {
     if (num === '.' && amount.includes('.')) return;
@@ -64,7 +66,7 @@ export const AddTransactionDialog = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Add Transaction</DialogTitle>
+          <DialogTitle>{editingTransaction ? 'Edit Transaction' : 'Add Transaction'}</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-6">
@@ -171,7 +173,7 @@ export const AddTransactionDialog = ({
             onClick={handleSubmit}
             disabled={!amount || parseFloat(amount) === 0 || !note.trim()}
           >
-            Add Transaction
+            {editingTransaction ? 'Save Changes' : 'Add Transaction'}
           </Button>
         </div>
       </DialogContent>
