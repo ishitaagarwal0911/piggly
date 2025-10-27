@@ -53,8 +53,11 @@ export const SettingsSheet = ({ onSettingsChange }: SettingsSheetProps) => {
     await saveSettings(newSettings);
     setSettings(newSettings);
     toast.success('Default view updated');
-    // Pass the new view directly to parent
-    onSettingsChange(view);
+    
+    // Small delay to ensure DB write propagates before triggering refresh
+    setTimeout(() => {
+      onSettingsChange(view);
+    }, 150);
   };
 
   const handleExport = async () => {

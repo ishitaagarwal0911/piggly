@@ -47,7 +47,13 @@ const Index = () => {
       const loaded = await loadTransactions();
       setTransactions(loaded);
       const settings = await loadSettings();
-      setViewType(settings.defaultView);
+      
+      // Only set viewType on INITIAL load (refreshKey === 0), not on subsequent refreshes
+      // This prevents race conditions when settings are updated
+      if (refreshKey === 0) {
+        setViewType(settings.defaultView);
+      }
+      
       setCurrency(settings.currency.symbol);
       setDataLoading(false);
     };

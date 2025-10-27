@@ -166,8 +166,11 @@ export const addCategory = async (category: Omit<CustomCategory, 'id' | 'order' 
   const order = existingCategories?.length || 0;
   const color = getColorForEmoji(category.icon);
 
+  // Generate string ID instead of UUID for consistency
+  const id = `custom_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
   await supabase.from('categories').insert({
-    id: crypto.randomUUID(),
+    id: id,
     user_id: user.id,
     name: category.name,
     icon: category.icon,
@@ -194,12 +197,12 @@ export const updateCategory = async (category: CustomCategory): Promise<void> =>
     .eq('id', category.id)
     .eq('user_id', user.id);
 
-  // If no rows updated, insert new category with NEW UUID (for default categories being edited first time)
+  // If no rows updated, insert new category (for default categories being edited first time)
   if (count === 0) {
     const { error: insertError } = await supabase
       .from('categories')
       .insert({
-        id: crypto.randomUUID(), // Generate NEW UUID instead of using category.id
+        id: category.id, // Keep original string ID to maintain transaction relationships
         user_id: user.id,
         name: category.name,
         icon: category.icon,
