@@ -20,7 +20,7 @@ export const PeriodSelector = ({
   onDateSelect,
 }: PeriodSelectorProps) => {
   return (
-    <div className="flex items-center justify-between bg-card rounded-xl p-4 shadow-notion">
+    <div className="flex items-center justify-center gap-2">
       <Button variant="ghost" size="sm" onClick={onPrevious}>
         <ChevronLeft className="w-5 h-5" />
       </Button>
