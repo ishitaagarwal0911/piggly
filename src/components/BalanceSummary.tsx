@@ -1,11 +1,15 @@
 import { Transaction } from '@/types/transaction';
 import { TrendingUp, TrendingDown } from 'lucide-react';
+import { loadSettings } from '@/lib/settings';
 
 interface BalanceSummaryProps {
   transactions: Transaction[];
 }
 
 export const BalanceSummary = ({ transactions }: BalanceSummaryProps) => {
+  const settings = loadSettings();
+  const currency = settings.currency.symbol;
+  
   const income = transactions
     .filter(t => t.type === 'income')
     .reduce((sum, t) => sum + t.amount, 0);
@@ -21,7 +25,7 @@ export const BalanceSummary = ({ transactions }: BalanceSummaryProps) => {
       <div className="text-center mb-6">
         <p className="text-sm text-muted-foreground mb-2">Current Balance</p>
         <h2 className="text-4xl font-semibold tracking-tight">
-          ${balance.toFixed(2)}
+          {currency}{balance.toFixed(2)}
         </h2>
       </div>
       
@@ -32,7 +36,7 @@ export const BalanceSummary = ({ transactions }: BalanceSummaryProps) => {
             <span className="text-xs text-muted-foreground">Income</span>
           </div>
           <p className="text-xl font-medium text-category-income">
-            ${income.toFixed(2)}
+            {currency}{income.toFixed(2)}
           </p>
         </div>
         
@@ -42,7 +46,7 @@ export const BalanceSummary = ({ transactions }: BalanceSummaryProps) => {
             <span className="text-xs text-muted-foreground">Expenses</span>
           </div>
           <p className="text-xl font-medium text-destructive">
-            ${expenses.toFixed(2)}
+            {currency}{expenses.toFixed(2)}
           </p>
         </div>
       </div>

@@ -1,0 +1,265 @@
+import { useState } from 'react';
+import { CustomCategory } from '@/types/settings';
+import { categories } from '@/lib/categories';
+import { addCategory, updateCategory, deleteCategory } from '@/lib/settings';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ColorPicker } from './ColorPicker';
+import { Pencil, Trash2, Plus } from 'lucide-react';
+import { toast } from 'sonner';
+
+interface CategoryManagerProps {
+  onCategoriesChange: () => void;
+}
+
+export const CategoryManager = ({ onCategoriesChange }: CategoryManagerProps) => {
+  const allCategories = categories();
+  const [editingCategory, setEditingCategory] = useState<CustomCategory | null>(null);
+  const [deletingCategory, setDeletingCategory] = useState<CustomCategory | null>(null);
+  const [isAddingNew, setIsAddingNew] = useState(false);
+  
+  // Form state
+  const [name, setName] = useState('');
+  const [icon, setIcon] = useState('');
+  const [color, setColor] = useState('#3B82F6');
+  const [type, setType] = useState<'expense' | 'income'>('expense');
+
+  const resetForm = () => {
+    setName('');
+    setIcon('');
+    setColor('#3B82F6');
+    setType('expense');
+    setEditingCategory(null);
+    setIsAddingNew(false);
+  };
+
+  const handleEdit = (category: CustomCategory) => {
+    setEditingCategory(category);
+    setName(category.name);
+    setIcon(category.icon);
+    setColor(category.color);
+    setType(category.type);
+    setIsAddingNew(false);
+  };
+
+  const handleAdd = () => {
+    setIsAddingNew(true);
+    resetForm();
+  };
+
+  const handleSave = () => {
+    if (!name.trim() || !icon.trim()) {
+      toast.error('Please fill all fields');
+      return;
+    }
+
+    if (editingCategory) {
+      updateCategory(editingCategory.id, { name: name.trim(), icon: icon.trim(), color, type });
+      toast.success('Category updated');
+    } else {
+      addCategory({ name: name.trim(), icon: icon.trim(), color, type });
+      toast.success('Category added');
+    }
+
+    onCategoriesChange();
+    resetForm();
+  };
+
+  const handleDelete = () => {
+    if (deletingCategory) {
+      deleteCategory(deletingCategory.id);
+      toast.success('Category deleted');
+      setDeletingCategory(null);
+      onCategoriesChange();
+    }
+  };
+
+  const expenseCategories = allCategories.filter(c => c.type === 'expense');
+  const incomeCategories = allCategories.filter(c => c.type === 'income');
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h3 className="text-lg font-semibold">Manage Categories</h3>
+        <Button onClick={handleAdd} size="sm">
+          <Plus className="w-4 h-4 mr-2" />
+          Add Category
+        </Button>
+      </div>
+
+      {/* Expense Categories */}
+      <div>
+        <h4 className="text-sm font-medium mb-3 text-muted-foreground">Expense Categories</h4>
+        <div className="space-y-2">
+          {expenseCategories.map((cat) => (
+            <div
+              key={cat.id}
+              className="flex items-center justify-between p-3 rounded-lg bg-secondary/50 hover:bg-secondary transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <div
+                  className="w-10 h-10 rounded-lg flex items-center justify-center text-xl"
+                  style={{ backgroundColor: `${cat.color}20` }}
+                >
+                  {cat.icon}
+                </div>
+                <div>
+                  <p className="font-medium">{cat.name}</p>
+                  <div className="flex items-center gap-2 mt-1">
+                    <div
+                      className="w-3 h-3 rounded-full"
+                      style={{ backgroundColor: cat.color }}
+                    />
+                    <span className="text-xs text-muted-foreground">{cat.color}</span>
+                  </div>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleEdit(cat)}
+                >
+                  <Pencil className="w-4 h-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setDeletingCategory(cat)}
+                >
+                  <Trash2 className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Income Categories */}
+      <div>
+        <h4 className="text-sm font-medium mb-3 text-muted-foreground">Income Categories</h4>
+        <div className="space-y-2">
+          {incomeCategories.map((cat) => (
+            <div
+              key={cat.id}
+              className="flex items-center justify-between p-3 rounded-lg bg-secondary/50 hover:bg-secondary transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <div
+                  className="w-10 h-10 rounded-lg flex items-center justify-center text-xl"
+                  style={{ backgroundColor: `${cat.color}20` }}
+                >
+                  {cat.icon}
+                </div>
+                <div>
+                  <p className="font-medium">{cat.name}</p>
+                  <div className="flex items-center gap-2 mt-1">
+                    <div
+                      className="w-3 h-3 rounded-full"
+                      style={{ backgroundColor: cat.color }}
+                    />
+                    <span className="text-xs text-muted-foreground">{cat.color}</span>
+                  </div>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleEdit(cat)}
+                >
+                  <Pencil className="w-4 h-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setDeletingCategory(cat)}
+                >
+                  <Trash2 className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Add/Edit Dialog */}
+      <Dialog open={isAddingNew || editingCategory !== null} onOpenChange={(open) => !open && resetForm()}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{editingCategory ? 'Edit Category' : 'Add Category'}</DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div>
+              <Label>Name</Label>
+              <Input
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="e.g., Groceries"
+                maxLength={30}
+              />
+            </div>
+
+            <div>
+              <Label>Icon (Emoji)</Label>
+              <Input
+                value={icon}
+                onChange={(e) => setIcon(e.target.value)}
+                placeholder="🛒"
+                maxLength={5}
+              />
+            </div>
+
+            <div>
+              <Label className="mb-3 block">Type</Label>
+              <Tabs value={type} onValueChange={(v) => setType(v as 'expense' | 'income')}>
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="expense">Expense</TabsTrigger>
+                  <TabsTrigger value="income">Income</TabsTrigger>
+                </TabsList>
+              </Tabs>
+            </div>
+
+            <div>
+              <Label className="mb-3 block">Color</Label>
+              <ColorPicker value={color} onChange={setColor} />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={resetForm}>
+              Cancel
+            </Button>
+            <Button onClick={handleSave}>
+              {editingCategory ? 'Save Changes' : 'Add Category'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation */}
+      <AlertDialog open={deletingCategory !== null} onOpenChange={(open) => !open && setDeletingCategory(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Category?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete "{deletingCategory?.name}"? This action cannot be undone.
+              Existing transactions with this category will remain unchanged.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
+  );
+};

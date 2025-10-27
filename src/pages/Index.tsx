@@ -2,28 +2,36 @@ import { useState, useEffect } from 'react';
 import { Transaction } from '@/types/transaction';
 import { BalanceSummary } from '@/components/BalanceSummary';
 import { ExpenseChart } from '@/components/ExpenseChart';
-import { TransactionList } from '@/components/TransactionList';
 import { AddTransactionDialog } from '@/components/AddTransactionDialog';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { SettingsSheet } from '@/components/SettingsSheet';
+import { PeriodSelector } from '@/components/PeriodSelector';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 import { loadTransactions, saveTransactions } from '@/lib/storage';
+import { loadSettings } from '@/lib/settings';
+import { getFilteredTransactions, getPreviousPeriod, getNextPeriod, ViewType } from '@/lib/dateUtils';
 import { toast } from 'sonner';
 
 const Index = () => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [showAddDialog, setShowAddDialog] = useState(false);
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const [viewType, setViewType] = useState<ViewType>('monthly');
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
     const loaded = loadTransactions();
     setTransactions(loaded);
-  }, []);
+    const settings = loadSettings();
+    setViewType(settings.defaultView);
+  }, [refreshKey]);
 
-  const handleAddTransaction = (newTransaction: Omit<Transaction, 'id' | 'date'>) => {
+  const handleAddTransaction = (newTransaction: Omit<Transaction, 'id' | 'createdAt'>) => {
     const transaction: Transaction = {
       ...newTransaction,
       id: crypto.randomUUID(),
-      date: new Date(),
+      createdAt: new Date(),
     };
 
     const updated = [transaction, ...transactions];
@@ -35,21 +43,44 @@ const Index = () => {
     });
   };
 
+  const handlePrevious = () => {
+    setCurrentDate(getPreviousPeriod(currentDate, viewType));
+  };
+
+  const handleNext = () => {
+    setCurrentDate(getNextPeriod(currentDate, viewType));
+  };
+
+  const handleSettingsChange = () => {
+    setRefreshKey(prev => prev + 1);
+  };
+
+  const filteredTransactions = getFilteredTransactions(transactions, currentDate, viewType);
+
   return (
     <div className="min-h-screen bg-background pb-24">
       {/* Header */}
       <header className="sticky top-0 z-10 bg-background/80 backdrop-blur-md border-b border-border">
         <div className="max-w-2xl mx-auto px-4 py-4 flex items-center justify-between">
           <h1 className="text-xl font-semibold">Expenses</h1>
-          <ThemeToggle />
+          <div className="flex items-center gap-2">
+            <SettingsSheet onSettingsChange={handleSettingsChange} />
+            <ThemeToggle />
+          </div>
         </div>
       </header>
 
       {/* Main Content */}
       <main className="max-w-2xl mx-auto px-4 py-6 space-y-6">
-        <BalanceSummary transactions={transactions} />
-        <ExpenseChart transactions={transactions} />
-        <TransactionList transactions={transactions} />
+        <PeriodSelector
+          currentDate={currentDate}
+          viewType={viewType}
+          onPrevious={handlePrevious}
+          onNext={handleNext}
+          onDateSelect={setCurrentDate}
+        />
+        <BalanceSummary transactions={filteredTransactions} />
+        <ExpenseChart transactions={filteredTransactions} />
       </main>
 
       {/* Floating Add Button */}

@@ -1,27 +1,18 @@
 export type TransactionType = 'expense' | 'income';
 
-export type CategoryType = 
-  | 'food' 
-  | 'transport' 
-  | 'shopping' 
-  | 'bills' 
-  | 'entertainment' 
-  | 'health' 
-  | 'income' 
-  | 'other';
-
 export interface Transaction {
   id: string;
   amount: number;
   type: TransactionType;
-  category: CategoryType;
+  category: string;
   note: string;
   date: Date;
+  createdAt: Date;
+  updatedAt?: Date;
 }
 
-export interface CategoryInfo {
-  id: CategoryType;
-  name: string;
-  icon: string;
-  color: string;
+export interface ExportData {
+  transactions: Transaction[];
+  exportDate: string;
+  version: string;
 }

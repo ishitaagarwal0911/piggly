@@ -1,16 +1,19 @@
 import { useState } from 'react';
-import { Transaction, TransactionType, CategoryType } from '@/types/transaction';
+import { Transaction, TransactionType } from '@/types/transaction';
 import { categories, getCategoryInfo } from '@/lib/categories';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { X } from 'lucide-react';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { CalendarIcon, X } from 'lucide-react';
+import { format } from 'date-fns';
 
 interface AddTransactionDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onAdd: (transaction: Omit<Transaction, 'id' | 'date'>) => void;
+  onAdd: (transaction: Omit<Transaction, 'id' | 'createdAt'>) => void;
 }
 
 export const AddTransactionDialog = ({
@@ -18,10 +21,12 @@ export const AddTransactionDialog = ({
   onOpenChange,
   onAdd,
 }: AddTransactionDialogProps) => {
+  const allCategories = categories();
   const [type, setType] = useState<TransactionType>('expense');
   const [amount, setAmount] = useState('');
-  const [category, setCategory] = useState<CategoryType>('food');
+  const [category, setCategory] = useState<string>(allCategories.find(c => c.type === 'expense')?.id || '');
   const [note, setNote] = useState('');
+  const [date, setDate] = useState<Date>(new Date());
 
   const handleNumberClick = (num: string) => {
     if (num === '.' && amount.includes('.')) return;
@@ -34,25 +39,26 @@ export const AddTransactionDialog = ({
   };
 
   const handleSubmit = () => {
-    if (!amount || parseFloat(amount) === 0 || !note.trim()) return;
+    if (!amount || parseFloat(amount) === 0 || !note.trim() || !category) return;
 
     onAdd({
       type,
       amount: parseFloat(amount),
       category,
       note: note.trim(),
+      date,
     });
 
     // Reset form
     setAmount('');
     setNote('');
-    setCategory('food');
+    setDate(new Date());
+    const defaultCategory = allCategories.find(c => c.type === 'expense');
+    setCategory(defaultCategory?.id || '');
     onOpenChange(false);
   };
 
-  const displayCategories = type === 'income' 
-    ? categories.filter(cat => cat.id === 'income')
-    : categories.filter(cat => cat.id !== 'income');
+  const displayCategories = allCategories.filter(cat => cat.type === type);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -74,7 +80,7 @@ export const AddTransactionDialog = ({
           <div className="text-center">
             <p className="text-sm text-muted-foreground mb-2">Amount</p>
             <div className="text-4xl font-semibold tracking-tight">
-              ${amount || '0'}
+              {amount || '0'}
             </div>
           </div>
 
@@ -115,7 +121,7 @@ export const AddTransactionDialog = ({
                   style={{
                     backgroundColor:
                       category === cat.id
-                        ? `hsl(var(--${cat.color}) / 0.15)`
+                        ? `${cat.color}15`
                         : undefined,
                   }}
                 >
@@ -135,6 +141,27 @@ export const AddTransactionDialog = ({
               onChange={(e) => setNote(e.target.value)}
               maxLength={50}
             />
+          </div>
+
+          {/* Date Picker */}
+          <div>
+            <p className="text-sm font-medium mb-2">Date</p>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="w-full justify-start text-left">
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {format(date, 'PPP')}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={date}
+                  onSelect={(d) => d && setDate(d)}
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
           </div>
 
           {/* Submit Button */}

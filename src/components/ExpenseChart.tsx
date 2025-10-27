@@ -1,5 +1,6 @@
 import { Transaction } from '@/types/transaction';
 import { getCategoryInfo } from '@/lib/categories';
+import { loadSettings } from '@/lib/settings';
 import { useMemo } from 'react';
 
 interface ExpenseChartProps {
@@ -7,6 +8,9 @@ interface ExpenseChartProps {
 }
 
 export const ExpenseChart = ({ transactions }: ExpenseChartProps) => {
+  const settings = loadSettings();
+  const currency = settings.currency.symbol;
+  
   const expensesByCategory = useMemo(() => {
     const expenses = transactions.filter(t => t.type === 'expense');
     const total = expenses.reduce((sum, t) => sum + t.amount, 0);
@@ -19,12 +23,12 @@ export const ExpenseChart = ({ transactions }: ExpenseChartProps) => {
     }, {} as Record<string, number>);
     
     return Object.entries(grouped).map(([category, amount]) => {
-      const info = getCategoryInfo(category as any);
+      const info = getCategoryInfo(category);
       return {
         category,
         amount,
         percentage: (amount / total) * 100,
-        info,
+        info: info || { id: category, name: category, icon: '📦', color: '#6B7280', type: 'expense' as const, order: 999 },
       };
     }).sort((a, b) => b.amount - a.amount);
   }, [transactions]);
@@ -65,8 +69,8 @@ export const ExpenseChart = ({ transactions }: ExpenseChartProps) => {
               <path
                 key={cat.category}
                 d={`M 50 50 L ${startX} ${startY} A 40 40 0 ${largeArcFlag} 1 ${endX} ${endY} Z`}
-                className={`fill-${cat.info.color} transition-all hover:opacity-80`}
-                style={{ fill: `hsl(var(--${cat.info.color}))` }}
+                className="transition-all hover:opacity-80"
+                style={{ fill: cat.info.color }}
               />
             );
             
@@ -80,7 +84,7 @@ export const ExpenseChart = ({ transactions }: ExpenseChartProps) => {
         
         <div className="absolute inset-0 flex flex-col items-center justify-center">
           <p className="text-xs text-muted-foreground">Total</p>
-          <p className="text-lg font-semibold">${total.toFixed(0)}</p>
+          <p className="text-lg font-semibold">{currency}{total.toFixed(0)}</p>
         </div>
       </div>
       
@@ -91,12 +95,12 @@ export const ExpenseChart = ({ transactions }: ExpenseChartProps) => {
             <div className="flex items-center gap-2 flex-1">
               <div 
                 className="w-3 h-3 rounded-full flex-shrink-0"
-                style={{ backgroundColor: `hsl(var(--${cat.info.color}))` }}
+                style={{ backgroundColor: cat.info.color }}
               />
               <span className="text-sm truncate">{cat.info.name}</span>
             </div>
             <div className="text-right">
-              <p className="text-sm font-medium">${cat.amount.toFixed(2)}</p>
+              <p className="text-sm font-medium">{currency}{cat.amount.toFixed(2)}</p>
               <p className="text-xs text-muted-foreground">{cat.percentage.toFixed(0)}%</p>
             </div>
           </div>
