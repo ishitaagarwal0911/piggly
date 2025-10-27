@@ -3,9 +3,9 @@ import { Transaction } from '@/types/transaction';
 import { BalanceSummary } from '@/components/BalanceSummary';
 import { ExpenseChart } from '@/components/ExpenseChart';
 import { AddTransactionDialog } from '@/components/AddTransactionDialog';
-import { ThemeToggle } from '@/components/ThemeToggle';
 import { SettingsSheet } from '@/components/SettingsSheet';
 import { PeriodSelector } from '@/components/PeriodSelector';
+import { TransactionDetailSheet } from '@/components/TransactionDetailSheet';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 import { loadTransactions, saveTransactions } from '@/lib/storage';
@@ -19,6 +19,8 @@ const Index = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [viewType, setViewType] = useState<ViewType>('monthly');
   const [refreshKey, setRefreshKey] = useState(0);
+  const [detailSheetOpen, setDetailSheetOpen] = useState(false);
+  const [detailFilter, setDetailFilter] = useState<{ type?: 'expense' | 'income'; category?: string }>({});
 
   useEffect(() => {
     const loaded = loadTransactions();
@@ -55,6 +57,21 @@ const Index = () => {
     setRefreshKey(prev => prev + 1);
   };
 
+  const handleCategoryClick = (category: string) => {
+    setDetailFilter({ type: 'expense', category });
+    setDetailSheetOpen(true);
+  };
+
+  const handleExpenseClick = () => {
+    setDetailFilter({ type: 'expense' });
+    setDetailSheetOpen(true);
+  };
+
+  const handleIncomeClick = () => {
+    setDetailFilter({ type: 'income' });
+    setDetailSheetOpen(true);
+  };
+
   const filteredTransactions = getFilteredTransactions(transactions, currentDate, viewType);
 
   return (
@@ -63,10 +80,7 @@ const Index = () => {
       <header className="sticky top-0 z-10 bg-background/80 backdrop-blur-md border-b border-border">
         <div className="max-w-2xl mx-auto px-4 py-4 flex items-center justify-between">
           <h1 className="text-xl font-semibold">Expenses</h1>
-          <div className="flex items-center gap-2">
-            <SettingsSheet onSettingsChange={handleSettingsChange} />
-            <ThemeToggle />
-          </div>
+          <SettingsSheet onSettingsChange={handleSettingsChange} />
         </div>
       </header>
 
@@ -79,8 +93,15 @@ const Index = () => {
           onNext={handleNext}
           onDateSelect={setCurrentDate}
         />
-        <BalanceSummary transactions={filteredTransactions} />
-        <ExpenseChart transactions={filteredTransactions} />
+        <BalanceSummary 
+          transactions={filteredTransactions}
+          onExpenseClick={handleExpenseClick}
+          onIncomeClick={handleIncomeClick}
+        />
+        <ExpenseChart 
+          transactions={filteredTransactions}
+          onCategoryClick={handleCategoryClick}
+        />
       </main>
 
       {/* Floating Add Button */}
@@ -99,6 +120,14 @@ const Index = () => {
         open={showAddDialog}
         onOpenChange={setShowAddDialog}
         onAdd={handleAddTransaction}
+      />
+
+      <TransactionDetailSheet
+        open={detailSheetOpen}
+        onOpenChange={setDetailSheetOpen}
+        transactions={filteredTransactions}
+        filterType={detailFilter.type}
+        filterCategory={detailFilter.category}
       />
     </div>
   );

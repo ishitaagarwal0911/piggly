@@ -4,9 +4,11 @@ import { loadSettings } from '@/lib/settings';
 
 interface BalanceSummaryProps {
   transactions: Transaction[];
+  onExpenseClick?: () => void;
+  onIncomeClick?: () => void;
 }
 
-export const BalanceSummary = ({ transactions }: BalanceSummaryProps) => {
+export const BalanceSummary = ({ transactions, onExpenseClick, onIncomeClick }: BalanceSummaryProps) => {
   const settings = loadSettings();
   const currency = settings.currency.symbol;
   
@@ -30,7 +32,7 @@ export const BalanceSummary = ({ transactions }: BalanceSummaryProps) => {
       </div>
       
       <div className="grid grid-cols-2 gap-4">
-        <div className="bg-secondary/50 rounded-xl p-4">
+        <div onClick={onIncomeClick} className="bg-secondary/50 rounded-xl p-4 transition-smooth cursor-pointer hover:bg-secondary/70">
           <div className="flex items-center gap-2 mb-1">
             <TrendingUp className="w-4 h-4 text-category-income" />
             <span className="text-xs text-muted-foreground">Income</span>
@@ -40,7 +42,7 @@ export const BalanceSummary = ({ transactions }: BalanceSummaryProps) => {
           </p>
         </div>
         
-        <div className="bg-secondary/50 rounded-xl p-4">
+        <div onClick={onExpenseClick} className="bg-secondary/50 rounded-xl p-4 transition-smooth cursor-pointer hover:bg-secondary/70">
           <div className="flex items-center gap-2 mb-1">
             <TrendingDown className="w-4 h-4 text-destructive" />
             <span className="text-xs text-muted-foreground">Expenses</span>

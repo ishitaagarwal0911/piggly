@@ -5,13 +5,15 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { CategoryManager } from './CategoryManager';
 import { loadSettings, saveSettings } from '@/lib/settings';
 import { CURRENCY_OPTIONS, CurrencyOption } from '@/types/settings';
-import { exportData, importData } from '@/lib/storage';
-import { Menu, Download, Upload } from 'lucide-react';
+import { exportData, importData, importCSV } from '@/lib/storage';
+import { Menu, Download, Upload, Moon, Sun, Monitor } from 'lucide-react';
 import { toast } from 'sonner';
 import { ViewType } from '@/lib/dateUtils';
+import { useTheme } from 'next-themes';
 
 interface SettingsSheetProps {
   onSettingsChange: () => void;
@@ -20,6 +22,7 @@ interface SettingsSheetProps {
 export const SettingsSheet = ({ onSettingsChange }: SettingsSheetProps) => {
   const [open, setOpen] = useState(false);
   const settings = loadSettings();
+  const { theme, setTheme } = useTheme();
 
   const handleCurrencyChange = (currencyCode: string) => {
     const currency = CURRENCY_OPTIONS.find(c => c.code === currencyCode);
@@ -36,6 +39,13 @@ export const SettingsSheet = ({ onSettingsChange }: SettingsSheetProps) => {
     saveSettings(newSettings);
     onSettingsChange();
     toast.success('Default view updated');
+  };
+
+  const handleThemeChange = (newTheme: string) => {
+    setTheme(newTheme);
+    const newSettings = { ...settings, theme: newTheme as 'light' | 'dark' | 'system' };
+    saveSettings(newSettings);
+    toast.success('Theme updated');
   };
 
   const handleExport = () => {
@@ -59,14 +69,20 @@ export const SettingsSheet = ({ onSettingsChange }: SettingsSheetProps) => {
   const handleImport = () => {
     const input = document.createElement('input');
     input.type = 'file';
-    input.accept = '.json';
+    input.accept = '.json,.csv';
     input.onchange = async (e) => {
       const file = (e.target as HTMLInputElement).files?.[0];
       if (!file) return;
 
       try {
         const text = await file.text();
-        const result = importData(text);
+        let result;
+        
+        if (file.name.endsWith('.csv')) {
+          result = importCSV(text);
+        } else {
+          result = importData(text);
+        }
         
         if (result.success) {
           toast.success(`Successfully imported ${result.transactions} transactions`);
@@ -85,7 +101,7 @@ export const SettingsSheet = ({ onSettingsChange }: SettingsSheetProps) => {
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
-        <Button variant="ghost" size="sm">
+        <Button variant="ghost" size="sm" className="transition-smooth">
           <Menu className="w-5 h-5" />
         </Button>
       </SheetTrigger>
@@ -105,40 +121,81 @@ export const SettingsSheet = ({ onSettingsChange }: SettingsSheetProps) => {
             <CategoryManager onCategoriesChange={onSettingsChange} />
           </TabsContent>
 
-          <TabsContent value="preferences" className="space-y-6 mt-6">
-            <div>
-              <Label className="mb-3 block">Currency</Label>
-              <Select value={settings.currency.code} onValueChange={handleCurrencyChange}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {CURRENCY_OPTIONS.map((currency) => (
-                    <SelectItem key={currency.code} value={currency.code}>
-                      {currency.symbol} {currency.name} ({currency.code})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+          <TabsContent value="preferences" className="mt-6">
+            <Accordion type="multiple" className="space-y-2">
+              <AccordionItem value="currency" className="border rounded-lg px-4 transition-smooth">
+                <AccordionTrigger className="hover:no-underline py-4">
+                  <span className="text-sm font-medium">Currency</span>
+                </AccordionTrigger>
+                <AccordionContent className="pb-4">
+                  <Select value={settings.currency.code} onValueChange={handleCurrencyChange}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {CURRENCY_OPTIONS.map((currency) => (
+                        <SelectItem key={currency.code} value={currency.code}>
+                          {currency.symbol} {currency.name} ({currency.code})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </AccordionContent>
+              </AccordionItem>
 
-            <div>
-              <Label className="mb-3 block">Default View</Label>
-              <RadioGroup value={settings.defaultView} onValueChange={(v) => handleViewChange(v as ViewType)}>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="daily" id="daily" />
-                  <Label htmlFor="daily" className="font-normal cursor-pointer">Daily</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="weekly" id="weekly" />
-                  <Label htmlFor="weekly" className="font-normal cursor-pointer">Weekly</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="monthly" id="monthly" />
-                  <Label htmlFor="monthly" className="font-normal cursor-pointer">Monthly</Label>
-                </div>
-              </RadioGroup>
-            </div>
+              <AccordionItem value="view" className="border rounded-lg px-4 transition-smooth">
+                <AccordionTrigger className="hover:no-underline py-4">
+                  <span className="text-sm font-medium">Default View</span>
+                </AccordionTrigger>
+                <AccordionContent className="pb-4">
+                  <RadioGroup value={settings.defaultView} onValueChange={(v) => handleViewChange(v as ViewType)}>
+                    <div className="flex items-center space-x-2 py-2">
+                      <RadioGroupItem value="daily" id="daily" />
+                      <Label htmlFor="daily" className="font-normal cursor-pointer">Daily</Label>
+                    </div>
+                    <div className="flex items-center space-x-2 py-2">
+                      <RadioGroupItem value="weekly" id="weekly" />
+                      <Label htmlFor="weekly" className="font-normal cursor-pointer">Weekly</Label>
+                    </div>
+                    <div className="flex items-center space-x-2 py-2">
+                      <RadioGroupItem value="monthly" id="monthly" />
+                      <Label htmlFor="monthly" className="font-normal cursor-pointer">Monthly</Label>
+                    </div>
+                  </RadioGroup>
+                </AccordionContent>
+              </AccordionItem>
+
+              <AccordionItem value="theme" className="border rounded-lg px-4 transition-smooth">
+                <AccordionTrigger className="hover:no-underline py-4">
+                  <span className="text-sm font-medium">Theme</span>
+                </AccordionTrigger>
+                <AccordionContent className="pb-4">
+                  <RadioGroup value={theme} onValueChange={handleThemeChange}>
+                    <div className="flex items-center space-x-2 py-2">
+                      <RadioGroupItem value="light" id="light" />
+                      <Label htmlFor="light" className="font-normal cursor-pointer flex items-center gap-2">
+                        <Sun className="w-4 h-4" />
+                        Light
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-2 py-2">
+                      <RadioGroupItem value="dark" id="dark" />
+                      <Label htmlFor="dark" className="font-normal cursor-pointer flex items-center gap-2">
+                        <Moon className="w-4 h-4" />
+                        Dark
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-2 py-2">
+                      <RadioGroupItem value="system" id="system" />
+                      <Label htmlFor="system" className="font-normal cursor-pointer flex items-center gap-2">
+                        <Monitor className="w-4 h-4" />
+                        System
+                      </Label>
+                    </div>
+                  </RadioGroup>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
           </TabsContent>
 
           <TabsContent value="data" className="space-y-4 mt-6">
@@ -147,7 +204,7 @@ export const SettingsSheet = ({ onSettingsChange }: SettingsSheetProps) => {
               <p className="text-sm text-muted-foreground mb-4">
                 Download all your transactions and settings as a JSON file.
               </p>
-              <Button onClick={handleExport} className="w-full">
+              <Button onClick={handleExport} className="w-full transition-smooth hover-lift">
                 <Download className="w-4 h-4 mr-2" />
                 Export Data
               </Button>
@@ -156,9 +213,9 @@ export const SettingsSheet = ({ onSettingsChange }: SettingsSheetProps) => {
             <div>
               <h3 className="text-sm font-medium mb-2">Import Data</h3>
               <p className="text-sm text-muted-foreground mb-4">
-                Restore your data from a previously exported JSON file. This will replace all current data.
+                Restore your data from a JSON or CSV file. CSV format: date,amount,type,category,note
               </p>
-              <Button onClick={handleImport} variant="outline" className="w-full">
+              <Button onClick={handleImport} variant="outline" className="w-full transition-smooth">
                 <Upload className="w-4 h-4 mr-2" />
                 Import Data
               </Button>

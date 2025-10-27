@@ -75,3 +75,54 @@ export const importData = (jsonString: string): { success: boolean; transactions
     return { success: false, transactions: 0, error: 'Failed to parse data' };
   }
 };
+
+export const importCSV = (csvString: string): { success: boolean; transactions: number; error?: string } => {
+  try {
+    const lines = csvString.trim().split('\n');
+    if (lines.length < 2) {
+      return { success: false, transactions: 0, error: 'CSV file is empty or invalid' };
+    }
+    
+    const transactions: Transaction[] = [];
+    
+    // Skip header row, process data rows
+    for (let i = 1; i < lines.length; i++) {
+      const line = lines[i].trim();
+      if (!line) continue;
+      
+      const parts = line.split(',');
+      if (parts.length < 3) continue;
+      
+      const [dateStr, amountStr, type, category = 'Other', note = ''] = parts;
+      
+      const date = new Date(dateStr.trim());
+      const amount = parseFloat(amountStr.trim());
+      
+      if (isNaN(date.getTime()) || isNaN(amount)) continue;
+      if (type.trim() !== 'expense' && type.trim() !== 'income') continue;
+      
+      transactions.push({
+        id: crypto.randomUUID(),
+        date,
+        amount,
+        type: type.trim() as 'expense' | 'income',
+        category: category.trim(),
+        note: note.trim(),
+        createdAt: new Date(),
+      });
+    }
+    
+    if (transactions.length === 0) {
+      return { success: false, transactions: 0, error: 'No valid transactions found in CSV' };
+    }
+    
+    // Merge with existing transactions
+    const existing = loadTransactions();
+    saveTransactions([...existing, ...transactions]);
+    
+    return { success: true, transactions: transactions.length };
+  } catch (error) {
+    console.error('Failed to import CSV:', error);
+    return { success: false, transactions: 0, error: 'Failed to parse CSV file' };
+  }
+};

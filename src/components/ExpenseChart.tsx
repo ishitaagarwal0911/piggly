@@ -5,9 +5,10 @@ import { useMemo } from 'react';
 
 interface ExpenseChartProps {
   transactions: Transaction[];
+  onCategoryClick?: (category: string) => void;
 }
 
-export const ExpenseChart = ({ transactions }: ExpenseChartProps) => {
+export const ExpenseChart = ({ transactions, onCategoryClick }: ExpenseChartProps) => {
   const settings = loadSettings();
   const currency = settings.currency.symbol;
   

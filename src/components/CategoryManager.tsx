@@ -8,7 +8,6 @@ import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ColorPicker } from './ColorPicker';
 import { Pencil, Trash2, Plus } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -22,16 +21,13 @@ export const CategoryManager = ({ onCategoriesChange }: CategoryManagerProps) =>
   const [deletingCategory, setDeletingCategory] = useState<CustomCategory | null>(null);
   const [isAddingNew, setIsAddingNew] = useState(false);
   
-  // Form state
   const [name, setName] = useState('');
   const [icon, setIcon] = useState('');
-  const [color, setColor] = useState('#3B82F6');
   const [type, setType] = useState<'expense' | 'income'>('expense');
 
   const resetForm = () => {
     setName('');
     setIcon('');
-    setColor('#3B82F6');
     setType('expense');
     setEditingCategory(null);
     setIsAddingNew(false);
@@ -41,7 +37,6 @@ export const CategoryManager = ({ onCategoriesChange }: CategoryManagerProps) =>
     setEditingCategory(category);
     setName(category.name);
     setIcon(category.icon);
-    setColor(category.color);
     setType(category.type);
     setIsAddingNew(false);
   };
@@ -58,10 +53,10 @@ export const CategoryManager = ({ onCategoriesChange }: CategoryManagerProps) =>
     }
 
     if (editingCategory) {
-      updateCategory(editingCategory.id, { name: name.trim(), icon: icon.trim(), color, type });
+      updateCategory(editingCategory.id, { name: name.trim(), icon: icon.trim(), type });
       toast.success('Category updated');
     } else {
-      addCategory({ name: name.trim(), icon: icon.trim(), color, type });
+      addCategory({ name: name.trim(), icon: icon.trim(), type });
       toast.success('Category added');
     }
 
@@ -85,9 +80,8 @@ export const CategoryManager = ({ onCategoriesChange }: CategoryManagerProps) =>
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold">Manage Categories</h3>
-        <Button onClick={handleAdd} size="sm">
-          <Plus className="w-4 h-4 mr-2" />
-          Add Category
+        <Button onClick={handleAdd} size="icon" variant="ghost" className="rounded-full w-8 h-8 transition-smooth hover:scale-105">
+          <Plus className="w-5 h-5" />
         </Button>
       </div>
 
@@ -98,7 +92,7 @@ export const CategoryManager = ({ onCategoriesChange }: CategoryManagerProps) =>
           {expenseCategories.map((cat) => (
             <div
               key={cat.id}
-              className="flex items-center justify-between p-3 rounded-lg bg-secondary/50 hover:bg-secondary transition-colors"
+              className="flex items-center justify-between p-3 rounded-lg bg-secondary/50 hover:bg-secondary transition-smooth"
             >
               <div className="flex items-center gap-3">
                 <div
@@ -114,7 +108,6 @@ export const CategoryManager = ({ onCategoriesChange }: CategoryManagerProps) =>
                       className="w-3 h-3 rounded-full"
                       style={{ backgroundColor: cat.color }}
                     />
-                    <span className="text-xs text-muted-foreground">{cat.color}</span>
                   </div>
                 </div>
               </div>
@@ -123,6 +116,7 @@ export const CategoryManager = ({ onCategoriesChange }: CategoryManagerProps) =>
                   variant="ghost"
                   size="sm"
                   onClick={() => handleEdit(cat)}
+                  className="transition-smooth"
                 >
                   <Pencil className="w-4 h-4" />
                 </Button>
@@ -130,6 +124,7 @@ export const CategoryManager = ({ onCategoriesChange }: CategoryManagerProps) =>
                   variant="ghost"
                   size="sm"
                   onClick={() => setDeletingCategory(cat)}
+                  className="transition-smooth"
                 >
                   <Trash2 className="w-4 h-4" />
                 </Button>
@@ -146,7 +141,7 @@ export const CategoryManager = ({ onCategoriesChange }: CategoryManagerProps) =>
           {incomeCategories.map((cat) => (
             <div
               key={cat.id}
-              className="flex items-center justify-between p-3 rounded-lg bg-secondary/50 hover:bg-secondary transition-colors"
+              className="flex items-center justify-between p-3 rounded-lg bg-secondary/50 hover:bg-secondary transition-smooth"
             >
               <div className="flex items-center gap-3">
                 <div
@@ -162,7 +157,6 @@ export const CategoryManager = ({ onCategoriesChange }: CategoryManagerProps) =>
                       className="w-3 h-3 rounded-full"
                       style={{ backgroundColor: cat.color }}
                     />
-                    <span className="text-xs text-muted-foreground">{cat.color}</span>
                   </div>
                 </div>
               </div>
@@ -171,6 +165,7 @@ export const CategoryManager = ({ onCategoriesChange }: CategoryManagerProps) =>
                   variant="ghost"
                   size="sm"
                   onClick={() => handleEdit(cat)}
+                  className="transition-smooth"
                 >
                   <Pencil className="w-4 h-4" />
                 </Button>
@@ -178,6 +173,7 @@ export const CategoryManager = ({ onCategoriesChange }: CategoryManagerProps) =>
                   variant="ghost"
                   size="sm"
                   onClick={() => setDeletingCategory(cat)}
+                  className="transition-smooth"
                 >
                   <Trash2 className="w-4 h-4" />
                 </Button>
@@ -223,11 +219,6 @@ export const CategoryManager = ({ onCategoriesChange }: CategoryManagerProps) =>
                   <TabsTrigger value="income">Income</TabsTrigger>
                 </TabsList>
               </Tabs>
-            </div>
-
-            <div>
-              <Label className="mb-3 block">Color</Label>
-              <ColorPicker value={color} onChange={setColor} />
             </div>
           </div>
 

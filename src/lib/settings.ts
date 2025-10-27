@@ -1,16 +1,64 @@
-import { AppSettings, CustomCategory, CURRENCY_OPTIONS } from '@/types/settings';
+import { AppSettings, CustomCategory, CURRENCY_OPTIONS, DEFAULT_COLORS } from '@/types/settings';
 
 const SETTINGS_KEY = 'expense_tracker_settings';
 
+// Emoji to color mapping for auto-assignment
+export const getColorFromEmoji = (emoji: string): string => {
+  const emojiMaps: Record<string, string> = {
+    // Food & Drinks
+    '🍽️': '#FFD4B2', '🍕': '#FFD4B2', '🍔': '#FFD4B2', '🥗': '#FFD4B2', '🍜': '#FFD4B2', 
+    '☕': '#FFE4CC', '🍰': '#FFEAA7', '🍺': '#FFF5BA', '🥘': '#FFD4B2',
+    
+    // Transport & Travel
+    '🚗': '#A3C4F3', '✈️': '#B3D9FF', '🚕': '#CCE5FF', '🚌': '#A3C4F3', 
+    '🚇': '#B3D9FF', '🚲': '#CCE5FF', '🛫': '#A3C4F3',
+    
+    // Shopping & Clothes
+    '🛍️': '#FFB3D9', '👕': '#FFC1CC', '👠': '#FFE5EC', '💄': '#FFB3D9', 
+    '🎁': '#FFC1CC', '👗': '#FFE5EC', '🏪': '#FFB3D9',
+    
+    // Bills & Utilities
+    '💡': '#FFF5BA', '🏠': '#FFFACD', '📱': '#FFF8DC', '💳': '#FFF5BA',
+    '🔌': '#FFFACD', '💧': '#FFF8DC',
+    
+    // Entertainment & Fun
+    '🎬': '#D4BBFF', '🎮': '#E6D7FF', '🎵': '#C9B3FF', '🎪': '#D4BBFF',
+    '🎨': '#E6D7FF', '📚': '#C9B3FF',
+    
+    // Health & Fitness
+    '💊': '#D4F4DD', '🏥': '#C8E6C9', '💪': '#D4F4DD', '🧘': '#C8E6C9',
+    '⚕️': '#D4F4DD',
+    
+    // Money & Income
+    '💰': '#B2EBB4', '💵': '#C8E6C9', '💸': '#D4F4DD', '🤝': '#B2EBB4',
+    '📈': '#C8E6C9', '🏦': '#D4F4DD',
+    
+    // Business & Work
+    '💼': '#E8E8E8', '📊': '#D4D4D4', '🖥️': '#C9C9C9', '📧': '#E8E8E8',
+    
+    // Miscellaneous
+    '📦': '#D4D4D4', '⭐': '#FFEAA7', '❓': '#E8E8E8', '🔧': '#C9C9C9',
+  };
+  
+  if (emojiMaps[emoji]) {
+    return emojiMaps[emoji];
+  }
+  
+  // Fallback: use emoji unicode to pick a pastel color
+  const code = emoji.codePointAt(0) || 0;
+  const pastelColors = DEFAULT_COLORS;
+  return pastelColors[code % pastelColors.length];
+};
+
 const DEFAULT_CATEGORIES: CustomCategory[] = [
-  { id: 'food', name: 'Food & Drinks', icon: '🍽️', color: '#F97316', type: 'expense', order: 0 },
-  { id: 'transport', name: 'Transport', icon: '🚗', color: '#3B82F6', type: 'expense', order: 1 },
-  { id: 'shopping', name: 'Shopping', icon: '🛍️', color: '#EC4899', type: 'expense', order: 2 },
-  { id: 'bills', name: 'Bills', icon: '💡', color: '#EAB308', type: 'expense', order: 3 },
-  { id: 'entertainment', name: 'Entertainment', icon: '🎬', color: '#8B5CF6', type: 'expense', order: 4 },
-  { id: 'health', name: 'Health', icon: '💊', color: '#EF4444', type: 'expense', order: 5 },
-  { id: 'income', name: 'Income', icon: '💰', color: '#10B981', type: 'income', order: 6 },
-  { id: 'other', name: 'Other', icon: '📦', color: '#6B7280', type: 'expense', order: 7 },
+  { id: 'food', name: 'Food & Drinks', icon: '🍽️', color: '#FFD4B2', type: 'expense', order: 0 },
+  { id: 'transport', name: 'Transport', icon: '🚗', color: '#A3C4F3', type: 'expense', order: 1 },
+  { id: 'shopping', name: 'Shopping', icon: '🛍️', color: '#FFB3D9', type: 'expense', order: 2 },
+  { id: 'bills', name: 'Bills', icon: '💡', color: '#FFF5BA', type: 'expense', order: 3 },
+  { id: 'entertainment', name: 'Entertainment', icon: '🎬', color: '#D4BBFF', type: 'expense', order: 4 },
+  { id: 'health', name: 'Health', icon: '💊', color: '#D4F4DD', type: 'expense', order: 5 },
+  { id: 'income', name: 'Income', icon: '💰', color: '#B2EBB4', type: 'income', order: 6 },
+  { id: 'other', name: 'Other', icon: '📦', color: '#D4D4D4', type: 'expense', order: 7 },
 ];
 
 const DEFAULT_SETTINGS: AppSettings = {
@@ -56,12 +104,13 @@ export const getCategoryById = (id: string): CustomCategory | undefined => {
   return categories.find(cat => cat.id === id);
 };
 
-export const addCategory = (category: Omit<CustomCategory, 'id' | 'order'>): void => {
+export const addCategory = (category: Omit<CustomCategory, 'id' | 'order' | 'color'>): void => {
   const settings = loadSettings();
   const newCategory: CustomCategory = {
     ...category,
     id: crypto.randomUUID(),
     order: settings.categories.length,
+    color: getColorFromEmoji(category.icon),
   };
   settings.categories.push(newCategory);
   saveSettings(settings);
