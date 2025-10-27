@@ -13,6 +13,9 @@ export default {
       },
     },
     extend: {
+      fontFamily: {
+        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
@@ -46,6 +49,16 @@ export default {
         card: {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
+        },
+        category: {
+          food: "hsl(var(--category-food))",
+          transport: "hsl(var(--category-transport))",
+          shopping: "hsl(var(--category-shopping))",
+          bills: "hsl(var(--category-bills))",
+          entertainment: "hsl(var(--category-entertainment))",
+          health: "hsl(var(--category-health))",
+          income: "hsl(var(--category-income))",
+          other: "hsl(var(--category-other))",
         },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
