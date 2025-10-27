@@ -120,6 +120,24 @@ export const importData = async (jsonString: string): Promise<{ success: boolean
   }
 };
 
+export const deleteTransaction = async (id: string): Promise<void> => {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Not authenticated');
+
+    const { error } = await supabase
+      .from('transactions')
+      .delete()
+      .eq('id', id)
+      .eq('user_id', user.id);
+    
+    if (error) throw error;
+  } catch (error) {
+    console.error('Failed to delete transaction:', error);
+    throw error;
+  }
+};
+
 export const importCSV = async (csvString: string): Promise<{ success: boolean; transactions: number; error?: string }> => {
   try {
     const { data: { user } } = await supabase.auth.getUser();

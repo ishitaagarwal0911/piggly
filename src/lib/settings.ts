@@ -217,13 +217,17 @@ export const updateCategory = async (category: CustomCategory): Promise<void> =>
   }
 };
 
-export const deleteCategory = async (categoryId: string): Promise<void> => {
+export const deleteCategory = async (categoryId: string): Promise<{ deleted: boolean }> => {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('Not authenticated');
 
-  await supabase
+  const { error, count } = await supabase
     .from('categories')
     .delete()
     .eq('id', categoryId)
     .eq('user_id', user.id);
+
+  if (error) throw error;
+  
+  return { deleted: (count || 0) > 0 };
 };

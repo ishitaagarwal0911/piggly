@@ -9,7 +9,7 @@ import { PeriodSelector } from '@/components/PeriodSelector';
 import { TransactionDetailSheet } from '@/components/TransactionDetailSheet';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
-import { loadTransactions, saveTransactions } from '@/lib/storage';
+import { loadTransactions, saveTransactions, deleteTransaction } from '@/lib/storage';
 import { loadSettings } from '@/lib/settings';
 import { getFilteredTransactions, getPreviousPeriod, getNextPeriod, ViewType } from '@/lib/dateUtils';
 import { useAuth } from '@/contexts/AuthContext';
@@ -177,10 +177,14 @@ const Index = () => {
   };
 
   const handleDeleteTransaction = async (id: string) => {
-    const updated = transactions.filter(t => t.id !== id);
-    await saveTransactions(updated);
-    toast.success('Transaction deleted');
-    setEditingTransaction(null);
+    try {
+      await deleteTransaction(id);
+      toast.success('Transaction deleted');
+      setEditingTransaction(null);
+    } catch (error) {
+      toast.error('Failed to delete transaction');
+      console.error('Delete error:', error);
+    }
   };
 
   const handleDetailSheetAddClick = (type: 'income' | 'expense') => {

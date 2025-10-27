@@ -81,11 +81,20 @@ export const CategoryManager = ({ onCategoriesChange }: CategoryManagerProps) =>
 
   const handleDelete = async () => {
     if (deletingCategory) {
-      await deleteCategory(deletingCategory.id);
-      toast.success('Category deleted');
-      setDeletingCategory(null);
-      await loadSettings(); // Reload to refresh cache
-      onCategoriesChange();
+      try {
+        const result = await deleteCategory(deletingCategory.id);
+        if (result.deleted) {
+          toast.success('Category deleted');
+        } else {
+          toast.info('Category was not in database');
+        }
+        setDeletingCategory(null);
+        await loadSettings();
+        onCategoriesChange();
+      } catch (error) {
+        toast.error('Failed to delete category');
+        console.error('Delete error:', error);
+      }
     }
   };
 
