@@ -135,7 +135,10 @@ const Index = () => {
     setCurrentDate(getNextPeriod(currentDate, viewType));
   };
 
-  const handleSettingsChange = () => {
+  const handleSettingsChange = (newView?: ViewType) => {
+    if (newView) {
+      setViewType(newView);
+    }
     setRefreshKey(prev => prev + 1);
   };
 

@@ -16,7 +16,7 @@ import { toast } from 'sonner';
 import { ViewType } from '@/lib/dateUtils';
 
 interface SettingsSheetProps {
-  onSettingsChange: () => void;
+  onSettingsChange: (newView?: ViewType) => void;
 }
 
 export const SettingsSheet = ({ onSettingsChange }: SettingsSheetProps) => {
@@ -53,10 +53,8 @@ export const SettingsSheet = ({ onSettingsChange }: SettingsSheetProps) => {
     await saveSettings(newSettings);
     setSettings(newSettings);
     toast.success('Default view updated');
-    // Small delay to ensure DB write completes
-    setTimeout(() => {
-      onSettingsChange();
-    }, 300);
+    // Pass the new view directly to parent
+    onSettingsChange(view);
   };
 
   const handleExport = async () => {

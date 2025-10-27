@@ -194,12 +194,12 @@ export const updateCategory = async (category: CustomCategory): Promise<void> =>
     .eq('id', category.id)
     .eq('user_id', user.id);
 
-  // If no rows updated, insert new category (for default categories being edited first time)
+  // If no rows updated, insert new category with NEW UUID (for default categories being edited first time)
   if (count === 0) {
     const { error: insertError } = await supabase
       .from('categories')
       .insert({
-        id: category.id,
+        id: crypto.randomUUID(), // Generate NEW UUID instead of using category.id
         user_id: user.id,
         name: category.name,
         icon: category.icon,
