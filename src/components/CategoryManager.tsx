@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { CustomCategory } from '@/types/settings';
 import { categories } from '@/lib/categories';
-import { addCategory, updateCategory, deleteCategory } from '@/lib/settings';
+import { addCategory, updateCategory, deleteCategory, loadSettings } from '@/lib/settings';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -64,6 +64,7 @@ export const CategoryManager = ({ onCategoriesChange }: CategoryManagerProps) =>
         toast.success('Category added');
       }
 
+      await loadSettings(); // Reload to refresh cache
       onCategoriesChange();
       resetForm();
     } catch (error) {
@@ -71,11 +72,12 @@ export const CategoryManager = ({ onCategoriesChange }: CategoryManagerProps) =>
     }
   };
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (deletingCategory) {
-      deleteCategory(deletingCategory.id);
+      await deleteCategory(deletingCategory.id);
       toast.success('Category deleted');
       setDeletingCategory(null);
+      await loadSettings(); // Reload to refresh cache
       onCategoriesChange();
     }
   };

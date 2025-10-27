@@ -123,7 +123,7 @@ export const SettingsSheet = ({ onSettingsChange }: SettingsSheetProps) => {
         </Button>
       </SheetTrigger>
       <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
-        <SheetHeader className="flex flex-row items-center justify-between pb-4">
+        <SheetHeader className="flex flex-row items-center pb-4">
           <ThemeToggle />
         </SheetHeader>
 

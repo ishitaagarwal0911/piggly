@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Transaction } from '@/types/transaction';
 import { BalanceSummary } from '@/components/BalanceSummary';
-import { ExpenseChart } from '@/components/ExpenseChart';
+import { ExpensePieChart } from '@/components/ExpensePieChart';
 import { AddTransactionDialog } from '@/components/AddTransactionDialog';
 import { SettingsSheet } from '@/components/SettingsSheet';
 import { PeriodSelector } from '@/components/PeriodSelector';
@@ -181,9 +181,8 @@ const Index = () => {
           onExpenseClick={handleExpenseClick}
           onIncomeClick={handleIncomeClick}
         />
-        <ExpenseChart 
+        <ExpensePieChart 
           transactions={filteredTransactions}
-          onCategoryClick={handleCategoryClick}
         />
       </main>
 

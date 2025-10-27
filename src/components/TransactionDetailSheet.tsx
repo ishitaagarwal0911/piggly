@@ -40,15 +40,21 @@ export const TransactionDetailSheet = ({
     });
   }, []);
 
-  // Filter transactions
-  const filtered = transactions.filter(t => {
+  // Filter transactions for "By Date" tab
+  const filteredForDate = transactions.filter(t => {
     if (filterType && t.type !== filterType) return false;
     if (filterCategory && t.category !== filterCategory) return false;
     return true;
   });
 
+  // For "By Category" tab, only filter by type (show all categories)
+  const filteredForCategory = transactions.filter(t => {
+    if (filterType && t.type !== filterType) return false;
+    return true;
+  });
+
   // Group by date
-  const groupedByDate = filtered.reduce((acc, t) => {
+  const groupedByDate = filteredForDate.reduce((acc, t) => {
     const dateKey = format(t.date, 'yyyy-MM-dd');
     if (!acc[dateKey]) acc[dateKey] = [];
     acc[dateKey].push(t);
@@ -60,7 +66,7 @@ export const TransactionDetailSheet = ({
   );
 
   // Group by category
-  const groupedByCategory = filtered.reduce((acc, t) => {
+  const groupedByCategory = filteredForCategory.reduce((acc, t) => {
     if (!acc[t.category]) acc[t.category] = [];
     acc[t.category].push(t);
     return acc;
@@ -79,7 +85,7 @@ export const TransactionDetailSheet = ({
     };
   }).sort((a, b) => b.total - a.total);
 
-  const total = filtered.reduce((sum, t) => sum + t.amount, 0);
+  const total = filteredForDate.reduce((sum, t) => sum + t.amount, 0);
 
   const renderTransaction = (transaction: Transaction) => {
     const categoryInfo = getCategoryInfo(transaction.category);
@@ -96,9 +102,9 @@ export const TransactionDetailSheet = ({
           {categoryInfo?.icon || '📦'}
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium truncate">{transaction.note || 'No description'}</p>
+          {transaction.note && <p className="text-sm font-medium truncate">{transaction.note}</p>}
           <p className="text-xs text-muted-foreground">
-            {format(transaction.date, 'h:mm a')}
+            {transaction.note ? format(transaction.date, 'h:mm a') : format(transaction.date, 'MMM d, yyyy · h:mm a')}
           </p>
         </div>
         <span className={`text-sm font-semibold whitespace-nowrap ${

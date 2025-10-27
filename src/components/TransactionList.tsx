@@ -41,7 +41,7 @@ export const TransactionList = ({ transactions }: TransactionListProps) => {
               </div>
               
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate">{transaction.note}</p>
+                {transaction.note && <p className="text-sm font-medium truncate">{transaction.note}</p>}
                 <p className="text-xs text-muted-foreground">
                   {categoryInfo.name} · {format(transaction.date, 'MMM d')}
                 </p>

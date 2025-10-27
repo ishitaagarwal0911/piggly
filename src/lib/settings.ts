@@ -1,4 +1,4 @@
-import { AppSettings, CustomCategory, CurrencyOption, CURRENCY_OPTIONS } from '@/types/settings';
+import { AppSettings, CustomCategory, CurrencyOption, CURRENCY_OPTIONS, DEFAULT_COLORS } from '@/types/settings';
 import { getDefaultCategories, setCategoriesCache } from './categories';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -35,7 +35,15 @@ export const loadSettings = async (): Promise<AppSettings> => {
       order: c.order_index,
     }));
 
-    const finalCategories = categories.length > 0 ? categories : getDefaultCategories();
+    // Merge default categories with custom categories
+    const defaultCategories = getDefaultCategories();
+    const customCategoryIds = new Set(categories.map(c => c.id));
+    const mergedCategories = [
+      ...categories,
+      ...defaultCategories.filter(dc => !customCategoryIds.has(dc.id))
+    ];
+    
+    const finalCategories = mergedCategories.sort((a, b) => a.order - b.order);
     
     // Update categories cache for synchronous access
     setCategoriesCache(finalCategories);
@@ -90,7 +98,7 @@ export const addCategory = async (category: Omit<CustomCategory, 'id' | 'order' 
     .eq('user_id', user.id);
 
   const order = existingCategories?.length || 0;
-  const color = '#D4D4D4'; // Default color
+  const color = DEFAULT_COLORS[Math.floor(Math.random() * DEFAULT_COLORS.length)];
 
   await supabase.from('categories').insert({
     id: crypto.randomUUID(),
