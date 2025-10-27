@@ -204,12 +204,7 @@ export const CategoryManager = ({ onCategoriesChange }: CategoryManagerProps) =>
                 onChange={(e) => setIcon(e.target.value)}
                 placeholder="🛒"
                 maxLength={5}
-                inputMode="text"
-                enterKeyHint="done"
-                className="text-2xl text-center"
-                autoComplete="off"
               />
-              <p className="text-xs text-muted-foreground mt-1">Tap to enter emoji</p>
             </div>
 
             <div>

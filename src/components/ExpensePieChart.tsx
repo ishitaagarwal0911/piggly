@@ -37,36 +37,12 @@ export const ExpensePieChart = ({ transactions }: ExpensePieChartProps) => {
       .sort((a, b) => b.value - a.value);
   }, [transactions]);
 
-  const totalExpenses = useMemo(() => {
-    return chartData.reduce((sum, item) => sum + item.value, 0);
-  }, [chartData]);
-
   if (chartData.length === 0) {
     return (
-      <div className="bg-card rounded-2xl p-6 shadow-notion relative">
+      <div className="bg-card rounded-2xl p-6 shadow-notion">
         <h3 className="text-sm font-medium mb-4">Spending by Category</h3>
-        <ResponsiveContainer width="100%" height={300}>
-          <PieChart>
-            <Pie
-              data={[{ name: 'No Data', value: 1 }]}
-              cx="50%"
-              cy="50%"
-              innerRadius={70}
-              outerRadius={90}
-              paddingAngle={0}
-              dataKey="value"
-              animationDuration={600}
-              stroke="none"
-            >
-              <Cell fill="rgba(212, 212, 212, 0.2)" />
-            </Pie>
-          </PieChart>
-        </ResponsiveContainer>
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none" style={{ marginTop: '24px' }}>
-          <div className="text-center">
-            <p className="text-xs text-muted-foreground mb-1">Total</p>
-            <p className="text-2xl font-semibold tracking-tight">{currency}0</p>
-          </div>
+        <div className="text-center py-8">
+          <p className="text-muted-foreground text-sm">No expenses yet</p>
         </div>
       </div>
     );
