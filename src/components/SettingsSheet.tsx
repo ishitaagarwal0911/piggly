@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -10,6 +10,7 @@ import { ThemeToggle } from '@/components/ThemeToggle';
 import { loadSettings, saveSettings } from '@/lib/settings';
 import { CURRENCY_OPTIONS } from '@/types/settings';
 import { exportData, importData, importCSV } from '@/lib/storage';
+import { useAuth } from '@/contexts/AuthContext';
 import { Menu, Download, Upload } from 'lucide-react';
 import { toast } from 'sonner';
 import { ViewType } from '@/lib/dateUtils';
@@ -20,28 +21,39 @@ interface SettingsSheetProps {
 
 export const SettingsSheet = ({ onSettingsChange }: SettingsSheetProps) => {
   const [open, setOpen] = useState(false);
-  const settings = loadSettings();
+  const [settings, setSettings] = useState(loadSettings());
+  const { user, signOut } = useAuth();
 
-  const handleCurrencyChange = (currencyCode: string) => {
+  useEffect(() => {
+    const loadData = async () => {
+      const loadedSettings = await loadSettings();
+      setSettings(loadedSettings);
+    };
+    loadData();
+  }, []);
+
+  const handleCurrencyChange = async (currencyCode: string) => {
     const currency = CURRENCY_OPTIONS.find(c => c.code === currencyCode);
     if (currency) {
       const newSettings = { ...settings, currency };
-      saveSettings(newSettings);
+      await saveSettings(newSettings);
+      setSettings(newSettings);
       onSettingsChange();
       toast.success('Currency updated');
     }
   };
 
-  const handleViewChange = (view: ViewType) => {
+  const handleViewChange = async (view: ViewType) => {
     const newSettings = { ...settings, defaultView: view };
-    saveSettings(newSettings);
+    await saveSettings(newSettings);
+    setSettings(newSettings);
     onSettingsChange();
     toast.success('Default view updated');
   };
 
-  const handleExport = () => {
+  const handleExport = async () => {
     try {
-      const data = exportData();
+      const data = await exportData();
       const blob = new Blob([data], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -70,9 +82,9 @@ export const SettingsSheet = ({ onSettingsChange }: SettingsSheetProps) => {
         let result;
         
         if (file.name.endsWith('.csv')) {
-          result = importCSV(text);
+          result = await importCSV(text);
         } else {
-          result = importData(text);
+          result = await importData(text);
         }
         
         if (result.success) {
@@ -87,6 +99,15 @@ export const SettingsSheet = ({ onSettingsChange }: SettingsSheetProps) => {
       }
     };
     input.click();
+  };
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      toast.success('Signed out successfully');
+    } catch (error) {
+      toast.error('Failed to sign out');
+    }
   };
 
   return (
@@ -175,6 +196,21 @@ export const SettingsSheet = ({ onSettingsChange }: SettingsSheetProps) => {
             </AccordionContent>
           </AccordionItem>
         </Accordion>
+
+        {user && (
+          <div className="mt-6 pt-6 border-t space-y-4">
+            <div className="text-sm text-muted-foreground">
+              Signed in as: <span className="font-medium text-foreground">{user.email}</span>
+            </div>
+            <Button 
+              variant="outline" 
+              onClick={handleSignOut} 
+              className="w-full"
+            >
+              Sign Out
+            </Button>
+          </div>
+        )}
       </SheetContent>
     </Sheet>
   );

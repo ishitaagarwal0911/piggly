@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Transaction } from '@/types/transaction';
 import { BalanceSummary } from '@/components/BalanceSummary';
 import { ExpenseChart } from '@/components/ExpenseChart';
@@ -11,9 +12,13 @@ import { Plus } from 'lucide-react';
 import { loadTransactions, saveTransactions } from '@/lib/storage';
 import { loadSettings } from '@/lib/settings';
 import { getFilteredTransactions, getPreviousPeriod, getNextPeriod, ViewType } from '@/lib/dateUtils';
+import { useAuth } from '@/contexts/AuthContext';
+import { useRealtimeSync } from '@/hooks/useRealtimeSync';
 import { toast } from 'sonner';
 
 const Index = () => {
+  const { user, loading } = useAuth();
+  const navigate = useNavigate();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [transactionType, setTransactionType] = useState<'income' | 'expense'>('expense');
@@ -24,14 +29,44 @@ const Index = () => {
   const [detailFilter, setDetailFilter] = useState<{ type?: 'expense' | 'income'; category?: string }>({});
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
 
+  // Redirect to auth if not authenticated
   useEffect(() => {
-    const loaded = loadTransactions();
-    setTransactions(loaded);
-    const settings = loadSettings();
-    setViewType(settings.defaultView);
-  }, [refreshKey]);
+    if (!loading && !user) {
+      navigate('/auth');
+    }
+  }, [user, loading, navigate]);
 
-  const handleAddTransaction = (newTransaction: Omit<Transaction, 'id' | 'createdAt'>) => {
+  // Load initial data
+  useEffect(() => {
+    const loadData = async () => {
+      if (!user) return;
+      
+      const loaded = await loadTransactions();
+      setTransactions(loaded);
+      const settings = await loadSettings();
+      setViewType(settings.defaultView);
+    };
+    loadData();
+  }, [refreshKey, user]);
+
+  // Real-time sync
+  useRealtimeSync(
+    () => setRefreshKey(prev => prev + 1),
+    () => setRefreshKey(prev => prev + 1),
+    () => setRefreshKey(prev => prev + 1)
+  );
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  if (!user) return null;
+
+  const handleAddTransaction = async (newTransaction: Omit<Transaction, 'id' | 'createdAt'>) => {
     if (editingTransaction) {
       // Update existing transaction
       const updated = transactions.map(t =>
@@ -40,7 +75,7 @@ const Index = () => {
           : t
       );
       setTransactions(updated);
-      saveTransactions(updated);
+      await saveTransactions(updated);
       toast.success('Transaction updated');
       setEditingTransaction(null);
     } else {
@@ -53,7 +88,7 @@ const Index = () => {
 
       const updated = [transaction, ...transactions];
       setTransactions(updated);
-      saveTransactions(updated);
+      await saveTransactions(updated);
       
       toast.success('Transaction added', {
         description: `${newTransaction.type === 'income' ? '+' : '-'}$${newTransaction.amount.toFixed(2)} ${newTransaction.note}`,
@@ -101,10 +136,10 @@ const Index = () => {
     }
   };
 
-  const handleDeleteTransaction = (id: string) => {
+  const handleDeleteTransaction = async (id: string) => {
     const updated = transactions.filter(t => t.id !== id);
     setTransactions(updated);
-    saveTransactions(updated);
+    await saveTransactions(updated);
     toast.success('Transaction deleted');
     setEditingTransaction(null);
   };
