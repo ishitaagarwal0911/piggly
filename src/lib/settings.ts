@@ -101,15 +101,9 @@ export const loadSettings = async (): Promise<AppSettings> => {
       order: c.order_index,
     }));
 
-    // Merge default categories with custom categories
-    const defaultCategories = getDefaultCategories();
-    const customCategoryIds = new Set(categories.map(c => c.id));
-    const mergedCategories = [
-      ...categories,
-      ...defaultCategories.filter(dc => !customCategoryIds.has(dc.id))
-    ];
-    
-    const finalCategories = mergedCategories.sort((a, b) => a.order - b.order);
+    // Database-first: All categories come from database only
+    // Default categories are seeded on signup via seed_default_categories()
+    const finalCategories = categories.sort((a, b) => a.order - b.order);
     
     // Update categories cache for synchronous access
     setCategoriesCache(finalCategories);

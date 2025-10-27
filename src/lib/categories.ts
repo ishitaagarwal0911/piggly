@@ -4,6 +4,9 @@ import { hexToRgba } from './utils';
 
 let cachedCategories: CustomCategory[] | null = null;
 
+// NOTE: These defaults are for reference only
+// Actual categories are seeded in the database on user signup via seed_default_categories()
+// All category operations (add, edit, delete) work directly with the database
 export const getDefaultCategories = (): CustomCategory[] => [
   { id: 'food', name: 'Food & Drinks', icon: '🍽️', color: hexToRgba('#FFD4B2', 0.70), type: 'expense', order: 0 },
   { id: 'transport', name: 'Transport', icon: '🚗', color: hexToRgba('#A3C4F3', 0.70), type: 'expense', order: 1 },
