@@ -50,62 +50,45 @@ export default defineConfig(({ mode }) => ({
         ]
       },
     workbox: {
-      workbox: {
-  globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2}'],
-  navigateFallback: null,
-  cleanupOutdatedCaches: true,
-  skipWaiting: false,
-  clientsClaim: false,
-  runtimeCaching: [
-    {
-      urlPattern: /\/manifest\.json$/,
-      handler: 'NetworkFirst',
-      options: {
-        cacheName: 'manifest-cache',
-        networkTimeoutSeconds: 2,
-        expiration: { maxEntries: 1, maxAgeSeconds: 0 }
-      }
-    },
-    {
-      urlPattern: /\.(?:woff|woff2|ttf|otf)$/,
-      handler: 'CacheFirst',
-      options: {
-        cacheName: 'fonts-cache',
-        expiration: { maxEntries: 20, maxAgeSeconds: 60 * 60 * 24 * 365 },
-        cacheableResponse: { statuses: [0, 200] }
-      }
-    },
-    {
-      urlPattern: /\.(?:png|jpg|jpeg|svg|gif|webp|ico)$/,
-      handler: 'CacheFirst',
-      options: {
-        cacheName: 'images-cache',
-        expiration: { maxEntries: 60, maxAgeSeconds: 60 * 60 * 24 * 30 }
-      }
-    },
-    {
-      urlPattern: /^https:\/\/.*\.supabase\.co\/.*/i,
-      handler: 'NetworkFirst',
-      options: {
-        cacheName: 'api-cache',
-        networkTimeoutSeconds: 3,
-        expiration: { maxEntries: 100, maxAgeSeconds: 60 * 60 * 24 }
-      }
-    }
-  ]
-}
+      globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2}'],
+      navigateFallback: null,
+      cleanupOutdatedCaches: true,
+      skipWaiting: false,
+      clientsClaim: false,
+      runtimeCaching: [
+        {
+          urlPattern: /\/manifest\.json$/,
+          handler: 'NetworkFirst',
+          options: {
+            cacheName: 'manifest-cache',
+            networkTimeoutSeconds: 2,
+            expiration: { maxEntries: 1, maxAgeSeconds: 0 }
+          }
         },
-        // Supabase API: Network-first with fast fallback
+        {
+          urlPattern: /\.(?:woff|woff2|ttf|otf)$/,
+          handler: 'CacheFirst',
+          options: {
+            cacheName: 'fonts-cache',
+            expiration: { maxEntries: 20, maxAgeSeconds: 60 * 60 * 24 * 365 },
+            cacheableResponse: { statuses: [0, 200] }
+          }
+        },
+        {
+          urlPattern: /\.(?:png|jpg|jpeg|svg|gif|webp|ico)$/,
+          handler: 'CacheFirst',
+          options: {
+            cacheName: 'images-cache',
+            expiration: { maxEntries: 60, maxAgeSeconds: 60 * 60 * 24 * 30 }
+          }
+        },
         {
           urlPattern: /^https:\/\/.*\.supabase\.co\/.*/i,
           handler: 'NetworkFirst',
           options: {
             cacheName: 'api-cache',
-            networkTimeoutSeconds: 3, // Faster fallback to cache
-            expiration: {
-              maxEntries: 100,
-              maxAgeSeconds: 60 * 60 * 24 // 1 day
-            }
+            networkTimeoutSeconds: 3,
+            expiration: { maxEntries: 100, maxAgeSeconds: 60 * 60 * 24 }
           }
         }
       ]
