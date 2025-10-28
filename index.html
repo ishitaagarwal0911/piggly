@@ -6,10 +6,48 @@
     <title>Piggly by Recess Club</title>
     <meta name="description" content="Track your monthly expenses">
     <meta name="author" content="Lovable" />
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-    <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"></noscript>
+    
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#9b87f5">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Piggly">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+    <link rel="manifest" href="/manifest.json">
+    
+    <!-- Resource Hints for Performance -->
+    <link rel="preconnect" href="https://bwcbjcboceplmjfieffp.supabase.co">
+    <link rel="dns-prefetch" href="https://bwcbjcboceplmjfieffp.supabase.co">
+    
+    <!-- Preload Critical Assets -->
+    <link rel="preload" href="/fonts/inter-400.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="/fonts/inter-600.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="modulepreload" href="/src/main.tsx">
+    
+    <!-- Critical CSS for Instant Render -->
+    <style>
+      body { 
+        margin: 0;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        background: #f7f5f2;
+      }
+      .dark body { 
+        background: #1f1f1f;
+        color: #e5e0d8;
+      }
+      @keyframes spin {
+        to { transform: rotate(360deg); }
+      }
+      .animate-spin {
+        animation: spin 1s linear infinite;
+      }
+      @keyframes pulse {
+        50% { opacity: .5; }
+      }
+      .animate-pulse {
+        animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+      }
+    </style>
 
     
     
