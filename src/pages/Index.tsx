@@ -149,8 +149,15 @@ const Index = () => {
       setTransactions(prev => prev.filter(t => t.id !== payload.old.id));
     }
   }, []); // No dependencies - uses functional updates
+
+  const handleCategoryChange = useCallback(async () => {
+    console.log('[Index] Category changed via realtime');
+    setCategoriesLoaded(false);
+    await loadSettings();
+    setCategoriesLoaded(true);
+  }, []);
   
-  useRealtimeSync(handleRealtimeChange, undefined, undefined);
+  useRealtimeSync(handleRealtimeChange, handleCategoryChange, undefined);
 
   // Only show skeleton on initial cold load without cache or when categories aren't loaded
   if (loading || (dataLoading && transactions.length === 0) || !categoriesLoaded) {
@@ -301,9 +308,13 @@ const Index = () => {
     if (newView) {
       setViewType(newView);
     }
-    // Reload settings to update currency
+    // Force category reload when settings change
+    setCategoriesLoaded(false);
+    
+    // Reload settings to update currency and categories
     const settings = await loadSettings();
     setCurrency(settings.currency.symbol);
+    setCategoriesLoaded(true);
   };
 
   const handleCategoryClick = (category: string) => {
