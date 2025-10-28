@@ -1,14 +1,16 @@
 import { useState, useEffect } from 'react';
 import { Transaction, TransactionType } from '@/types/transaction';
 import { categories, getCategoryInfo } from '@/lib/categories';
+import { addCategory, loadSettings } from '@/lib/settings';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
-import { CalendarIcon } from 'lucide-react';
+import { CalendarIcon, Plus } from 'lucide-react';
 import { format } from 'date-fns';
+import { toast } from 'sonner';
 
 interface AddTransactionDialogProps {
   open: boolean;
@@ -37,6 +39,9 @@ export const AddTransactionDialog = ({
   const [firstOperand, setFirstOperand] = useState<number | null>(null);
   const [operator, setOperator] = useState<string | null>(null);
   const [waitingForSecondOperand, setWaitingForSecondOperand] = useState(false);
+  const [showAddCategory, setShowAddCategory] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState('');
+  const [newCategoryIcon, setNewCategoryIcon] = useState('');
 
   // Sync form state when editingTransaction changes
   useEffect(() => {
@@ -164,6 +169,32 @@ export const AddTransactionDialog = ({
     }
   };
 
+  const handleAddCategory = async () => {
+    if (!newCategoryName.trim() || !newCategoryIcon.trim()) {
+      toast.error('Please enter both name and icon');
+      return;
+    }
+
+    try {
+      await addCategory({ 
+        name: newCategoryName.trim(), 
+        icon: newCategoryIcon.trim(), 
+        type 
+      });
+      await loadSettings(); // Reload to refresh cache
+      toast.success('Category added');
+      setShowAddCategory(false);
+      setNewCategoryName('');
+      setNewCategoryIcon('');
+      // Select the newly added category
+      const updatedCategories = categories();
+      const newCat = updatedCategories.find(c => c.name === newCategoryName.trim());
+      if (newCat) setCategory(newCat.id);
+    } catch (error) {
+      toast.error('Failed to add category');
+    }
+  };
+
   const displayCategories = allCategories.filter(cat => cat.type === type);
 
   return (
@@ -228,22 +259,60 @@ export const AddTransactionDialog = ({
                   onClick={() => setCategory(cat.id)}
                   className={`p-3 rounded-xl flex flex-col items-center gap-1 transition-all ${
                     category === cat.id
-                      ? 'ring-2 ring-primary'
+                      ? 'ring-2'
                       : 'hover:bg-secondary'
                   }`}
                   style={{
-                    backgroundColor:
-                      category === cat.id
-                        ? `${cat.color}15`
-                        : undefined,
+                    borderColor: category === cat.id ? cat.color : undefined,
                   }}
                 >
                   <span className="text-2xl">{cat.icon}</span>
                   <span className="text-xs">{cat.name.split(' ')[0]}</span>
                 </button>
               ))}
+              
+              {/* Add Category Button */}
+              <button
+                onClick={() => setShowAddCategory(true)}
+                className="p-3 rounded-xl flex flex-col items-center justify-center gap-1 transition-all hover:bg-secondary border-2 border-dashed border-muted-foreground/30"
+              >
+                <Plus className="w-6 h-6 text-muted-foreground" />
+                <span className="text-xs text-muted-foreground">Add</span>
+              </button>
             </div>
           </div>
+
+          {/* Quick Add Category Dialog */}
+          {showAddCategory && (
+            <div className="space-y-3 p-4 border rounded-lg bg-secondary/50">
+              <p className="text-sm font-medium">Quick Add Category</p>
+              <Input
+                placeholder="Category name"
+                value={newCategoryName}
+                onChange={(e) => setNewCategoryName(e.target.value)}
+                maxLength={30}
+              />
+              <Input
+                placeholder="Emoji"
+                value={newCategoryIcon}
+                onChange={(e) => setNewCategoryIcon(e.target.value)}
+                maxLength={5}
+                className="text-2xl text-center"
+              />
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" onClick={() => {
+                  setShowAddCategory(false);
+                  setNewCategoryName('');
+                  setNewCategoryIcon('');
+                }} className="flex-1">
+                  Cancel
+                </Button>
+                <Button size="sm" onClick={handleAddCategory} className="flex-1">
+                  Add
+                </Button>
+              </div>
+            </div>
+          )}
 
           {/* Note Input */}
           <div>

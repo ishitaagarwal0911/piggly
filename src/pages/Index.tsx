@@ -27,7 +27,6 @@ const Index = () => {
   const [transactionType, setTransactionType] = useState<'income' | 'expense'>('expense');
   const [currentDate, setCurrentDate] = useState(new Date());
   const [viewType, setViewType] = useState<ViewType>('monthly');
-  const [refreshKey, setRefreshKey] = useState(0);
   const [detailSheetOpen, setDetailSheetOpen] = useState(false);
   const [detailFilter, setDetailFilter] = useState<{ type?: 'expense' | 'income'; category?: string }>({});
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
@@ -40,7 +39,7 @@ const Index = () => {
     }
   }, [user, loading, isInitialized, navigate]);
 
-  // Load initial data with parallel loading
+  // Load initial data only once
   useEffect(() => {
     const loadData = async () => {
       if (!user) return;
@@ -54,18 +53,12 @@ const Index = () => {
       ]);
       
       setTransactions(loaded);
-      
-      // Only set viewType on INITIAL load (refreshKey === 0), not on subsequent refreshes
-      // This prevents race conditions when settings are updated
-      if (refreshKey === 0) {
-        setViewType(settings.defaultView);
-      }
-      
+      setViewType(settings.defaultView);
       setCurrency(settings.currency.symbol);
       setDataLoading(false);
     };
     loadData();
-  }, [refreshKey, user]);
+  }, [user]); // Only reload when user changes (auth state)
 
   // Real-time sync with proper data transformation
   useRealtimeSync(
@@ -98,8 +91,8 @@ const Index = () => {
         setTransactions(prev => prev.filter(t => t.id !== payload.old.id));
       }
     },
-    () => setRefreshKey(prev => prev + 1),
-    () => setRefreshKey(prev => prev + 1)
+    undefined, // No need to reload settings on sync
+    undefined  // No need to reload settings on error
   );
 
   // App shell pattern - show skeleton while loading for better perceived performance
@@ -167,11 +160,13 @@ const Index = () => {
     setCurrentDate(getNextPeriod(currentDate, viewType));
   };
 
-  const handleSettingsChange = (newView?: ViewType) => {
+  const handleSettingsChange = async (newView?: ViewType) => {
     if (newView) {
       setViewType(newView);
     }
-    setRefreshKey(prev => prev + 1);
+    // Reload settings to update currency
+    const settings = await loadSettings();
+    setCurrency(settings.currency.symbol);
   };
 
   const handleCategoryClick = (category: string) => {
@@ -260,10 +255,11 @@ const Index = () => {
       <div className="fixed bottom-8 left-0 right-0 flex justify-center pointer-events-none z-50">
         <Button
           size="lg"
-          className="rounded-full w-14 h-14 shadow-notion-hover pointer-events-auto transition-transform hover:scale-105 active:scale-95"
+          className="rounded-full px-6 h-14 shadow-notion-hover pointer-events-auto transition-transform hover:scale-105 active:scale-95 flex items-center gap-2"
           onClick={() => setShowAddDialog(true)}
         >
-          <Plus className="w-6 h-6" />
+          <Plus className="w-5 h-5" />
+          <span className="font-medium">Add</span>
         </Button>
       </div>
 
