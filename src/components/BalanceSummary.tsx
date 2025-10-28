@@ -46,7 +46,7 @@ export const BalanceSummary = ({ transactions, onExpenseClick, onIncomeClick }: 
             <TrendingUp className="w-4 h-4 text-success" />
             <p className="text-xs text-muted-foreground">Income</p>
           </div>
-          <p className="text-[10px] font-semibold text-success tracking-tight">
+          <p className="text-sm font-semibold text-success tracking-tight break-words leading-tight">
             +{currency}{income.toFixed(0)}
           </p>
         </button>
@@ -59,7 +59,7 @@ export const BalanceSummary = ({ transactions, onExpenseClick, onIncomeClick }: 
             <TrendingDown className="w-4 h-4 text-destructive" />
             <p className="text-xs text-muted-foreground">Expenses</p>
           </div>
-          <p className="text-[10px] font-semibold text-destructive tracking-tight">
+          <p className="text-sm font-semibold text-destructive tracking-tight break-words leading-tight">
             -{currency}{expenses.toFixed(0)}
           </p>
         </button>
