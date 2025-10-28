@@ -310,7 +310,7 @@ export const AddTransactionDialog = ({
                 value={newCategoryIcon}
                 onChange={(e) => setNewCategoryIcon(e.target.value)}
                 maxLength={5}
-                className="text-2xl text-center"
+                className="text-center"
               />
               <div className="flex gap-2">
                 <Button variant="outline" size="sm" onClick={() => {
