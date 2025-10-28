@@ -16,9 +16,9 @@ export function useHistoryState<T>(initialValue: T, modalKey: string): [T, (valu
   const setValue = useCallback((newValue: T) => {
     // When opening a modal (setting to truthy value)
     if (newValue && !value) {
-      // Push a new history entry
-      window.history.pushState(
-        { modal: modalKey, timestamp: Date.now() },
+      // Use replaceState instead of pushState to improve bfcache compatibility
+      window.history.replaceState(
+        { ...window.history.state, modal: modalKey, timestamp: Date.now() },
         '',
         window.location.href
       );

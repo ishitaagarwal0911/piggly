@@ -1,12 +1,30 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 
-export const useRealtimeSync = (onTransactionChange: (payload: any) => void, onCategoryChange: () => void, onSettingsChange: () => void) => {
+export const useRealtimeSync = (
+  onTransactionChange: (payload: any) => void, 
+  onCategoryChange?: () => void, 
+  onSettingsChange?: () => void
+) => {
   const { user } = useAuth();
+  
+  // Store callbacks in refs to avoid re-subscribing when they change
+  const transactionCallbackRef = useRef(onTransactionChange);
+  const categoryCallbackRef = useRef(onCategoryChange);
+  const settingsCallbackRef = useRef(onSettingsChange);
+  
+  // Update refs when callbacks change
+  useEffect(() => {
+    transactionCallbackRef.current = onTransactionChange;
+    categoryCallbackRef.current = onCategoryChange;
+    settingsCallbackRef.current = onSettingsChange;
+  });
 
   useEffect(() => {
     if (!user) return;
+    
+    console.log('[useRealtimeSync] Subscribing to channels for user:', user.id);
 
     // Subscribe to transactions changes
     const transactionsChannel = supabase
@@ -20,7 +38,7 @@ export const useRealtimeSync = (onTransactionChange: (payload: any) => void, onC
           filter: `user_id=eq.${user.id}`,
         },
         (payload) => {
-          onTransactionChange(payload);
+          transactionCallbackRef.current?.(payload);
         }
       )
       .subscribe();
@@ -37,7 +55,7 @@ export const useRealtimeSync = (onTransactionChange: (payload: any) => void, onC
           filter: `user_id=eq.${user.id}`,
         },
         () => {
-          onCategoryChange();
+          categoryCallbackRef.current?.();
         }
       )
       .subscribe();
@@ -54,15 +72,16 @@ export const useRealtimeSync = (onTransactionChange: (payload: any) => void, onC
           filter: `user_id=eq.${user.id}`,
         },
         () => {
-          onSettingsChange();
+          settingsCallbackRef.current?.();
         }
       )
       .subscribe();
 
     return () => {
+      console.log('[useRealtimeSync] Unsubscribing from channels');
       supabase.removeChannel(transactionsChannel);
       supabase.removeChannel(categoriesChannel);
       supabase.removeChannel(settingsChannel);
     };
-  }, [user, onTransactionChange, onCategoryChange, onSettingsChange]);
+  }, [user?.id]); // Only re-subscribe if user ID changes
 };

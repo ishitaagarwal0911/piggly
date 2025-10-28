@@ -1,4 +1,4 @@
-import { useState, useEffect, lazy, Suspense } from 'react';
+import { useState, useEffect, useCallback, useRef, lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Transaction } from '@/types/transaction';
 import { BalanceSummary } from '@/components/BalanceSummary';
@@ -35,9 +35,31 @@ const Index = () => {
   const [detailFilter, setDetailFilter] = useState<{ type?: 'expense' | 'income'; category?: string }>({});
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const [currency, setCurrency] = useState('₹');
+  
+  // Track user ID to prevent unnecessary reloads
+  const [hasLoadedData, setHasLoadedData] = useState(false);
+  const userIdRef = useRef<string | null>(null);
 
   // Restore page state across cold starts
   usePageRestore(currentDate, viewType);
+
+  // Debug: Track component lifecycle
+  useEffect(() => {
+    console.log('[Index] Component mounted/updated', {
+      userId: user?.id,
+      transactionCount: transactions.length,
+      timestamp: Date.now()
+    });
+  }, [user?.id, transactions.length]);
+
+  // Debug: Track visibility changes
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      console.log('[Index] Visibility changed:', document.hidden ? 'hidden' : 'visible');
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, []);
 
   // Redirect to auth if not authenticated
   useEffect(() => {
@@ -50,6 +72,15 @@ const Index = () => {
   useEffect(() => {
     const loadData = async () => {
       if (!user) return;
+      
+      // Only load if user changed OR first load
+      if (hasLoadedData && userIdRef.current === user.id) {
+        console.log('[Index] Skipping data load - same user already loaded');
+        return;
+      }
+      
+      console.log('[Index] Loading data for user:', user.id);
+      userIdRef.current = user.id;
       
       // Try to load from cache first (synchronous, instant)
       const cached = getCachedTransactions(user.id);
@@ -76,44 +107,44 @@ const Index = () => {
       setCurrency(settings.currency.symbol);
       setDataLoading(false);
       setIsSyncing(false);
+      setHasLoadedData(true);
     };
     loadData();
-  }, [user]); // Only reload when user changes (auth state)
+  }, [user?.id, hasLoadedData]); // Depend on user.id, not user object
 
-  // Real-time sync with proper data transformation
-  useRealtimeSync(
-    (payload) => {
-      if (payload.eventType === 'INSERT') {
-        const newTransaction: Transaction = {
-          id: payload.new.id,
-          amount: parseFloat(String(payload.new.amount)),
-          type: payload.new.type,
-          category: payload.new.category,
-          note: payload.new.note || '',
-          date: new Date(payload.new.date),
-          createdAt: new Date(payload.new.created_at),
-          updatedAt: payload.new.updated_at ? new Date(payload.new.updated_at) : undefined,
-        };
-        setTransactions(prev => [newTransaction, ...prev]);
-      } else if (payload.eventType === 'UPDATE') {
-        const updatedTransaction: Transaction = {
-          id: payload.new.id,
-          amount: parseFloat(String(payload.new.amount)),
-          type: payload.new.type,
-          category: payload.new.category,
-          note: payload.new.note || '',
-          date: new Date(payload.new.date),
-          createdAt: new Date(payload.new.created_at),
-          updatedAt: payload.new.updated_at ? new Date(payload.new.updated_at) : undefined,
-        };
-        setTransactions(prev => prev.map(t => t.id === updatedTransaction.id ? updatedTransaction : t));
-      } else if (payload.eventType === 'DELETE') {
-        setTransactions(prev => prev.filter(t => t.id !== payload.old.id));
-      }
-    },
-    undefined, // No need to reload settings on sync
-    undefined  // No need to reload settings on error
-  );
+  // Real-time sync with stable callback
+  const handleRealtimeChange = useCallback((payload: any) => {
+    console.log('[Index] Realtime event:', payload.eventType);
+    if (payload.eventType === 'INSERT') {
+      const newTransaction: Transaction = {
+        id: payload.new.id,
+        amount: parseFloat(String(payload.new.amount)),
+        type: payload.new.type,
+        category: payload.new.category,
+        note: payload.new.note || '',
+        date: new Date(payload.new.date),
+        createdAt: new Date(payload.new.created_at),
+        updatedAt: payload.new.updated_at ? new Date(payload.new.updated_at) : undefined,
+      };
+      setTransactions(prev => [newTransaction, ...prev]);
+    } else if (payload.eventType === 'UPDATE') {
+      const updatedTransaction: Transaction = {
+        id: payload.new.id,
+        amount: parseFloat(String(payload.new.amount)),
+        type: payload.new.type,
+        category: payload.new.category,
+        note: payload.new.note || '',
+        date: new Date(payload.new.date),
+        createdAt: new Date(payload.new.created_at),
+        updatedAt: payload.new.updated_at ? new Date(payload.new.updated_at) : undefined,
+      };
+      setTransactions(prev => prev.map(t => t.id === updatedTransaction.id ? updatedTransaction : t));
+    } else if (payload.eventType === 'DELETE') {
+      setTransactions(prev => prev.filter(t => t.id !== payload.old.id));
+    }
+  }, []); // No dependencies - uses functional updates
+  
+  useRealtimeSync(handleRealtimeChange, undefined, undefined);
 
   // Only show skeleton on initial cold load without cache
   if (loading || (dataLoading && transactions.length === 0)) {
