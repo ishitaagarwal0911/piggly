@@ -25,14 +25,11 @@ const Auth = () => {
     }
   }, [user, isInitialized, navigate]);
 
-  // Check for verification success from magic link
+  // Handle code exchange for session
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const isVerified = params.get('verified') === 'true';
-    const shouldReturnToPWA = params.get('return') === 'pwa';
     const code = params.get('code');
     
-    // Handle code exchange for session
     if (code) {
       supabase.auth.exchangeCodeForSession(code).catch(() => {
         // Silently fail, user can retry with OTP
@@ -54,11 +51,6 @@ const Auth = () => {
           // Silently fail, user can retry with OTP
         });
       }
-    }
-    
-    if (isVerified) {
-      toast.success('Successfully signed in!');
-      // Let the user/session check in the first useEffect handle the redirect
     }
   }, []);
 
