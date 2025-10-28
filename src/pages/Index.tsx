@@ -152,9 +152,8 @@ const Index = () => {
 
   const handleCategoryChange = useCallback(async () => {
     console.log('[Index] Category changed via realtime');
-    setCategoriesLoaded(false);
+    // Just reload settings in background - don't trigger loading state
     await loadSettings();
-    setCategoriesLoaded(true);
   }, []);
   
   useRealtimeSync(handleRealtimeChange, handleCategoryChange, undefined);
@@ -308,13 +307,9 @@ const Index = () => {
     if (newView) {
       setViewType(newView);
     }
-    // Force category reload when settings change
-    setCategoriesLoaded(false);
-    
-    // Reload settings to update currency and categories
+    // Reload settings to update currency and categories in background
     const settings = await loadSettings();
     setCurrency(settings.currency.symbol);
-    setCategoriesLoaded(true);
   };
 
   const handleCategoryClick = (category: string) => {

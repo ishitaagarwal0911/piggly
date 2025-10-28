@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Transaction, TransactionType } from '@/types/transaction';
 import { categories, getCategoryInfo } from '@/lib/categories';
 import { addCategory, loadSettings } from '@/lib/settings';
@@ -42,6 +42,7 @@ export const AddTransactionDialog = ({
   const [showAddCategory, setShowAddCategory] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState('');
   const [newCategoryIcon, setNewCategoryIcon] = useState('');
+  const quickAddRef = useRef<HTMLDivElement>(null);
 
   // Sync form state when editingTransaction changes
   useEffect(() => {
@@ -78,6 +79,18 @@ export const AddTransactionDialog = ({
       setCategory(defaultCategory?.id || '');
     }
   }, [open, allCategories, initialType]);
+
+  // Auto-scroll to quick add form when it opens
+  useEffect(() => {
+    if (showAddCategory && quickAddRef.current) {
+      setTimeout(() => {
+        quickAddRef.current?.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'nearest' 
+        });
+      }, 100);
+    }
+  }, [showAddCategory]);
 
   const performCalculation = (a: number, b: number, op: string): number => {
     switch (op) {
@@ -284,7 +297,7 @@ export const AddTransactionDialog = ({
 
           {/* Quick Add Category Dialog */}
           {showAddCategory && (
-            <div className="space-y-3 p-4 border rounded-lg bg-secondary/50">
+            <div ref={quickAddRef} className="space-y-3 p-4 border rounded-lg bg-secondary/50">
               <p className="text-sm font-medium">Quick Add Category</p>
               <Input
                 placeholder="Category name"
