@@ -23,6 +23,6 @@ export function isPWA(): boolean {
 export function formatAmount(amount: number): string {
   // Round to 2 decimal places
   const rounded = Math.round(amount * 100) / 100;
-  // Convert to string and remove trailing zeros
-  return rounded.toString().replace(/\.?0+$/, '');
+  // Format with up to 2 decimals, removing trailing zeros after decimal point
+  return rounded.toFixed(2).replace(/\.00$/, '').replace(/(\.\d)0$/, '$1');
 }
