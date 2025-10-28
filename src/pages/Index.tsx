@@ -16,6 +16,7 @@ import { useHistoryState } from '@/hooks/useHistoryState';
 import { usePageRestore } from '@/hooks/usePageRestore';
 import { getCachedTransactions, isCacheFresh } from '@/lib/cache';
 import { toast } from 'sonner';
+import { useSwipeGesture } from '@/hooks/useSwipeGesture';
 
 // Lazy load heavy components for faster initial load
 const AddTransactionDialog = lazy(() => import('@/components/AddTransactionDialog'));
@@ -35,6 +36,7 @@ const Index = () => {
   const [detailFilter, setDetailFilter] = useState<{ type?: 'expense' | 'income'; category?: string }>({});
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const [currency, setCurrency] = useState('₹');
+  const [settingsOpen, setSettingsOpen] = useState(false);
   
   // Track user ID to prevent unnecessary reloads
   const [hasLoadedData, setHasLoadedData] = useState(false);
@@ -43,6 +45,14 @@ const Index = () => {
 
   // Restore page state across cold starts
   usePageRestore(currentDate, viewType);
+
+  // Swipe gesture to open settings menu (mobile)
+  useSwipeGesture({
+    onSwipeRight: () => {
+      setSettingsOpen(true);
+    },
+    edgeThreshold: 50, // Start swipe within 50px from left edge
+  });
 
   // Debug: Track component lifecycle
   useEffect(() => {
@@ -376,7 +386,11 @@ const Index = () => {
             onDateSelect={handleDateSelect}
           />
           <div className="absolute right-4">
-            <SettingsSheet onSettingsChange={handleSettingsChange} />
+            <SettingsSheet 
+              onSettingsChange={handleSettingsChange}
+              open={settingsOpen}
+              onOpenChange={setSettingsOpen}
+            />
           </div>
         </div>
       </header>

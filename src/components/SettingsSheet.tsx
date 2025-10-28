@@ -18,10 +18,16 @@ import { ViewType } from '@/lib/dateUtils';
 
 interface SettingsSheetProps {
   onSettingsChange: (newView?: ViewType) => void;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
-export const SettingsSheet = ({ onSettingsChange }: SettingsSheetProps) => {
-  const [open, setOpen] = useHistoryState(false, 'settings');
+export const SettingsSheet = ({ onSettingsChange, open: externalOpen, onOpenChange: externalOnOpenChange }: SettingsSheetProps) => {
+  const [internalOpen, setInternalOpen] = useHistoryState(false, 'settings');
+  
+  // Use external control if provided, otherwise use internal state
+  const open = externalOpen !== undefined ? externalOpen : internalOpen;
+  const setOpen = externalOnOpenChange || setInternalOpen;
   const [settings, setSettings] = useState<AppSettings>({
     categories: [],
     currency: CURRENCY_OPTIONS[0],

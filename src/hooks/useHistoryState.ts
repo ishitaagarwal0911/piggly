@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 /**
  * Custom hook that synchronizes state with browser history
  * Allows the back button to close modals instead of navigating away
+ * Prevents tab closure on mobile by using pushState and checking history length
  * 
  * @param initialValue - Initial state value
  * @param modalKey - Unique identifier for this modal
@@ -12,16 +13,22 @@ export function useHistoryState<T>(initialValue: T, modalKey: string): [T, (valu
   const [value, setValueState] = useState<T>(initialValue);
   const isSettingFromPopState = useRef(false);
   const currentModalKey = useRef(modalKey);
+  const hasAddedHistoryEntry = useRef(false);
 
   const setValue = useCallback((newValue: T) => {
     // When opening a modal (setting to truthy value)
     if (newValue && !value) {
-      // Use replaceState instead of pushState to improve bfcache compatibility
-      window.history.replaceState(
-        { ...window.history.state, modal: modalKey, timestamp: Date.now() },
-        '',
-        window.location.href
-      );
+      // Use pushState to create a proper history entry (so back button can close modal)
+      try {
+        window.history.pushState(
+          { ...window.history.state, modal: modalKey, timestamp: Date.now() },
+          '',
+          window.location.href
+        );
+        hasAddedHistoryEntry.current = true;
+      } catch (e) {
+        console.warn('Failed to add history entry:', e);
+      }
     }
     setValueState(newValue);
   }, [value, modalKey]);
@@ -41,6 +48,7 @@ export function useHistoryState<T>(initialValue: T, modalKey: string): [T, (valu
           isSettingFromPopState.current = true;
           setValueState(initialValue);
           isSettingFromPopState.current = false;
+          hasAddedHistoryEntry.current = false;
         }
       }
     };
@@ -55,17 +63,19 @@ export function useHistoryState<T>(initialValue: T, modalKey: string): [T, (valu
   // Clean up history entry when component unmounts with modal open
   useEffect(() => {
     return () => {
-      if (value && !isSettingFromPopState.current) {
-        // If modal is open when unmounting, try to clean up history
+      if (value && !isSettingFromPopState.current && hasAddedHistoryEntry.current) {
+        // Only call history.back() if we have more than 1 entry (prevents tab closure)
         try {
           const state = window.history.state;
-          if (state && state.modal === currentModalKey.current) {
+          if (state && state.modal === currentModalKey.current && window.history.length > 1) {
             window.history.back();
           }
         } catch (e) {
           // Ignore errors during cleanup
+          console.warn('History cleanup error:', e);
         }
       }
+      hasAddedHistoryEntry.current = false;
     };
   }, [value]);
 
