@@ -20,7 +20,7 @@ export default defineConfig(({ mode }) => ({
         name: 'Piggly by Recess Club',
         short_name: 'Piggly',
         description: 'Track your monthly expenses',
-        theme_color: '#9b87f5',
+        theme_color: '#1f1f1f',
         background_color: '#ffffff',
         display: 'standalone',
         orientation: 'portrait-primary',
@@ -30,13 +30,13 @@ export default defineConfig(({ mode }) => ({
             src: 'icon-192.png',
             sizes: '192x192',
             type: 'image/png',
-            purpose: 'any maskable'
+            purpose: 'any'
           },
           {
             src: 'icon-512.png',
             sizes: '512x512',
             type: 'image/png',
-            purpose: 'any maskable'
+            purpose: 'any'
           }
         ]
       },
@@ -44,7 +44,22 @@ export default defineConfig(({ mode }) => ({
       // Aggressive caching for instant loads
       globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2}'],
       navigateFallback: null,
+      // Force service worker to update
+      cleanupOutdatedCaches: true,
       runtimeCaching: [
+        // Manifest: Always fetch fresh to get theme color updates
+        {
+          urlPattern: /\/manifest\.json$/,
+          handler: 'NetworkFirst',
+          options: {
+            cacheName: 'manifest-cache',
+            networkTimeoutSeconds: 2,
+            expiration: {
+              maxEntries: 1,
+              maxAgeSeconds: 0 // Always revalidate
+            }
+          }
+        },
         // Fonts: Cache forever
         {
           urlPattern: /\.(?:woff|woff2|ttf|otf)$/,
