@@ -383,7 +383,7 @@ const Index = () => {
             <img 
               src={piggyTransparent} 
               alt="Piggly" 
-              className="h-8 w-8 object-contain"
+              className="h-10 w-10 object-contain"
             />
           </div>
           <PeriodSelector
