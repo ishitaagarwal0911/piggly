@@ -38,6 +38,7 @@ const Index = () => {
   
   // Track user ID to prevent unnecessary reloads
   const [hasLoadedData, setHasLoadedData] = useState(false);
+  const [categoriesLoaded, setCategoriesLoaded] = useState(false);
   const userIdRef = useRef<string | null>(null);
 
   // Restore page state across cold starts
@@ -81,6 +82,7 @@ const Index = () => {
       
       console.log('[Index] Loading data for user:', user.id);
       userIdRef.current = user.id;
+      setCategoriesLoaded(false);
       
       // Try to load from cache first (synchronous, instant)
       const cached = getCachedTransactions(user.id);
@@ -105,6 +107,7 @@ const Index = () => {
       setTransactions(loaded);
       setViewType(settings.defaultView);
       setCurrency(settings.currency.symbol);
+      setCategoriesLoaded(true);
       setDataLoading(false);
       setIsSyncing(false);
       setHasLoadedData(true);
@@ -146,8 +149,8 @@ const Index = () => {
   
   useRealtimeSync(handleRealtimeChange, undefined, undefined);
 
-  // Only show skeleton on initial cold load without cache
-  if (loading || (dataLoading && transactions.length === 0)) {
+  // Only show skeleton on initial cold load without cache or when categories aren't loaded
+  if (loading || (dataLoading && transactions.length === 0) || !categoriesLoaded) {
     return (
       <div className="min-h-screen bg-background">
         <header className="bg-background border-b border-border">
