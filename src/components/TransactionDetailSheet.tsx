@@ -96,8 +96,7 @@ export const TransactionDetailSheet = ({
         className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-muted/50 transition-colors text-left"
       >
         <div 
-          className="w-10 h-10 rounded-xl flex items-center justify-center text-lg flex-shrink-0"
-          style={{ backgroundColor: categoryInfo?.color || '#D4D4D4' }}
+          className="w-10 h-10 flex items-center justify-center text-lg flex-shrink-0"
         >
           {categoryInfo?.icon || '📦'}
         </div>
@@ -205,8 +204,7 @@ export const TransactionDetailSheet = ({
                     <AccordionTrigger className="hover:no-underline py-3">
                       <div className="flex items-center gap-3 flex-1">
                         <div 
-                          className="w-10 h-10 rounded-xl flex items-center justify-center text-lg flex-shrink-0"
-                          style={{ backgroundColor: color }}
+                          className="w-10 h-10 flex items-center justify-center text-lg flex-shrink-0"
                         >
                           {icon}
                         </div>
