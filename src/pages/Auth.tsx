@@ -202,7 +202,7 @@ const Auth = () => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-gradient-to-br from-background via-background to-primary/5">
+    <div className="min-h-screen flex flex-col items-center justify-center px-8 py-4 bg-gradient-to-br from-background via-background to-primary/5">
       <div className="w-full max-w-md">
         {/* Logo and Title */}
         <div className="flex flex-col items-center mb-8">
