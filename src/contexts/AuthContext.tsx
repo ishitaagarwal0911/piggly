@@ -20,30 +20,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
-    // Optimistic loading - check for cached session first
-    setIsInitialized(true);
-    
-    // Check localStorage for cached session to render immediately
-    const cachedSession = localStorage.getItem('sb-bwcbjcboceplmjfieffp-auth-token');
-    if (cachedSession) {
-      try {
-        const parsed = JSON.parse(cachedSession);
-        if (parsed && parsed.access_token) {
-          setLoading(false); // Allow optimistic render with cached state
-        }
-      } catch (e) {
-        // Invalid cache, continue with normal flow
-      }
-    }
-    
-    // Then verify with server
+    // Get initial session first
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
+      setIsInitialized(true);
     });
 
-    // Listen for auth state changes
+    // Then set up listener for future changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         setSession(session);
