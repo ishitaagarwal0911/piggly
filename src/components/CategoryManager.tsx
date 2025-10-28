@@ -134,7 +134,7 @@ export const CategoryManager = ({ onCategoriesChange }: CategoryManagerProps) =>
               className="flex items-center justify-between p-3 rounded-lg bg-secondary/50 hover:bg-secondary transition-smooth cursor-pointer relative"
             >
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg flex items-center justify-center text-xl bg-secondary">
+                <div className="w-10 h-10 rounded-lg flex items-center justify-center text-xl">
                   {cat.icon}
                 </div>
                 <div>
@@ -171,7 +171,7 @@ export const CategoryManager = ({ onCategoriesChange }: CategoryManagerProps) =>
               className="flex items-center justify-between p-3 rounded-lg bg-secondary/50 hover:bg-secondary transition-smooth cursor-pointer relative"
             >
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg flex items-center justify-center text-xl bg-secondary">
+                <div className="w-10 h-10 rounded-lg flex items-center justify-center text-xl">
                   {cat.icon}
                 </div>
                 <div>

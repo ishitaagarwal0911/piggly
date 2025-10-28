@@ -3,9 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Mail, ArrowLeft } from 'lucide-react';
+import { Mail, ArrowLeft, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
 import piggyImage from '@/assets/piggy.png';
+import { isPWA } from '@/lib/utils';
 
 const Auth = () => {
   const { user, loading, isInitialized, sendOTP } = useAuth();
@@ -19,6 +20,32 @@ const Auth = () => {
       navigate('/', { replace: true });
     }
   }, [user, isInitialized, navigate]);
+
+  // Handle deep link detection for magic links
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const isFromEmail = params.get('source') === 'email';
+    const shouldReturnToPWA = params.get('return') === 'pwa';
+    
+    if (isFromEmail && shouldReturnToPWA && !isPWA()) {
+      // User clicked email link but opened in browser
+      const pwaUrl = window.location.origin + window.location.pathname;
+      
+      // Attempt automatic redirect to PWA
+      setTimeout(() => {
+        try {
+          // Try to open in PWA context
+          window.location.replace(pwaUrl);
+        } catch (e) {
+          console.log('Could not auto-redirect to PWA');
+        }
+      }, 100);
+      
+      toast.info('Redirecting to Piggly app...', {
+        description: 'If the app doesn\'t open, please open Piggly from your home screen.'
+      });
+    }
+  }, []);
 
   const handleSendMagicLink = async (e: React.FormEvent) => {
     e.preventDefault();
