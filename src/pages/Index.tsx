@@ -17,6 +17,7 @@ import { usePageRestore } from '@/hooks/usePageRestore';
 import { getCachedTransactions, isCacheFresh } from '@/lib/cache';
 import { toast } from 'sonner';
 import { useSwipeGesture } from '@/hooks/useSwipeGesture';
+import piggyTransparent from '@/assets/piggly_transparent.png';
 
 // Lazy load heavy components for faster initial load
 const AddTransactionDialog = lazy(() => import('@/components/AddTransactionDialog'));
@@ -378,6 +379,13 @@ const Index = () => {
       {/* Header */}
       <header className="bg-background border-b border-border">
         <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-center relative">
+          <div className="absolute left-4">
+            <img 
+              src={piggyTransparent} 
+              alt="Piggly" 
+              className="h-6 w-6 object-contain"
+            />
+          </div>
           <PeriodSelector
             currentDate={currentDate}
             viewType={viewType}

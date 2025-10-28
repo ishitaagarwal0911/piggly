@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
 import { Mail, ArrowLeft, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
-import piggyImage from '@/assets/piggy.png';
+import piggyImage from '@/assets/piggly_transparent.png';
 import { isPWA } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -202,20 +202,22 @@ const Auth = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-6">
-      <div className="w-full max-w-md bg-card rounded-2xl p-8 shadow-notion space-y-6">
-        {/* Piggy Image */}
-        <div className="flex justify-center">
-          <img src={piggyImage} alt="Piggly" className="w-28 h-28 object-contain opacity-90" />
-        </div>
-
-        {/* Welcome Text */}
-        <div className="text-center space-y-2">
-          <h1 className="text-3xl font-semibold tracking-tight text-foreground">
+    <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-gradient-to-br from-background via-background to-primary/5">
+      <div className="w-full max-w-md">
+        {/* Logo and Title */}
+        <div className="flex flex-col items-center mb-8">
+          <div className="w-40 h-40 mb-6 relative">
+            <img 
+              src={piggyImage} 
+              alt="Piggly - Personal Finance Tracker" 
+              className="w-full h-full object-contain drop-shadow-lg"
+            />
+          </div>
+          <h1 className="text-2xl font-bold text-center bg-gradient-to-r from-primary via-primary to-accent bg-clip-text text-transparent mb-2">
             Welcome to Piggly
           </h1>
-          <p className="text-sm text-muted-foreground">
-            A place where you can track all your expenses and income
+          <p className="text-muted-foreground text-center">
+            A place where you can track all your expenses and income.
           </p>
         </div>
 
