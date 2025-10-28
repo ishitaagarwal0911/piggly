@@ -124,8 +124,7 @@ export const ExpenseChart = ({ transactions, onCategoryClick }: ExpenseChartProp
           >
             <div className="flex items-center gap-3 p-2 rounded-lg transition-colors hover:bg-muted/30">
               <div 
-                className="w-9 h-9 rounded-lg flex items-center justify-center text-base flex-shrink-0 backdrop-blur-sm transition-transform group-hover:scale-105"
-                style={{ backgroundColor: color }}
+                className="w-9 h-9 flex items-center justify-center text-xl flex-shrink-0 transition-transform group-hover:scale-105"
               >
                 {icon}
               </div>

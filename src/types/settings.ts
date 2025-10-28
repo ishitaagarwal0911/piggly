@@ -21,14 +21,10 @@ export interface AppSettings {
 }
 
 export const DEFAULT_COLORS = [
-  '#FFC1CC', '#FFB3D9', '#FFE5EC',
-  '#FFD4B2', '#FFE4CC', '#FFEAA7',
-  '#FFF8DC', '#FFFACD', '#FFF5BA',
-  '#D4F4DD', '#C8E6C9', '#B2EBB4',
-  '#CCE5FF', '#B3D9FF', '#A3C4F3',
-  '#E6D7FF', '#D4BBFF', '#C9B3FF',
-  '#F4CCCC', '#E8C4C4', '#FFCCF9',
-  '#E8E8E8', '#D4D4D4', '#C9C9C9'
+  '#FDB022', '#F5A962', '#E87B7B',
+  '#E87BA0', '#B08AD8', '#B899D8',
+  '#6B9FE8', '#57C4C4', '#5FB05F',
+  '#7BC879', '#9D9A97', '#D4D4D4'
 ];
 
 export const CURRENCY_OPTIONS: CurrencyOption[] = [

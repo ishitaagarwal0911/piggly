@@ -34,8 +34,7 @@ export const TransactionList = ({ transactions }: TransactionListProps) => {
               className="flex items-center gap-3 p-3 rounded-xl hover:bg-secondary/50 transition-colors"
             >
               <div
-                className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
-                style={{ backgroundColor: `hsl(var(--${categoryInfo.color}) / 0.15)` }}
+                className="w-10 h-10 flex items-center justify-center flex-shrink-0"
               >
                 <span className="text-lg">{categoryInfo.icon}</span>
               </div>
