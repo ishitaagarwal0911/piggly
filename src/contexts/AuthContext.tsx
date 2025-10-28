@@ -64,7 +64,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
-        emailRedirectTo: `${window.location.origin}/?source=email&return=pwa`
+        emailRedirectTo: `${window.location.origin}/auth?verified=true&return=pwa`
       }
     });
     if (error) throw error;

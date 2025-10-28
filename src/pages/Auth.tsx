@@ -14,6 +14,7 @@ const Auth = () => {
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [linkSent, setLinkSent] = useState(false);
+  const [verified, setVerified] = useState(false);
 
   useEffect(() => {
     if (user && isInitialized) {
@@ -21,29 +22,26 @@ const Auth = () => {
     }
   }, [user, isInitialized, navigate]);
 
-  // Handle deep link detection for magic links
+  // Check for verification success from magic link
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const isFromEmail = params.get('source') === 'email';
+    const isVerified = params.get('verified') === 'true';
     const shouldReturnToPWA = params.get('return') === 'pwa';
     
-    if (isFromEmail && shouldReturnToPWA && !isPWA()) {
-      // User clicked email link but opened in browser
-      const pwaUrl = window.location.origin + window.location.pathname;
+    if (isVerified) {
+      setVerified(true);
       
-      // Attempt automatic redirect to PWA
-      setTimeout(() => {
-        try {
-          // Try to open in PWA context
-          window.location.replace(pwaUrl);
-        } catch (e) {
-          console.log('Could not auto-redirect to PWA');
-        }
-      }, 100);
-      
-      toast.info('Redirecting to Piggly app...', {
-        description: 'If the app doesn\'t open, please open Piggly from your home screen.'
-      });
+      // If in browser (not PWA), show message to return to PWA
+      if (shouldReturnToPWA && !isPWA()) {
+        toast.success('Successfully signed in!', {
+          description: 'Please open Piggly from your home screen to continue.',
+          duration: 10000,
+        });
+      } else {
+        // In PWA or regular browser, show success and redirect
+        toast.success('Successfully signed in!');
+        // Let the user/session check in the first useEffect handle the redirect
+      }
     }
   }, []);
 
@@ -87,7 +85,52 @@ const Auth = () => {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+        <div className="space-y-4 text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          {verified && (
+            <p className="text-sm text-muted-foreground">Completing sign in...</p>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // Show success screen if verified
+  if (verified && !user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background p-6">
+        <div className="w-full max-w-md bg-card rounded-2xl p-8 shadow-notion space-y-6 text-center">
+          <div className="flex justify-center">
+            <img src={piggyImage} alt="Piggly" className="w-28 h-28 object-contain opacity-90" />
+          </div>
+          
+          <div className="space-y-4">
+            <div className="flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 mx-auto">
+              <Mail className="w-8 h-8 text-primary" />
+            </div>
+            
+            <div className="space-y-2">
+              <h2 className="text-2xl font-semibold text-foreground">
+                ✓ Successfully Signed In!
+              </h2>
+              
+              {!isPWA() ? (
+                <div className="space-y-3 pt-2">
+                  <p className="text-sm text-muted-foreground">
+                    Please open <span className="font-semibold text-foreground">Piggly</span> from your home screen to continue
+                  </p>
+                  <div className="bg-secondary/50 rounded-xl p-4 text-xs text-muted-foreground">
+                    Your session is saved and you'll be automatically logged in when you open the app
+                  </div>
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  Redirecting you to your dashboard...
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
