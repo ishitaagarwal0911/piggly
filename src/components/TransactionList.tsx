@@ -1,6 +1,7 @@
 import { Transaction } from '@/types/transaction';
 import { getCategoryInfo } from '@/lib/categories';
 import { format } from 'date-fns';
+import { formatAmount } from '@/lib/utils';
 
 interface TransactionListProps {
   transactions: Transaction[];
@@ -53,7 +54,7 @@ export const TransactionList = ({ transactions }: TransactionListProps) => {
                     : 'text-foreground'
                 }`}
               >
-                {transaction.type === 'income' ? '+' : '-'}${transaction.amount.toFixed(2)}
+                {transaction.type === 'income' ? '+' : '-'}${formatAmount(transaction.amount)}
               </p>
             </div>
           );

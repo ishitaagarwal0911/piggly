@@ -8,6 +8,7 @@ import { format, isSameDay } from 'date-fns';
 import { ChevronDown, ChevronRight, Plus } from 'lucide-react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Button } from '@/components/ui/button';
+import { formatAmount } from '@/lib/utils';
 
 interface TransactionDetailSheetProps {
   open: boolean;
@@ -109,7 +110,7 @@ export const TransactionDetailSheet = ({
         <span className={`text-sm font-semibold whitespace-nowrap ${
           transaction.type === 'income' ? 'text-success' : 'text-destructive'
         }`}>
-          {transaction.type === 'income' ? '+' : '-'}{currency}{transaction.amount.toFixed(2)}
+          {transaction.type === 'income' ? '+' : '-'}{currency}{formatAmount(transaction.amount)}
         </span>
       </button>
     );
@@ -129,7 +130,7 @@ export const TransactionDetailSheet = ({
           <div>
             <p className="text-sm text-muted-foreground">Total</p>
             <p className="text-2xl font-semibold">
-              {currency}{total.toFixed(2)}
+              {currency}{formatAmount(total)}
             </p>
           </div>
           {onAddClick && (
@@ -174,7 +175,7 @@ export const TransactionDetailSheet = ({
                             {isSameDay(date, new Date()) ? 'Today' : format(date, 'MMM d, yyyy')}
                           </h3>
                           <span className="text-sm text-muted-foreground">
-                            {currency}{dayTotal.toFixed(2)}
+                            {currency}{formatAmount(dayTotal)}
                           </span>
                         </div>
                       </AccordionTrigger>
@@ -215,7 +216,7 @@ export const TransactionDetailSheet = ({
                           </p>
                         </div>
                         <span className="text-sm font-semibold">
-                          {currency}{total.toFixed(2)}
+                          {currency}{formatAmount(total)}
                         </span>
                       </div>
                     </AccordionTrigger>

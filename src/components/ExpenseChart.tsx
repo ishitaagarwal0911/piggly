@@ -3,6 +3,7 @@ import { Transaction } from '@/types/transaction';
 import { getCategoryInfo } from '@/lib/categories';
 import { loadSettings } from '@/lib/settings';
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
+import { formatAmount } from '@/lib/utils';
 
 interface ExpenseChartProps {
   transactions: Transaction[];
@@ -132,7 +133,7 @@ export const ExpenseChart = ({ transactions, onCategoryClick }: ExpenseChartProp
                 <div className="flex items-center justify-between gap-2 mb-1.5">
                   <span className="text-sm font-medium truncate">{name}</span>
                   <span className="text-sm font-semibold whitespace-nowrap tracking-tight">
-                    {currency}{amount.toFixed(2)}
+                    {currency}{formatAmount(amount)}
                   </span>
                 </div>
                 <div className="flex items-center gap-2">

@@ -19,3 +19,10 @@ export function isPWA(): boolean {
     document.referrer.includes('android-app://')
   );
 }
+
+export function formatAmount(amount: number): string {
+  // Round to 2 decimal places
+  const rounded = Math.round(amount * 100) / 100;
+  // Convert to string and remove trailing zeros
+  return rounded.toString().replace(/\.?0+$/, '');
+}

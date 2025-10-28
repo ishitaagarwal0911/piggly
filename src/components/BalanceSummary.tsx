@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Transaction } from '@/types/transaction';
 import { TrendingUp, TrendingDown } from 'lucide-react';
 import { loadSettings } from '@/lib/settings';
+import { formatAmount } from '@/lib/utils';
 
 interface BalanceSummaryProps {
   transactions: Transaction[];
@@ -33,7 +34,7 @@ export const BalanceSummary = ({ transactions, onExpenseClick, onIncomeClick }: 
       <div className="text-center mb-6">
         <p className="text-sm text-muted-foreground mb-2">Current Balance</p>
         <h2 className="text-4xl font-semibold tracking-tight">
-          {currency}{balance.toFixed(2)}
+          {currency}{formatAmount(balance)}
         </h2>
       </div>
       
