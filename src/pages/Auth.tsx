@@ -16,7 +16,6 @@ const Auth = () => {
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [linkSent, setLinkSent] = useState(false);
-  const [verified, setVerified] = useState(false);
   const [otp, setOtp] = useState('');
   const [verifying, setVerifying] = useState(false);
 
@@ -58,19 +57,8 @@ const Auth = () => {
     }
     
     if (isVerified) {
-      setVerified(true);
-      
-      // If in browser (not PWA), show message to return to PWA
-      if (shouldReturnToPWA && !isPWA()) {
-        toast.success('Successfully signed in!', {
-          description: 'Please open Piggly from your home screen to continue.',
-          duration: 10000,
-        });
-      } else {
-        // In PWA or regular browser, show success and redirect
-        toast.success('Successfully signed in!');
-        // Let the user/session check in the first useEffect handle the redirect
-      }
+      toast.success('Successfully signed in!');
+      // Let the user/session check in the first useEffect handle the redirect
     }
   }, []);
 
@@ -157,53 +145,11 @@ const Auth = () => {
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="space-y-4 text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-          {verified && (
-            <p className="text-sm text-muted-foreground">Completing sign in...</p>
-          )}
         </div>
       </div>
     );
   }
 
-  // Show success screen if verified
-  if (verified && !user) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background p-6">
-        <div className="w-full max-w-md bg-card rounded-2xl p-8 shadow-notion space-y-6 text-center">
-          <div className="flex justify-center">
-            <img src={piggyImage} alt="Piggly" className="w-28 h-28 object-contain opacity-90" />
-          </div>
-          
-          <div className="space-y-4">
-            <div className="flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 mx-auto">
-              <Mail className="w-8 h-8 text-primary" />
-            </div>
-            
-            <div className="space-y-2">
-              <h2 className="text-2xl font-semibold text-foreground">
-                ✓ Successfully Signed In!
-              </h2>
-              
-              {!isPWA() ? (
-                <div className="space-y-3 pt-2">
-                  <p className="text-sm text-muted-foreground">
-                    Please open <span className="font-semibold text-foreground">Piggly</span> from your home screen to continue
-                  </p>
-                  <div className="bg-secondary/50 rounded-xl p-4 text-xs text-muted-foreground">
-                    Your session is saved and you'll be automatically logged in when you open the app
-                  </div>
-                </div>
-              ) : (
-                <p className="text-sm text-muted-foreground">
-                  Redirecting you to your dashboard...
-                </p>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-8 py-4 bg-gradient-to-br from-background via-background to-primary/5">
@@ -217,7 +163,7 @@ const Auth = () => {
               className="w-full h-full object-contain drop-shadow-lg"
             />
           </div>
-          <h1 className="text-2xl font-bold text-center bg-gradient-to-r from-primary via-primary to-accent bg-clip-text text-transparent mb-2">
+          <h1 className="text-2xl font-bold text-center text-foreground mb-2">
             Welcome to Piggly
           </h1>
           <p className="text-muted-foreground text-center">
