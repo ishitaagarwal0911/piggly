@@ -20,36 +20,42 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
-    // Optimistic loading - check for cached session first
-    setIsInitialized(true);
-    
-    // Check localStorage for cached session to render immediately
-    const cachedSession = localStorage.getItem('sb-bwcbjcboceplmjfieffp-auth-token');
-    if (cachedSession) {
-      try {
-        const parsed = JSON.parse(cachedSession);
-        if (parsed && parsed.access_token) {
-          setLoading(false); // Allow optimistic render with cached state
-        }
-      } catch (e) {
-        // Invalid cache, continue with normal flow
-      }
-    }
-    
-    // Then verify with server
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
-
-    // Listen for auth state changes
+    // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
+        setLoading(false);
       }
     );
+
+    // THEN check for existing session with optimistic loading
+    const loadSession = async () => {
+      // Try to read from cached session immediately
+      const cachedSession = localStorage.getItem('sb-bwcbjcboceplmjfieffp-auth-token');
+      if (cachedSession) {
+        try {
+          const parsed = JSON.parse(cachedSession);
+          if (parsed && parsed.access_token && parsed.user) {
+            // Optimistically set session from cache for instant render
+            setSession(parsed as Session);
+            setUser(parsed.user as User);
+            setLoading(false);
+          }
+        } catch (e) {
+          // Invalid cache, continue with normal flow
+        }
+      }
+      
+      // Verify with server in background
+      const { data: { session } } = await supabase.auth.getSession();
+      setSession(session);
+      setUser(session?.user ?? null);
+      setLoading(false);
+      setIsInitialized(true);
+    };
+    
+    loadSession();
 
     return () => subscription.unsubscribe();
   }, []);

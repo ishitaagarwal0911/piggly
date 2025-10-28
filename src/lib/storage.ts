@@ -1,11 +1,15 @@
 import { Transaction, ExportData } from '@/types/transaction';
 import { supabase } from '@/integrations/supabase/client';
 import { loadSettings } from './settings';
+import { cacheTransactions, getCachedTransactions } from './cache';
 
 export const saveTransactions = async (transactions: Transaction[]): Promise<void> => {
   try {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('Not authenticated');
+
+    // Cache immediately for instant feedback
+    cacheTransactions(transactions, user.id);
 
     // Upsert transactions
     const { error } = await supabase
@@ -44,16 +48,21 @@ export const loadTransactions = async (): Promise<Transaction[]> => {
     
     if (error) throw error;
     
-  return data.map(t => ({
-    id: t.id,
-    amount: parseFloat(String(t.amount)),
-    type: t.type as 'expense' | 'income',
-    category: t.category,
-    note: t.note || '',
-    date: new Date(t.date),
-    createdAt: new Date(t.created_at),
-    updatedAt: t.updated_at ? new Date(t.updated_at) : undefined,
-  }));
+    const transactions = data.map(t => ({
+      id: t.id,
+      amount: parseFloat(String(t.amount)),
+      type: t.type as 'expense' | 'income',
+      category: t.category,
+      note: t.note || '',
+      date: new Date(t.date),
+      createdAt: new Date(t.created_at),
+      updatedAt: t.updated_at ? new Date(t.updated_at) : undefined,
+    }));
+
+    // Cache the fresh data
+    cacheTransactions(transactions, user.id);
+    
+    return transactions;
   } catch (error) {
     console.error('Failed to load transactions:', error);
     return [];

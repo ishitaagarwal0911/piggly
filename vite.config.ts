@@ -33,7 +33,8 @@ export default defineConfig(({ mode }) => ({
         background_color: "#ffffff",
         display: "standalone",
         orientation: "portrait-primary",
-        start_url: "/",
+        start_url: "/?source=pwa",
+        scope: "/",
         icons: [
           {
             src: "icon-192.png",
@@ -53,8 +54,8 @@ export default defineConfig(({ mode }) => ({
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff,woff2}"],
         navigateFallback: null,
         cleanupOutdatedCaches: true,
-        skipWaiting: false,
-        clientsClaim: false,
+        skipWaiting: true,
+        clientsClaim: true,
         runtimeCaching: [
           {
             // Ensure auth endpoints are never served from cache

@@ -13,6 +13,8 @@ import { getFilteredTransactions, getPreviousPeriod, getNextPeriod, ViewType } f
 import { useAuth } from '@/contexts/AuthContext';
 import { useRealtimeSync } from '@/hooks/useRealtimeSync';
 import { useHistoryState } from '@/hooks/useHistoryState';
+import { usePageRestore } from '@/hooks/usePageRestore';
+import { getCachedTransactions, isCacheFresh } from '@/lib/cache';
 import { toast } from 'sonner';
 
 // Lazy load heavy components for faster initial load
@@ -23,7 +25,8 @@ const Index = () => {
   const { user, loading, isInitialized } = useAuth();
   const navigate = useNavigate();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [dataLoading, setDataLoading] = useState(true);
+  const [dataLoading, setDataLoading] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
   const [showAddDialog, setShowAddDialog] = useHistoryState(false, 'add-transaction');
   const [transactionType, setTransactionType] = useState<'income' | 'expense'>('expense');
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -33,6 +36,9 @@ const Index = () => {
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const [currency, setCurrency] = useState('₹');
 
+  // Restore page state across cold starts
+  usePageRestore(currentDate, viewType);
+
   // Redirect to auth if not authenticated
   useEffect(() => {
     if (!loading && !user && isInitialized) {
@@ -40,14 +46,26 @@ const Index = () => {
     }
   }, [user, loading, isInitialized, navigate]);
 
-  // Load initial data only once
+  // Load initial data with instant cache rendering
   useEffect(() => {
     const loadData = async () => {
       if (!user) return;
       
-      setDataLoading(true);
+      // Try to load from cache first (synchronous, instant)
+      const cached = getCachedTransactions(user.id);
+      if (cached) {
+        setTransactions(cached);
+        
+        // If cache is fresh, skip loading state entirely
+        if (isCacheFresh(user.id)) {
+          setDataLoading(false);
+        }
+      }
       
-      // Load transactions and settings in parallel for faster loading
+      // Always fetch fresh data in background
+      setIsSyncing(true);
+      
+      // Load transactions and settings in parallel
       const [loaded, settings] = await Promise.all([
         loadTransactions(),
         loadSettings()
@@ -57,6 +75,7 @@ const Index = () => {
       setViewType(settings.defaultView);
       setCurrency(settings.currency.symbol);
       setDataLoading(false);
+      setIsSyncing(false);
     };
     loadData();
   }, [user]); // Only reload when user changes (auth state)
@@ -96,8 +115,8 @@ const Index = () => {
     undefined  // No need to reload settings on error
   );
 
-  // App shell pattern - show skeleton while loading for better perceived performance
-  if (loading || dataLoading) {
+  // Only show skeleton on initial cold load without cache
+  if (loading || (dataLoading && transactions.length === 0)) {
     return (
       <div className="min-h-screen bg-background">
         <header className="bg-background border-b border-border">
