@@ -11,6 +11,7 @@ import { loadSettings, saveSettings } from '@/lib/settings';
 import { CURRENCY_OPTIONS, AppSettings } from '@/types/settings';
 import { exportData, importData, importCSV } from '@/lib/storage';
 import { useAuth } from '@/contexts/AuthContext';
+import { useHistoryState } from '@/hooks/useHistoryState';
 import { Menu, Download, Upload } from 'lucide-react';
 import { toast } from 'sonner';
 import { ViewType } from '@/lib/dateUtils';
@@ -20,7 +21,7 @@ interface SettingsSheetProps {
 }
 
 export const SettingsSheet = ({ onSettingsChange }: SettingsSheetProps) => {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useHistoryState(false, 'settings');
   const [settings, setSettings] = useState<AppSettings>({
     categories: [],
     currency: CURRENCY_OPTIONS[0],

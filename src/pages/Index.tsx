@@ -12,6 +12,7 @@ import { loadSettings } from '@/lib/settings';
 import { getFilteredTransactions, getPreviousPeriod, getNextPeriod, ViewType } from '@/lib/dateUtils';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRealtimeSync } from '@/hooks/useRealtimeSync';
+import { useHistoryState } from '@/hooks/useHistoryState';
 import { toast } from 'sonner';
 
 // Lazy load heavy components for faster initial load
@@ -23,11 +24,11 @@ const Index = () => {
   const navigate = useNavigate();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [dataLoading, setDataLoading] = useState(true);
-  const [showAddDialog, setShowAddDialog] = useState(false);
+  const [showAddDialog, setShowAddDialog] = useHistoryState(false, 'add-transaction');
   const [transactionType, setTransactionType] = useState<'income' | 'expense'>('expense');
   const [currentDate, setCurrentDate] = useState(new Date());
   const [viewType, setViewType] = useState<ViewType>('monthly');
-  const [detailSheetOpen, setDetailSheetOpen] = useState(false);
+  const [detailSheetOpen, setDetailSheetOpen] = useHistoryState(false, 'detail-sheet');
   const [detailFilter, setDetailFilter] = useState<{ type?: 'expense' | 'income'; category?: string }>({});
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const [currency, setCurrency] = useState('₹');
