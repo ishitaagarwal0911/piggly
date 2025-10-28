@@ -129,7 +129,10 @@ const Index = () => {
         createdAt: new Date(payload.new.created_at),
         updatedAt: payload.new.updated_at ? new Date(payload.new.updated_at) : undefined,
       };
-      setTransactions(prev => [newTransaction, ...prev]);
+      setTransactions(prev => {
+        const exists = prev.some(t => t.id === newTransaction.id);
+        return exists ? prev : [newTransaction, ...prev];
+      });
     } else if (payload.eventType === 'UPDATE') {
       const updatedTransaction: Transaction = {
         id: payload.new.id,
@@ -264,6 +267,7 @@ const Index = () => {
           ? { ...editingTransaction, ...newTransaction }
           : t
       );
+      setTransactions(updated);
       await saveTransactions(updated);
       toast.success('Transaction updated');
       setEditingTransaction(null);
@@ -276,6 +280,7 @@ const Index = () => {
       };
 
       const updated = [transaction, ...transactions];
+      setTransactions(updated);
       await saveTransactions(updated);
       
       toast.success('Transaction added', {
