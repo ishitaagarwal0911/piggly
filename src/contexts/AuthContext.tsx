@@ -9,6 +9,7 @@ interface AuthContextType {
   isInitialized: boolean;
   sendOTP: (email: string) => Promise<void>;
   verifyOtp: (email: string, token: string) => Promise<void>;
+  signInWithGoogle: () => Promise<void>;
   signOut: () => Promise<void>;
 }
 
@@ -81,13 +82,27 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (error) throw error;
   };
 
+  const signInWithGoogle = async () => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${window.location.origin}/auth?verified=true`,
+        queryParams: {
+          access_type: 'offline',
+          prompt: 'consent',
+        }
+      }
+    });
+    if (error) throw error;
+  };
+
   const signOut = async () => {
     const { error } = await supabase.auth.signOut();
     if (error) throw error;
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, isInitialized, sendOTP, verifyOtp, signOut }}>
+    <AuthContext.Provider value={{ user, session, loading, isInitialized, sendOTP, verifyOtp, signInWithGoogle, signOut }}>
       {children}
     </AuthContext.Provider>
   );
