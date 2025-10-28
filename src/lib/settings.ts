@@ -3,62 +3,102 @@ import { getDefaultCategories, setCategoriesCache } from './categories';
 import { supabase } from '@/integrations/supabase/client';
 
 
-// Smart emoji-to-color mapping based on emoji unicode and visual characteristics
+// Deterministic emoji-to-color mapping based on emoji unicode and visual characteristics
 const getColorForEmoji = (emoji: string): string => {
   const codePoint = emoji.codePointAt(0) || 0;
-  let baseColor: string;
   
-  // Yellow/Gold emojis (💡, 🌟, ⭐, 🍋, 💛)
-  if ([0x1F4A1, 0x1F31F, 0x2B50, 0x1F34B, 0x1F49B].includes(codePoint)) {
-    baseColor = DEFAULT_COLORS[Math.floor(Math.random() * 3) + 6]; // Yellow range
+  // Specific emoji mappings for common categories
+  const emojiColorMap: { [key: number]: string } = {
+    // Transportation - Red/Orange
+    0x1F697: '#E87B7B', // 🚗 car - red
+    0x1F68C: '#E87B7B', // 🚌 bus - red
+    0x1F6B2: '#F5A962', // 🚲 bicycle - orange
+    0x2708: '#6B9FE8',  // ✈️ airplane - blue
+    
+    // Money/Income - Green
+    0x1F4B0: '#5FB05F', // 💰 money bag - green
+    0x1F4B5: '#5FB05F', // 💵 dollar - green
+    0x1F4B8: '#7BC879', // 💸 money wings - green
+    0x1F4B3: '#5FB05F', // 💳 credit card - green
+    
+    // Checkmarks - Green
+    0x2705: '#5FB05F',  // ✅ checkmark - green
+    0x2714: '#5FB05F',  // ✔️ check - green
+    
+    // Food & Drinks - Orange/Yellow
+    0x1F37D: '#FDB022', // 🍽️ fork and knife - yellow/orange
+    0x1F354: '#F5A962', // 🍔 hamburger - orange
+    0x1F355: '#F5A962', // 🍕 pizza - orange
+    0x1F32E: '#FDB022', // 🌮 taco - yellow
+    0x1F35C: '#FDB022', // 🍜 ramen - yellow
+    
+    // Bills/Utilities - Yellow
+    0x1F4A1: '#FDB022', // 💡 lightbulb - yellow
+    0x26A1: '#FDB022',  // ⚡ lightning - yellow
+    
+    // Shopping - Pink
+    0x1F6CD: '#E87BA0', // 🛍️ shopping bags - pink
+    0x1F45C: '#E87BA0', // 👜 handbag - pink
+    0x1F381: '#E87BA0', // 🎁 gift - pink
+    
+    // Entertainment - Purple
+    0x1F3AC: '#B08AD8', // 🎬 movie - purple
+    0x1F3AE: '#B08AD8', // 🎮 game - purple
+    0x1F3B5: '#B899D8', // 🎵 music - purple
+    
+    // Health/Medical - Teal/Green
+    0x1F48A: '#57C4C4', // 💊 pill - teal
+    0x1F3E5: '#57C4C4', // 🏥 hospital - teal
+    0x1FA7A: '#57C4C4', // 🩺 stethoscope - teal
+    
+    // Other/Neutral - Gray
+    0x1F4E6: '#9D9A97', // 📦 package - gray
+    0x1F3E2: '#9D9A97', // 🏢 office - gray
+  };
+  
+  // Check for exact emoji match
+  if (emojiColorMap[codePoint]) {
+    return emojiColorMap[codePoint];
   }
-  // Red/Pink emojis (❤️, 💝, 🍓, 💖, 🧡)
+  
+  // Fallback to category-based colors (deterministic, no randomization)
+  // Yellow/Gold emojis
+  if ([0x1F31F, 0x2B50, 0x1F34B, 0x1F49B].includes(codePoint)) {
+    return '#FDB022';
+  }
+  // Red/Pink emojis
   else if ([0x2764, 0x1F49D, 0x1F353, 0x1F496, 0x1F9E1].includes(codePoint)) {
-    baseColor = DEFAULT_COLORS[Math.floor(Math.random() * 3)]; // Red/Pink range
+    return '#E87B7B';
   }
-  // Blue emojis (💙, 🌊, 🚗, 💎, 🔵)
-  else if ([0x1F499, 0x1F30A, 0x1F697, 0x1F48E, 0x1F535].includes(codePoint)) {
-    baseColor = DEFAULT_COLORS[Math.floor(Math.random() * 3) + 12]; // Blue range
+  // Blue emojis
+  else if ([0x1F499, 0x1F30A, 0x1F48E, 0x1F535].includes(codePoint)) {
+    return '#6B9FE8';
   }
-  // Green emojis (💚, 🌱, 🍃, 💰, ♻️)
-  else if ([0x1F49A, 0x1F331, 0x1F343, 0x1F4B0, 0x267B].includes(codePoint)) {
-    baseColor = DEFAULT_COLORS[Math.floor(Math.random() * 3) + 9]; // Green range
+  // Green emojis
+  else if ([0x1F49A, 0x1F331, 0x1F343, 0x267B].includes(codePoint)) {
+    return '#5FB05F';
   }
-  // Purple emojis (💜, 🔮, 👾, 🍇)
+  // Purple emojis
   else if ([0x1F49C, 0x1F52E, 0x1F47E, 0x1F347].includes(codePoint)) {
-    baseColor = DEFAULT_COLORS[Math.floor(Math.random() * 3) + 15]; // Purple range
+    return '#B08AD8';
   }
-  // Orange emojis (🍊, 🎃, 🦊, 📙)
+  // Orange emojis
   else if ([0x1F34A, 0x1F383, 0x1F98A, 0x1F4D9].includes(codePoint)) {
-    baseColor = DEFAULT_COLORS[Math.floor(Math.random() * 2) + 3]; // Orange range
+    return '#F5A962';
   }
   // Food emojis - warm colors
   else if (codePoint >= 0x1F32D && codePoint <= 0x1F37F) {
-    baseColor = DEFAULT_COLORS[Math.floor(Math.random() * 3) + 3]; // Orange/Yellow range
+    return '#F5A962';
   }
-  // Entertainment emojis (🎬, 🎮, 🎯) - purple/pink
+  // Entertainment emojis
   else if (codePoint >= 0x1F3AC && codePoint <= 0x1F3AF) {
-    baseColor = DEFAULT_COLORS[Math.floor(Math.random() * 3) + 15]; // Purple range
+    return '#B08AD8';
   }
-  // Shopping/bags (🛍️, 👜, 🎁) - pink
-  else if ([0x1F6CD, 0x1F45C, 0x1F381].includes(codePoint)) {
-    baseColor = DEFAULT_COLORS[Math.floor(Math.random() * 3)]; // Pink range
-  }
-  // Medical/health (💊, 🏥, 🩺) - green
-  else if ([0x1F48A, 0x1F3E5, 0x1FA7A].includes(codePoint)) {
-    baseColor = DEFAULT_COLORS[Math.floor(Math.random() * 3) + 9]; // Green range
-  }
-  // Neutral/gray emojis (📦, 🏢, ⚙️, 📊)
-  else if ([0x1F4E6, 0x1F3E2, 0x2699, 0x1F4CA].includes(codePoint)) {
-    baseColor = DEFAULT_COLORS[Math.floor(Math.random() * 3) + 21]; // Gray range
-  }
-  // Default to random color from palette
+  // Default: use deterministic hash of codepoint to select color
   else {
-    baseColor = DEFAULT_COLORS[Math.floor(Math.random() * DEFAULT_COLORS.length)];
+    const index = codePoint % DEFAULT_COLORS.length;
+    return DEFAULT_COLORS[index];
   }
-  
-  // Return solid color at 100% opacity
-  return baseColor;
 };
 
 const getDefaultSettings = (): AppSettings => ({

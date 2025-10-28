@@ -301,7 +301,8 @@ const Index = () => {
     if (newView) {
       setViewType(newView);
     }
-    // Reload settings to update currency
+    // Force reload of categories and settings
+    setCategoriesLoaded(false);
     const settings = await loadSettings();
     setCurrency(settings.currency.symbol);
   };
