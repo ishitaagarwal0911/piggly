@@ -57,6 +57,15 @@ export default defineConfig(({ mode }) => ({
         clientsClaim: false,
         runtimeCaching: [
           {
+            // Ensure auth endpoints are never served from cache
+            urlPattern: /^https:\/\/.*\.supabase\.co\/auth\/.*/i,
+            handler: "NetworkOnly",
+            options: {
+              cacheName: "supabase-auth",
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
+          {
             urlPattern: /\/manifest\.json$/,
             handler: "NetworkFirst",
             options: {
