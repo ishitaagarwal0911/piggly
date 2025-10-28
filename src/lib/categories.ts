@@ -1,6 +1,5 @@
 import { CustomCategory } from '@/types/settings';
 import { loadSettings } from './settings';
-import { hexToRgba } from './utils';
 
 let cachedCategories: CustomCategory[] | null = null;
 

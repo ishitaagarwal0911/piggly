@@ -2,13 +2,6 @@ import { AppSettings, CustomCategory, CurrencyOption, CURRENCY_OPTIONS, DEFAULT_
 import { getDefaultCategories, setCategoriesCache } from './categories';
 import { supabase } from '@/integrations/supabase/client';
 
-// Convert hex color to rgba with 70% opacity for vibrant colors
-const hexToRgba = (hex: string, alpha: number = 0.70): string => {
-  const r = parseInt(hex.slice(1, 3), 16);
-  const g = parseInt(hex.slice(3, 5), 16);
-  const b = parseInt(hex.slice(5, 7), 16);
-  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-};
 
 // Smart emoji-to-color mapping based on emoji unicode and visual characteristics
 const getColorForEmoji = (emoji: string): string => {
@@ -64,8 +57,8 @@ const getColorForEmoji = (emoji: string): string => {
     baseColor = DEFAULT_COLORS[Math.floor(Math.random() * DEFAULT_COLORS.length)];
   }
   
-  // Return color with 70% transparency for vibrant aesthetic
-  return hexToRgba(baseColor, 0.70);
+  // Return solid color at 100% opacity
+  return baseColor;
 };
 
 const getDefaultSettings = (): AppSettings => ({

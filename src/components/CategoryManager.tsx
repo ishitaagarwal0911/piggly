@@ -131,7 +131,7 @@ export const CategoryManager = ({ onCategoriesChange }: CategoryManagerProps) =>
             <div
               key={cat.id}
               onClick={() => handleEdit(cat)}
-              className="flex items-center justify-between p-3 rounded-lg bg-secondary/50 hover:bg-secondary transition-smooth cursor-pointer relative"
+              className="flex items-center justify-between p-3 rounded-lg hover:bg-secondary/50 transition-smooth cursor-pointer relative"
             >
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-lg flex items-center justify-center text-xl">
@@ -168,7 +168,7 @@ export const CategoryManager = ({ onCategoriesChange }: CategoryManagerProps) =>
             <div
               key={cat.id}
               onClick={() => handleEdit(cat)}
-              className="flex items-center justify-between p-3 rounded-lg bg-secondary/50 hover:bg-secondary transition-smooth cursor-pointer relative"
+              className="flex items-center justify-between p-3 rounded-lg hover:bg-secondary/50 transition-smooth cursor-pointer relative"
             >
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-lg flex items-center justify-center text-xl">
