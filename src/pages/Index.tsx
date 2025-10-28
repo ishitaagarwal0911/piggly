@@ -151,22 +151,100 @@ const Index = () => {
     return (
       <div className="min-h-screen bg-background">
         <header className="bg-background border-b border-border">
-          <div className="max-w-2xl mx-auto px-4 py-3 h-14" />
+          <div className="max-w-2xl mx-auto px-4 py-3 h-14 flex items-center justify-between">
+            <div className="h-6 bg-muted/50 rounded w-32 animate-pulse" />
+            <div className="h-8 w-8 bg-muted/50 rounded-full animate-pulse" style={{ animationDelay: '100ms' }} />
+          </div>
         </header>
         <main className="max-w-2xl mx-auto px-4 py-6 space-y-6">
           {/* Balance summary skeleton */}
-          <div className="bg-card rounded-lg p-4 space-y-3 animate-pulse">
-            <div className="h-4 bg-muted rounded w-1/3" />
-            <div className="h-8 bg-muted rounded w-1/2" />
-            <div className="flex gap-2">
-              <div className="h-16 bg-muted rounded flex-1" />
-              <div className="h-16 bg-muted rounded flex-1" />
+          <div className="bg-card rounded-2xl shadow-notion p-6 space-y-6 animate-fade-in">
+            {/* Current Balance label */}
+            <div className="flex justify-center">
+              <div className="h-4 bg-muted/50 rounded w-28 animate-pulse" />
+            </div>
+            {/* Large balance amount */}
+            <div className="flex justify-center">
+              <div className="h-12 bg-muted/60 rounded-lg w-48 animate-pulse" style={{ animationDelay: '100ms' }} />
+            </div>
+            {/* Income/Expense cards */}
+            <div className="grid grid-cols-2 gap-4">
+              {/* Income card */}
+              <div className="bg-card border border-border rounded-xl p-4 space-y-3 animate-pulse" style={{ animationDelay: '200ms' }}>
+                <div className="flex items-center gap-2">
+                  <div className="h-8 w-8 bg-muted/50 rounded-full" />
+                  <div className="h-3 bg-muted/50 rounded w-12" />
+                </div>
+                <div className="h-6 bg-muted/60 rounded w-20" />
+              </div>
+              {/* Expense card */}
+              <div className="bg-card border border-border rounded-xl p-4 space-y-3 animate-pulse" style={{ animationDelay: '250ms' }}>
+                <div className="flex items-center gap-2">
+                  <div className="h-8 w-8 bg-muted/50 rounded-full" />
+                  <div className="h-3 bg-muted/50 rounded w-14" />
+                </div>
+                <div className="h-6 bg-muted/60 rounded w-20" />
+              </div>
             </div>
           </div>
+
           {/* Chart skeleton */}
-          <div className="bg-card rounded-lg p-4 space-y-3 animate-pulse">
-            <div className="h-4 bg-muted rounded w-1/4" />
-            <div className="h-64 bg-muted rounded" />
+          <div className="bg-card rounded-2xl shadow-notion p-6 space-y-6 animate-fade-in" style={{ animationDelay: '300ms' }}>
+            {/* Header */}
+            <div className="h-5 bg-muted/50 rounded w-40 animate-pulse" />
+            
+            <div className="flex flex-col items-center gap-6">
+              {/* Circular ring chart skeleton */}
+              <div className="relative w-48 h-48 animate-pulse" style={{ animationDelay: '350ms' }}>
+                <svg className="w-full h-full" viewBox="0 0 100 100">
+                  <circle
+                    cx="50"
+                    cy="50"
+                    r="40"
+                    fill="none"
+                    stroke="hsl(var(--muted))"
+                    strokeWidth="12"
+                    opacity="0.3"
+                  />
+                  <circle
+                    cx="50"
+                    cy="50"
+                    r="40"
+                    fill="none"
+                    stroke="hsl(var(--muted))"
+                    strokeWidth="12"
+                    opacity="0.5"
+                    strokeDasharray="60 251"
+                    transform="rotate(-90 50 50)"
+                  />
+                </svg>
+                {/* Center text */}
+                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                  <div className="h-3 bg-muted/50 rounded w-16 mb-2" />
+                  <div className="h-6 bg-muted/60 rounded w-20" />
+                </div>
+              </div>
+
+              {/* Category list skeleton */}
+              <div className="w-full space-y-4">
+                {[0, 1, 2].map((i) => (
+                  <div 
+                    key={i} 
+                    className="space-y-2 animate-pulse" 
+                    style={{ animationDelay: `${400 + i * 50}ms` }}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="h-10 w-10 bg-muted/50 rounded-full" />
+                        <div className="h-4 bg-muted/50 rounded w-24" />
+                      </div>
+                      <div className="h-5 bg-muted/60 rounded w-16" />
+                    </div>
+                    <div className="h-2 bg-muted/40 rounded-full w-full" />
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         </main>
       </div>
