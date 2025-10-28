@@ -57,17 +57,21 @@ const Index = () => {
 
   // Debug: Track component lifecycle
   useEffect(() => {
-    console.log('[Index] Component mounted/updated', {
-      userId: user?.id,
-      transactionCount: transactions.length,
-      timestamp: Date.now()
-    });
+    if (import.meta.env.DEV) {
+      console.log('[Index] Component mounted/updated', {
+        userId: user?.id,
+        transactionCount: transactions.length,
+        timestamp: Date.now()
+      });
+    }
   }, [user?.id, transactions.length]);
 
   // Debug: Track visibility changes
   useEffect(() => {
     const handleVisibilityChange = () => {
-      console.log('[Index] Visibility changed:', document.hidden ? 'hidden' : 'visible');
+      if (import.meta.env.DEV) {
+        console.log('[Index] Visibility changed:', document.hidden ? 'hidden' : 'visible');
+      }
     };
     document.addEventListener('visibilitychange', handleVisibilityChange);
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
@@ -87,11 +91,15 @@ const Index = () => {
       
       // Only load if user changed OR first load
       if (hasLoadedData && userIdRef.current === user.id) {
-        console.log('[Index] Skipping data load - same user already loaded');
+        if (import.meta.env.DEV) {
+          console.log('[Index] Skipping data load - same user already loaded');
+        }
         return;
       }
       
-      console.log('[Index] Loading data for user:', user.id);
+      if (import.meta.env.DEV) {
+        console.log('[Index] Loading data for user:', user.id);
+      }
       userIdRef.current = user.id;
       setCategoriesLoaded(false);
       

@@ -88,7 +88,9 @@ const Auth = () => {
       toast.success('Check your email for the sign-in link');
     } catch (error: any) {
       toast.error(error.message || 'Failed to send sign-in link');
-      console.error(error);
+      if (import.meta.env.DEV) {
+        console.error(error);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -131,7 +133,9 @@ const Auth = () => {
       } else {
         toast.error(error.message || 'Failed to verify code');
       }
-      console.error(error);
+      if (import.meta.env.DEV) {
+        console.error(error);
+      }
     } finally {
       setVerifying(false);
     }

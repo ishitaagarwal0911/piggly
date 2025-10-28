@@ -24,7 +24,9 @@ export const useRealtimeSync = (
   useEffect(() => {
     if (!user) return;
     
-    console.log('[useRealtimeSync] Subscribing to channels for user:', user.id);
+    if (import.meta.env.DEV) {
+      console.log('[useRealtimeSync] Subscribing to channels for user:', user.id);
+    }
 
     // Subscribe to transactions changes
     const transactionsChannel = supabase
@@ -78,7 +80,9 @@ export const useRealtimeSync = (
       .subscribe();
 
     return () => {
-      console.log('[useRealtimeSync] Unsubscribing from channels');
+      if (import.meta.env.DEV) {
+        console.log('[useRealtimeSync] Unsubscribing from channels');
+      }
       supabase.removeChannel(transactionsChannel);
       supabase.removeChannel(categoriesChannel);
       supabase.removeChannel(settingsChannel);
