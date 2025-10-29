@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { CustomCategory } from "@/types/settings";
 import { categories } from "@/lib/categories";
 import { addCategory, updateCategory, deleteCategory, loadSettings } from "@/lib/settings";
@@ -38,6 +38,16 @@ export const CategoryManager = ({ onCategoriesChange }: CategoryManagerProps) =>
   
   const [draggedCategory, setDraggedCategory] = useState<CustomCategory | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+  
+  // Local state for optimistic rendering
+  const [localExpenseCategories, setLocalExpenseCategories] = useState<CustomCategory[]>([]);
+  const [localIncomeCategories, setLocalIncomeCategories] = useState<CustomCategory[]>([]);
+  
+  // Sync local state with categories
+  useEffect(() => {
+    setLocalExpenseCategories(allCategories.filter(c => c.type === 'expense'));
+    setLocalIncomeCategories(allCategories.filter(c => c.type === 'income'));
+  }, [allCategories, categoryVersion]);
 
   const resetForm = () => {
     setName("");
@@ -119,10 +129,31 @@ export const CategoryManager = ({ onCategoriesChange }: CategoryManagerProps) =>
     e.dataTransfer.effectAllowed = 'move';
   };
 
-  const handleDragOver = (e: React.DragEvent, index: number) => {
+  const handleDragOver = (e: React.DragEvent, targetCategory: CustomCategory, targetIndex: number) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
-    setDragOverIndex(index);
+    
+    if (!draggedCategory || draggedCategory.id === targetCategory.id) return;
+    if (draggedCategory.type !== targetCategory.type) return;
+    
+    const isExpense = draggedCategory.type === 'expense';
+    const currentList = isExpense ? localExpenseCategories : localIncomeCategories;
+    
+    const currentIndex = currentList.findIndex(c => c.id === draggedCategory.id);
+    if (currentIndex === -1 || currentIndex === targetIndex) return;
+    
+    // Reorder immediately for smooth visual feedback
+    const reordered = [...currentList];
+    const [removed] = reordered.splice(currentIndex, 1);
+    reordered.splice(targetIndex, 0, removed);
+    
+    if (isExpense) {
+      setLocalExpenseCategories(reordered);
+    } else {
+      setLocalIncomeCategories(reordered);
+    }
+    
+    setDragOverIndex(targetIndex);
   };
 
   const handleDragLeave = () => {
@@ -138,47 +169,40 @@ export const CategoryManager = ({ onCategoriesChange }: CategoryManagerProps) =>
       return;
     }
 
-    const categoriesList = draggedCategory.type === 'expense' ? expenseCategories : incomeCategories;
-    const currentIndex = categoriesList.findIndex(c => c.id === draggedCategory.id);
+    const isExpense = draggedCategory.type === 'expense';
+    const finalList = isExpense ? localExpenseCategories : localIncomeCategories;
     
-    if (currentIndex === -1 || currentIndex === targetIndex) {
-      setDraggedCategory(null);
-      setDragOverIndex(null);
-      return;
-    }
-
-    try {
-      const reordered = [...categoriesList];
-      const [removed] = reordered.splice(currentIndex, 1);
-      reordered.splice(targetIndex, 0, removed);
-
-      const updates = reordered.map((cat, idx) => ({
-        ...cat,
-        order: idx
-      }));
-
-      await Promise.all(updates.map(cat => updateCategory(cat)));
-      await loadSettings();
-      setCategoryVersion(prev => prev + 1);
-      onCategoriesChange();
-      
-      toast.success("Category order updated");
-    } catch (error) {
-      toast.error("Failed to reorder category");
+    // Update database in background (non-blocking)
+    updateCategoriesInDatabase(finalList).catch((error) => {
+      toast.error("Failed to save category order");
       console.error("Reorder error:", error);
-    }
+      // Revert to original order on error
+      loadSettings().then(() => {
+        setCategoryVersion(prev => prev + 1);
+        onCategoriesChange();
+      });
+    });
 
     setDraggedCategory(null);
     setDragOverIndex(null);
+  };
+
+  const updateCategoriesInDatabase = async (categories: CustomCategory[]) => {
+    const updates = categories.map((cat, idx) => ({
+      ...cat,
+      order: idx
+    }));
+    
+    await Promise.all(updates.map(cat => updateCategory(cat)));
+    await loadSettings();
+    setCategoryVersion(prev => prev + 1);
+    onCategoriesChange();
   };
 
   const handleDragEnd = () => {
     setDraggedCategory(null);
     setDragOverIndex(null);
   };
-
-  const expenseCategories = allCategories.filter((c) => c.type === "expense");
-  const incomeCategories = allCategories.filter((c) => c.type === "income");
 
   return (
     <div className="space-y-6">
@@ -197,19 +221,20 @@ export const CategoryManager = ({ onCategoriesChange }: CategoryManagerProps) =>
       <div>
         <h4 className="text-sm font-medium mb-3 text-muted-foreground">Expense Categories</h4>
         <div className="space-y-2">
-          {expenseCategories.map((cat, index) => (
+          {localExpenseCategories.map((cat, index) => (
             <div
               key={cat.id}
               draggable={true}
               onDragStart={(e) => handleDragStart(e, cat)}
-              onDragOver={(e) => handleDragOver(e, index)}
+              onDragOver={(e) => handleDragOver(e, cat, index)}
               onDragLeave={handleDragLeave}
               onDrop={(e) => handleDrop(e, cat, index)}
               onDragEnd={handleDragEnd}
               onClick={() => handleEdit(cat)}
               className={cn(
-                "flex items-center justify-between p-3 rounded-lg hover:bg-secondary/50 transition-smooth cursor-pointer relative",
-                draggedCategory?.id === cat.id && "opacity-50",
+                "flex items-center justify-between p-3 rounded-lg hover:bg-secondary/50 cursor-pointer relative",
+                "transition-all duration-200 ease-out",
+                draggedCategory?.id === cat.id && "opacity-50 scale-[0.98]",
                 dragOverIndex === index && draggedCategory?.type === 'expense' && "border-2 border-primary border-dashed"
               )}
             >
@@ -255,19 +280,20 @@ export const CategoryManager = ({ onCategoriesChange }: CategoryManagerProps) =>
       <div>
         <h4 className="text-sm font-medium mb-3 text-muted-foreground">Income Categories</h4>
         <div className="space-y-2">
-          {incomeCategories.map((cat, index) => (
+          {localIncomeCategories.map((cat, index) => (
             <div
               key={cat.id}
               draggable={true}
               onDragStart={(e) => handleDragStart(e, cat)}
-              onDragOver={(e) => handleDragOver(e, index)}
+              onDragOver={(e) => handleDragOver(e, cat, index)}
               onDragLeave={handleDragLeave}
               onDrop={(e) => handleDrop(e, cat, index)}
               onDragEnd={handleDragEnd}
               onClick={() => handleEdit(cat)}
               className={cn(
-                "flex items-center justify-between p-3 rounded-lg hover:bg-secondary/50 transition-smooth cursor-pointer relative",
-                draggedCategory?.id === cat.id && "opacity-50",
+                "flex items-center justify-between p-3 rounded-lg hover:bg-secondary/50 cursor-pointer relative",
+                "transition-all duration-200 ease-out",
+                draggedCategory?.id === cat.id && "opacity-50 scale-[0.98]",
                 dragOverIndex === index && draggedCategory?.type === 'income' && "border-2 border-primary border-dashed"
               )}
             >
