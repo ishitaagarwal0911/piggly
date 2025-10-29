@@ -11,6 +11,8 @@ import { Calendar } from '@/components/ui/calendar';
 import { CalendarIcon, Plus } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { cn } from '@/lib/utils';
 
 interface AddTransactionDialogProps {
   open: boolean;
@@ -44,6 +46,7 @@ export const AddTransactionDialog = ({
   const [newCategoryIcon, setNewCategoryIcon] = useState('');
   const [isAddingCategory, setIsAddingCategory] = useState(false);
   const quickAddRef = useRef<HTMLDivElement>(null);
+  const isMobile = useIsMobile();
 
   // Sync form state when editingTransaction changes
   useEffect(() => {
@@ -216,7 +219,15 @@ export const AddTransactionDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-hidden flex flex-col animate-in fade-in-0 zoom-in-95 duration-200 p-4 sm:p-6" centered={false}>
+      <DialogContent 
+        className={cn(
+          "overflow-hidden flex flex-col animate-in fade-in-0 duration-200",
+          isMobile 
+            ? "fixed inset-0 max-w-full h-full max-h-full rounded-none p-4 zoom-in-100" 
+            : "sm:max-w-md max-h-[90vh] p-6 zoom-in-95"
+        )}
+        centered={!isMobile}
+      >
         <DialogHeader className="mb-3">
           <DialogTitle className="tracking-tight text-base sm:text-lg">{editingTransaction ? 'Edit Transaction' : 'Add Transaction'}</DialogTitle>
         </DialogHeader>
