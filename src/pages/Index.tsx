@@ -17,7 +17,7 @@ import { usePageRestore } from '@/hooks/usePageRestore';
 import { getCachedTransactions, isCacheFresh } from '@/lib/cache';
 import { toast } from 'sonner';
 import { useSwipeGesture } from '@/hooks/useSwipeGesture';
-import piggyTransparent from '@/assets/piggly_icon_optimized.webp';
+import piggyTransparent from '@/assets/piggly_header_icon.png';
 
 // Lazy load heavy components for faster initial load
 const AddTransactionDialog = lazy(() => import('@/components/AddTransactionDialog'));
