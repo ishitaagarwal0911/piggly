@@ -11,7 +11,6 @@ import { loadSettings, saveSettings } from '@/lib/settings';
 import { CURRENCY_OPTIONS, AppSettings } from '@/types/settings';
 import { exportData, importData, importCSV } from '@/lib/storage';
 import { useAuth } from '@/contexts/AuthContext';
-import { useHistoryState } from '@/hooks/useHistoryState';
 import { Menu, Download, Upload } from 'lucide-react';
 import { toast } from 'sonner';
 import { ViewType } from '@/lib/dateUtils';
@@ -23,7 +22,7 @@ interface SettingsSheetProps {
 }
 
 export const SettingsSheet = ({ onSettingsChange, open: externalOpen, onOpenChange: externalOnOpenChange }: SettingsSheetProps) => {
-  const [internalOpen, setInternalOpen] = useHistoryState(false, 'settings');
+  const [internalOpen, setInternalOpen] = useState(false);
   
   // Use external control if provided, otherwise use internal state
   const open = externalOpen !== undefined ? externalOpen : internalOpen;

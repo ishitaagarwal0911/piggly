@@ -20,6 +20,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Trash2, Plus, GripVertical, Save, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface CategoryManagerProps {
   onCategoriesChange: () => void;
@@ -315,7 +316,27 @@ export const CategoryManager = ({ onCategoriesChange }: CategoryManagerProps) =>
       <div>
         <h4 className="text-sm font-medium mb-3 text-muted-foreground">Expense Categories</h4>
         <div className="space-y-2">
-          {localExpenseCategories.map((cat, index) => (
+          {loadingCategories ? (
+            // Show skeleton placeholders while loading
+            <>
+              {[...Array(4)].map((_, idx) => (
+                <div key={`expense-skeleton-${idx}`} className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+                  <div className="flex items-center gap-3 flex-1">
+                    <Skeleton className="h-10 w-10 rounded-lg" />
+                    <div className="space-y-2 flex-1">
+                      <Skeleton className="h-4 w-32" />
+                      <Skeleton className="h-3 w-3 rounded-full" />
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Skeleton className="h-8 w-8 rounded" />
+                    <Skeleton className="h-8 w-8 rounded" />
+                  </div>
+                </div>
+              ))}
+            </>
+          ) : (
+            localExpenseCategories.map((cat, index) => (
             <div
               key={cat.id}
               draggable={!loadingCategories && !isSaving}
@@ -366,7 +387,8 @@ export const CategoryManager = ({ onCategoriesChange }: CategoryManagerProps) =>
                 </Button>
               </div>
             </div>
-          ))}
+          ))
+          )}
         </div>
       </div>
 
@@ -374,7 +396,27 @@ export const CategoryManager = ({ onCategoriesChange }: CategoryManagerProps) =>
       <div>
         <h4 className="text-sm font-medium mb-3 text-muted-foreground">Income Categories</h4>
         <div className="space-y-2">
-          {localIncomeCategories.map((cat, index) => (
+          {loadingCategories ? (
+            // Show skeleton placeholders while loading
+            <>
+              {[...Array(2)].map((_, idx) => (
+                <div key={`income-skeleton-${idx}`} className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+                  <div className="flex items-center gap-3 flex-1">
+                    <Skeleton className="h-10 w-10 rounded-lg" />
+                    <div className="space-y-2 flex-1">
+                      <Skeleton className="h-4 w-32" />
+                      <Skeleton className="h-3 w-3 rounded-full" />
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Skeleton className="h-8 w-8 rounded" />
+                    <Skeleton className="h-8 w-8 rounded" />
+                  </div>
+                </div>
+              ))}
+            </>
+          ) : (
+            localIncomeCategories.map((cat, index) => (
             <div
               key={cat.id}
               draggable={!loadingCategories && !isSaving}
@@ -425,7 +467,8 @@ export const CategoryManager = ({ onCategoriesChange }: CategoryManagerProps) =>
                 </Button>
               </div>
             </div>
-          ))}
+          ))
+          )}
         </div>
       </div>
 
