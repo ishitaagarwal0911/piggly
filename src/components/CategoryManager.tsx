@@ -261,10 +261,9 @@ export const CategoryManager = ({ onCategoriesChange }: CategoryManagerProps) =>
       // Update all categories in parallel with explicit Promise.all
       await Promise.all(updates.map(cat => updateCategory(cat)));
       
-      // Reload settings to get fresh data and update cache
-      await loadSettings();
-      setCategoryVersion(prev => prev + 1);
-      setIsDirty(false); // Hide button after fresh data is loaded
+      // Don't reload settings - local state already has the correct order
+      // This prevents the flicker when saving
+      setIsDirty(false);
       onCategoriesChange();
     } catch (error: any) {
       console.error("Failed to update category order:", error);
