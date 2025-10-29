@@ -14,6 +14,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Menu, Download, Upload } from 'lucide-react';
 import { toast } from 'sonner';
 import { ViewType } from '@/lib/dateUtils';
+import { useLocation } from 'react-router-dom';
 
 interface SettingsSheetProps {
   onSettingsChange: (newView?: ViewType) => void;
@@ -23,6 +24,7 @@ interface SettingsSheetProps {
 
 export const SettingsSheet = ({ onSettingsChange, open: externalOpen, onOpenChange: externalOnOpenChange }: SettingsSheetProps) => {
   const [internalOpen, setInternalOpen] = useState(false);
+  const location = useLocation();
   
   // Use external control if provided, otherwise use internal state
   const open = externalOpen !== undefined ? externalOpen : internalOpen;
@@ -42,6 +44,29 @@ export const SettingsSheet = ({ onSettingsChange, open: externalOpen, onOpenChan
     };
     loadData();
   }, []);
+
+  // Handle back button navigation
+  useEffect(() => {
+    if (!open) return;
+
+    const handlePopState = () => {
+      if (open) {
+        setOpen(false);
+      }
+    };
+
+    // Push settings state to history
+    window.history.pushState({ settingsOpen: true }, "", location.pathname + location.search + "#settings");
+    window.addEventListener("popstate", handlePopState);
+
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+      // Clean up hash if still present
+      if (window.location.hash === "#settings") {
+        window.history.replaceState({}, "", location.pathname + location.search);
+      }
+    };
+  }, [open, location.pathname, location.search, setOpen]);
 
   const handleCurrencyChange = async (currencyCode: string) => {
     const currency = CURRENCY_OPTIONS.find(c => c.code === currencyCode);

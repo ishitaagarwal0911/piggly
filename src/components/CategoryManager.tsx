@@ -52,10 +52,25 @@ export const CategoryManager = ({ onCategoriesChange }: CategoryManagerProps) =>
   const expenseRef = useRef<CustomCategory[]>([]);
   const incomeRef = useRef<CustomCategory[]>([]);
   
-  // Load real categories from backend
+  // Load categories from cache immediately, then fetch fresh data
   useEffect(() => {
-    if (!isUpdating) {
+    // Try to get cached categories first for instant display
+    const cached = categories();
+    if (cached && cached.length > 0) {
+      const expenses = cached.filter(c => c.type === 'expense');
+      const incomes = cached.filter(c => c.type === 'income');
+      setLocalExpenseCategories(expenses);
+      setLocalIncomeCategories(incomes);
+      expenseRef.current = expenses;
+      incomeRef.current = incomes;
+      setLoadingCategories(false);
+    } else {
+      // Only show loading if we have no cached data
       setLoadingCategories(true);
+    }
+
+    // Fetch fresh data from backend
+    if (!isUpdating) {
       loadSettings().then(settings => {
         setAllCategories(settings.categories);
         const expenses = settings.categories.filter(c => c.type === 'expense');
@@ -216,8 +231,10 @@ export const CategoryManager = ({ onCategoriesChange }: CategoryManagerProps) =>
       const latestExpense = expenseRef.current;
       const latestIncome = incomeRef.current;
       
+      // Combine and update in database
       await updateCategoriesInDatabase(latestExpense, latestIncome);
       setIsDirty(false);
+      toast.success("Category order saved");
     } catch (error: any) {
       toast.error(error.message || "Failed to save category order");
       console.error("Save order error:", error);
@@ -243,7 +260,6 @@ export const CategoryManager = ({ onCategoriesChange }: CategoryManagerProps) =>
     
     try {
       // Build combined array: expenses first, then incomes
-      // This ensures a single global order sequence
       const combined = [...expenseCategories, ...incomeCategories];
       
       // Assign global order_index from 0 to N-1
@@ -252,15 +268,13 @@ export const CategoryManager = ({ onCategoriesChange }: CategoryManagerProps) =>
         order: idx
       }));
       
-      // Update all categories in parallel
+      // Update all categories in parallel with explicit Promise.all
       await Promise.all(updates.map(cat => updateCategory(cat)));
       
-      // Reload settings to get fresh data
+      // Reload settings to get fresh data and update cache
       await loadSettings();
       setCategoryVersion(prev => prev + 1);
       onCategoriesChange();
-      
-      toast.success("Category order saved");
     } catch (error: any) {
       console.error("Failed to update category order:", error);
       throw error;
