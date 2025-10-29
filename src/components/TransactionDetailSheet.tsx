@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Transaction } from '@/types/transaction';
@@ -40,6 +40,16 @@ export const TransactionDetailSheet = ({
       setCurrency(settings.currency.symbol);
     });
   }, []);
+
+  // Scroll to selected category when sheet opens
+  useEffect(() => {
+    if (open && defaultOpenCategory) {
+      setTimeout(() => {
+        const element = document.querySelector(`[data-category="${defaultOpenCategory}"]`);
+        element?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 300);
+    }
+  }, [open, defaultOpenCategory]);
 
   // Filter transactions for "By Date" tab
   const filteredForDate = transactions.filter(t => {
@@ -189,7 +199,7 @@ export const TransactionDetailSheet = ({
                 className="space-y-2"
               >
                 {categoriesWithTotals.map(({ category, name, icon, color, transactions, total }) => (
-                  <AccordionItem key={category} value={category} className="border rounded-lg px-4">
+                  <AccordionItem key={category} value={category} data-category={category} className="border rounded-lg px-4">
                     <AccordionTrigger className="hover:no-underline py-3">
                       <div className="flex items-center gap-3 flex-1">
                         <div 

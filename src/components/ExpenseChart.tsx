@@ -96,6 +96,7 @@ export const ExpenseChart = ({ transactions, onCategoryClick, currency = '₹' }
                   key={`cell-${index}`} 
                   fill={entry.color}
                   className="transition-all hover:opacity-80 cursor-pointer"
+                  onClick={() => onCategoryClick?.(entry.category)}
                 />
               ))}
             </Pie>

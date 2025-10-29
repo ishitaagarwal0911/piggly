@@ -35,6 +35,7 @@ const Index = () => {
   const [viewType, setViewType] = useState<ViewType>('monthly');
   const [detailSheetOpen, setDetailSheetOpen] = useHistoryState(false, 'detail-sheet');
   const [detailFilter, setDetailFilter] = useState<{ type?: 'expense' | 'income'; category?: string }>({});
+  const [selectedCategory, setSelectedCategory] = useState<string | undefined>();
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const [currency, setCurrency] = useState('₹');
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -359,7 +360,8 @@ const Index = () => {
   };
 
   const handleCategoryClick = (category: string) => {
-    setDetailFilter({ type: 'expense', category });
+    setSelectedCategory(category);
+    setDetailFilter({ type: 'expense' });
     setDetailSheetOpen(true);
   };
 
@@ -488,14 +490,17 @@ const Index = () => {
       <Suspense fallback={null}>
         <TransactionDetailSheet
           open={detailSheetOpen}
-          onOpenChange={setDetailSheetOpen}
+          onOpenChange={(open) => {
+            setDetailSheetOpen(open);
+            if (!open) setSelectedCategory(undefined);
+          }}
           transactions={filteredTransactions}
           filterType={detailFilter.type}
           filterCategory={detailFilter.category}
           onEdit={handleEditTransaction}
           onAddClick={handleDetailSheetAddClick}
-          defaultTab={detailFilter.category ? "by-category" : undefined}
-          defaultOpenCategory={detailFilter.category}
+          defaultTab={selectedCategory ? "by-category" : undefined}
+          defaultOpenCategory={selectedCategory}
         />
       </Suspense>
     </div>
