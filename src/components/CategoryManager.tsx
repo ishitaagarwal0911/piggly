@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { CustomCategory } from "@/types/settings";
-import { categories } from "@/lib/categories";
+import { categories, setCategoriesCache } from "@/lib/categories";
 import { addCategory, updateCategory, deleteCategory, loadSettings } from "@/lib/settings";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -54,9 +54,15 @@ export const CategoryManager = ({ onCategoriesChange }: CategoryManagerProps) =>
   
   // Load categories from cache immediately, then fetch fresh data
   useEffect(() => {
+    if (isUpdating) return; // Prevent overwriting optimistic state during save
+    
     // Try to get cached categories first for instant display
     const cached = categories();
-    if (cached && cached.length > 0) {
+    
+    // Detect if cached looks like defaults (no user suffix in IDs)
+    const looksLikeDefaults = cached.length > 0 && cached.every(c => !c.id.includes("_"));
+    
+    if (cached && cached.length > 0 && !looksLikeDefaults) {
       const expenses = cached.filter(c => c.type === 'expense');
       const incomes = cached.filter(c => c.type === 'income');
       setLocalExpenseCategories(expenses);
@@ -65,7 +71,7 @@ export const CategoryManager = ({ onCategoriesChange }: CategoryManagerProps) =>
       incomeRef.current = incomes;
       setLoadingCategories(false);
     } else {
-      // Only show loading if we have no cached data
+      // Show loading if we have no cached data or it looks like defaults
       setLoadingCategories(true);
     }
 
@@ -260,6 +266,9 @@ export const CategoryManager = ({ onCategoriesChange }: CategoryManagerProps) =>
       
       // Update all categories in parallel with explicit Promise.all
       await Promise.all(updates.map(cat => updateCategory(cat)));
+      
+      // Update cache immediately with the final order to prevent flicker
+      setCategoriesCache(updates);
       
       // Don't reload settings - local state already has the correct order
       // This prevents the flicker when saving

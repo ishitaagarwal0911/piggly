@@ -346,9 +346,13 @@ const Index = () => {
     if (newView) {
       setViewType(newView);
     }
-    // Reload settings to update currency and categories in background
-    const settings = await loadSettings();
+    // Reload both settings and transactions to update UI after import
+    const [settings, loadedTxs] = await Promise.all([
+      loadSettings(),
+      loadTransactions()
+    ]);
     setCurrency(settings.currency.symbol);
+    setTransactions(loadedTxs);
   };
 
   const handleCategoryClick = (category: string) => {

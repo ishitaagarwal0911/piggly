@@ -88,21 +88,27 @@ export const importData = async (jsonString: string): Promise<{ success: boolean
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('Not authenticated');
 
-    const data = JSON.parse(jsonString);
+    const parsed = JSON.parse(jsonString);
+    
+    // Accept both array format and object with transactions property
+    const txsRaw = Array.isArray(parsed) ? parsed : parsed?.transactions;
     
     // Validate structure
-    if (!data.transactions || !Array.isArray(data.transactions)) {
+    if (!Array.isArray(txsRaw)) {
       return { success: false, transactions: 0, error: 'Invalid data format' };
     }
     
     // Import resolveCategoryId helper
     const { resolveCategoryId } = await import('./categories');
     
-    // Parse transactions and resolve category names to IDs
+    // Parse transactions and resolve category names to IDs with defensive parsing
     const transactions: Transaction[] = await Promise.all(
-      data.transactions.map(async (t: any) => ({
-        ...t,
+      txsRaw.map(async (t: any) => ({
+        id: t.id || crypto.randomUUID(),
+        amount: parseFloat(String(t.amount)),
+        type: t.type as 'expense' | 'income',
         category: await resolveCategoryId(t.category, t.type),
+        note: t.note || '',
         date: new Date(t.date),
         createdAt: t.createdAt ? new Date(t.createdAt) : new Date(t.date),
         updatedAt: t.updatedAt ? new Date(t.updatedAt) : undefined,
@@ -112,17 +118,17 @@ export const importData = async (jsonString: string): Promise<{ success: boolean
     // Save transactions
     await saveTransactions(transactions);
     
-    // Import settings if available
-    if (data.settings) {
+    // Import settings if available (only for object format)
+    if (!Array.isArray(parsed) && parsed.settings) {
       const { error: settingsError } = await supabase
         .from('user_settings')
         .upsert({
           user_id: user.id,
-          currency_code: data.settings.currency?.code || 'INR',
-          currency_symbol: data.settings.currency?.symbol || '₹',
-          currency_name: data.settings.currency?.name || 'Indian Rupee',
-          default_view: data.settings.defaultView || 'monthly',
-          theme: data.settings.theme || 'system',
+          currency_code: parsed.settings.currency?.code || 'INR',
+          currency_symbol: parsed.settings.currency?.symbol || '₹',
+          currency_name: parsed.settings.currency?.name || 'Indian Rupee',
+          default_view: parsed.settings.defaultView || 'monthly',
+          theme: parsed.settings.theme || 'system',
         });
       
       if (settingsError) console.error('Failed to import settings:', settingsError);
@@ -158,7 +164,7 @@ export const importCSV = async (csvString: string): Promise<{ success: boolean; 
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('Not authenticated');
 
-    const lines = csvString.trim().split('\n');
+    const lines = csvString.trim().split(/\r?\n/);
     if (lines.length < 2) {
       return { success: false, transactions: 0, error: 'CSV file is empty or invalid' };
     }
