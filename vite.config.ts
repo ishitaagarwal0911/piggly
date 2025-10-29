@@ -12,12 +12,29 @@ export default defineConfig(({ mode }) => ({
   },
   publicDir: "public",
   build: {
-    // Include .well-known directory in build
+    target: 'es2015',
+    cssCodeSplit: true,
+    minify: 'esbuild',
+    sourcemap: false,
     rollupOptions: {
       input: {
         main: path.resolve(__dirname, "index.html"),
       },
+      output: {
+        manualChunks: {
+          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
+          'ui-core': ['@radix-ui/react-dialog', '@radix-ui/react-sheet', '@radix-ui/react-accordion'],
+          'charts': ['recharts', 'date-fns'],
+          'supabase': ['@supabase/supabase-js', '@tanstack/react-query'],
+          'forms': ['react-hook-form', '@hookform/resolvers', 'zod']
+        },
+        chunkFileNames: 'assets/[name]-[hash].js',
+        entryFileNames: 'assets/[name]-[hash].js',
+        assetFileNames: 'assets/[name]-[hash].[ext]'
+      }
     },
+    chunkSizeWarningLimit: 800,
+    reportCompressedSize: false,
   },
   plugins: [
     react(),
@@ -62,9 +79,18 @@ export default defineConfig(({ mode }) => ({
             // Ensure auth endpoints are never served from cache
             urlPattern: /^https:\/\/.*\.supabase\.co\/auth\/.*/i,
             handler: "NetworkOnly",
+          },
+          {
+            // API data - Network first with quick timeout
+            urlPattern: /^https:\/\/.*\.supabase\.co\/rest\/.*/i,
+            handler: "NetworkFirst",
             options: {
-              cacheName: "supabase-auth",
-              cacheableResponse: { statuses: [0, 200] },
+              cacheName: "api-data",
+              networkTimeoutSeconds: 2,
+              expiration: {
+                maxEntries: 50,
+                maxAgeSeconds: 60 * 5,
+              },
             },
           },
           {
@@ -120,22 +146,10 @@ export default defineConfig(({ mode }) => ({
             options: {
               cacheName: "images-cache",
               expiration: {
-                maxEntries: 60,
-                maxAgeSeconds: 60 * 60 * 24 * 365, // 1 year for images
+                maxEntries: 100,
+                maxAgeSeconds: 60 * 60 * 24 * 365,
               },
               cacheableResponse: { statuses: [0, 200] },
-            },
-          },
-          {
-            urlPattern: /^https:\/\/.*\.supabase\.co\/.*/i,
-            handler: "NetworkFirst",
-            options: {
-              cacheName: "api-cache",
-              networkTimeoutSeconds: 3,
-              expiration: {
-                maxEntries: 100,
-                maxAgeSeconds: 60 * 60 * 24,
-              },
             },
           },
         ],

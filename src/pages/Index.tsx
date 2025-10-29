@@ -46,6 +46,20 @@ const Index = () => {
   const userIdRef = useRef<string | null>(null);
   const categoryChangeTimeoutRef = useRef<NodeJS.Timeout>();
 
+  // Handle PWA shortcuts (add-expense, add-income)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const action = params.get('action');
+    
+    if (action === 'add-expense') {
+      setTransactionType('expense');
+      setShowAddDialog(true);
+    } else if (action === 'add-income') {
+      setTransactionType('income');
+      setShowAddDialog(true);
+    }
+  }, []);
+
   // Restore page state across cold starts
   usePageRestore(currentDate, viewType);
 

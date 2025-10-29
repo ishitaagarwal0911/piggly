@@ -4,20 +4,31 @@ import "./index.css";
 
 createRoot(document.getElementById("root")!).render(<App />);
 
-// Lazy-register Service Worker after initial render to avoid render-blocking
+// Register Service Worker with production optimization
 if ('serviceWorker' in navigator) {
-  const lazyRegister = () => {
+  const register = () => {
     import('virtual:pwa-register').then(({ registerSW }) => {
-      registerSW({ immediate: false });
+      registerSW({ 
+        immediate: import.meta.env.PROD,
+        onOfflineReady() {
+          console.log('App ready to work offline');
+        }
+      });
     }).catch(() => {
       // ignore SW registration errors in non-supporting environments
     });
   };
 
-  const w = globalThis as any;
-  if ('requestIdleCallback' in w) {
-    w.requestIdleCallback(lazyRegister);
+  // In production: register immediately for faster offline capability
+  // In development: defer to avoid conflicts
+  if (import.meta.env.PROD) {
+    register();
   } else {
-    setTimeout(lazyRegister, 1500);
+    const w = globalThis as any;
+    if ('requestIdleCallback' in w) {
+      w.requestIdleCallback(register);
+    } else {
+      setTimeout(register, 1500);
+    }
   }
 }
