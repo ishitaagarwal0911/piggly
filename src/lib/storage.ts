@@ -95,13 +95,19 @@ export const importData = async (jsonString: string): Promise<{ success: boolean
       return { success: false, transactions: 0, error: 'Invalid data format' };
     }
     
-    // Parse transactions
-    const transactions: Transaction[] = data.transactions.map((t: any) => ({
-      ...t,
-      date: new Date(t.date),
-      createdAt: t.createdAt ? new Date(t.createdAt) : new Date(t.date),
-      updatedAt: t.updatedAt ? new Date(t.updatedAt) : undefined,
-    }));
+    // Import resolveCategoryId helper
+    const { resolveCategoryId } = await import('./categories');
+    
+    // Parse transactions and resolve category names to IDs
+    const transactions: Transaction[] = await Promise.all(
+      data.transactions.map(async (t: any) => ({
+        ...t,
+        category: await resolveCategoryId(t.category, t.type),
+        date: new Date(t.date),
+        createdAt: t.createdAt ? new Date(t.createdAt) : new Date(t.date),
+        updatedAt: t.updatedAt ? new Date(t.updatedAt) : undefined,
+      }))
+    );
     
     // Save transactions
     await saveTransactions(transactions);
@@ -157,6 +163,9 @@ export const importCSV = async (csvString: string): Promise<{ success: boolean; 
       return { success: false, transactions: 0, error: 'CSV file is empty or invalid' };
     }
     
+    // Import resolveCategoryId helper
+    const { resolveCategoryId } = await import('./categories');
+    
     const transactions: Transaction[] = [];
     
     // Skip header row, process data rows
@@ -175,12 +184,15 @@ export const importCSV = async (csvString: string): Promise<{ success: boolean; 
       if (isNaN(date.getTime()) || isNaN(amount)) continue;
       if (type.trim() !== 'expense' && type.trim() !== 'income') continue;
       
+      // Resolve category name to ID
+      const categoryId = await resolveCategoryId(category.trim(), type.trim() as 'expense' | 'income');
+      
       transactions.push({
         id: crypto.randomUUID(),
         date,
         amount,
         type: type.trim() as 'expense' | 'income',
-        category: category.trim(),
+        category: categoryId,
         note: note.trim(),
         createdAt: new Date(),
       });

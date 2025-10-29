@@ -32,3 +32,37 @@ export const getCategoryInfo = (categoryIdOrName: string): CustomCategory | unde
   const allCategories = categories();
   return allCategories.find(c => c.id === categoryIdOrName || c.name === categoryIdOrName);
 };
+
+// Resolve category name to ID, with fallback to "Other"
+export const resolveCategoryId = async (categoryNameOrId: string, type: 'expense' | 'income'): Promise<string> => {
+  // If it already looks like an ID (contains user_id pattern), return as-is
+  if (categoryNameOrId.includes('_') && categoryNameOrId.length > 30) {
+    return categoryNameOrId;
+  }
+  
+  // Load current categories
+  const settings = await loadSettings();
+  const allCategories = settings.categories;
+  
+  // Try to find by name
+  const matchingCategory = allCategories.find(
+    c => c.name === categoryNameOrId && c.type === type
+  );
+  
+  if (matchingCategory) {
+    return matchingCategory.id;
+  }
+  
+  // Fallback to "Other" category
+  const otherCategory = allCategories.find(
+    c => c.name === 'Other' && c.type === type
+  );
+  
+  if (otherCategory) {
+    return otherCategory.id;
+  }
+  
+  // This should never happen after the migration, but return the first category as ultimate fallback
+  const fallback = allCategories.find(c => c.type === type);
+  return fallback?.id || categoryNameOrId;
+};
