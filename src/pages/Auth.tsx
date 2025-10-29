@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
 import { Mail, ArrowLeft, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
-import piggyImage from '@/assets/piggly_transparent.png';
+import piggyImage from '@/assets/piggly_transparent_optimized.webp';
 import { isPWA } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 
