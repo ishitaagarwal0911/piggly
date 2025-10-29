@@ -27,7 +27,8 @@ interface CategoryManagerProps {
 
 export const CategoryManager = ({ onCategoriesChange }: CategoryManagerProps) => {
   const [categoryVersion, setCategoryVersion] = useState(0);
-  const allCategories = categories();
+  const [allCategories, setAllCategories] = useState<CustomCategory[]>([]);
+  const [loadingCategories, setLoadingCategories] = useState(true);
   const [editingCategory, setEditingCategory] = useState<CustomCategory | null>(null);
   const [deletingCategory, setDeletingCategory] = useState<CustomCategory | null>(null);
   const [isAddingNew, setIsAddingNew] = useState(false);
@@ -44,13 +45,21 @@ export const CategoryManager = ({ onCategoriesChange }: CategoryManagerProps) =>
   const [localIncomeCategories, setLocalIncomeCategories] = useState<CustomCategory[]>([]);
   const [isUpdating, setIsUpdating] = useState(false);
   
-  // Sync local state with categories
+  // Load real categories from backend
   useEffect(() => {
-    if (!isUpdating) {  // Only sync when not actively updating
-      setLocalExpenseCategories(allCategories.filter(c => c.type === 'expense'));
-      setLocalIncomeCategories(allCategories.filter(c => c.type === 'income'));
+    if (!isUpdating) {
+      setLoadingCategories(true);
+      loadSettings().then(settings => {
+        setAllCategories(settings.categories);
+        setLocalExpenseCategories(settings.categories.filter(c => c.type === 'expense'));
+        setLocalIncomeCategories(settings.categories.filter(c => c.type === 'income'));
+        setLoadingCategories(false);
+      }).catch(error => {
+        console.error('Failed to load categories:', error);
+        setLoadingCategories(false);
+      });
     }
-  }, [allCategories, categoryVersion, isUpdating]);
+  }, [categoryVersion, isUpdating]);
 
   const resetForm = () => {
     setName("");
@@ -128,6 +137,7 @@ export const CategoryManager = ({ onCategoriesChange }: CategoryManagerProps) =>
   };
 
   const handleDragStart = (e: React.DragEvent, category: CustomCategory) => {
+    if (loadingCategories) return; // Prevent drag while loading
     setDraggedCategory(category);
     e.dataTransfer.effectAllowed = 'move';
   };
@@ -166,7 +176,7 @@ export const CategoryManager = ({ onCategoriesChange }: CategoryManagerProps) =>
   const handleDrop = async (e: React.DragEvent, targetCategory: CustomCategory, targetIndex: number) => {
     e.preventDefault();
     
-    if (!draggedCategory || draggedCategory.id === targetCategory.id) {
+    if (loadingCategories || !draggedCategory || draggedCategory.id === targetCategory.id) {
       setDraggedCategory(null);
       setDragOverIndex(null);
       return;
@@ -243,7 +253,7 @@ export const CategoryManager = ({ onCategoriesChange }: CategoryManagerProps) =>
           {localExpenseCategories.map((cat, index) => (
             <div
               key={cat.id}
-              draggable={true}
+              draggable={!loadingCategories}
               onDragStart={(e) => handleDragStart(e, cat)}
               onDragOver={(e) => handleDragOver(e, cat, index)}
               onDragLeave={handleDragLeave}
@@ -302,7 +312,7 @@ export const CategoryManager = ({ onCategoriesChange }: CategoryManagerProps) =>
           {localIncomeCategories.map((cat, index) => (
             <div
               key={cat.id}
-              draggable={true}
+              draggable={!loadingCategories}
               onDragStart={(e) => handleDragStart(e, cat)}
               onDragOver={(e) => handleDragOver(e, cat, index)}
               onDragLeave={handleDragLeave}

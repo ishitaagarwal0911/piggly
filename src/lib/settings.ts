@@ -171,7 +171,7 @@ export const updateCategory = async (category: CustomCategory): Promise<void> =>
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('Not authenticated');
 
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from('categories')
     .update({
       name: category.name,
@@ -181,11 +181,18 @@ export const updateCategory = async (category: CustomCategory): Promise<void> =>
       order_index: category.order,
     })
     .eq('id', category.id)
-    .eq('user_id', user.id);
+    .eq('user_id', user.id)
+    .select('id');
 
   if (error) {
     console.error('Failed to update category:', error);
     throw error;
+  }
+
+  if (!data || data.length === 0) {
+    const errorMsg = `No category updated - invalid ID "${category.id}" or user mismatch`;
+    console.error(errorMsg);
+    throw new Error(errorMsg);
   }
 };
 
