@@ -83,49 +83,116 @@ export const exportData = async (): Promise<string> => {
   return JSON.stringify(exportData, null, 2);
 };
 
-export const importData = async (jsonString: string): Promise<{ success: boolean; transactions: number; error?: string }> => {
+export const importData = async (jsonString: string): Promise<{ success: boolean; transactions: number; skipped?: number; error?: string }> => {
   try {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('Not authenticated');
 
-    const data = JSON.parse(jsonString);
-    
-    // Validate structure
-    if (!data.transactions || !Array.isArray(data.transactions)) {
-      return { success: false, transactions: 0, error: 'Invalid data format' };
+    let parsed: any;
+    try {
+      parsed = JSON.parse(jsonString);
+    } catch (parseError: any) {
+      return { success: false, transactions: 0, error: `Invalid JSON: ${parseError.message}` };
     }
     
-    // Parse transactions
-    const transactions: Transaction[] = data.transactions.map((t: any) => ({
-      ...t,
-      date: new Date(t.date),
-      createdAt: t.createdAt ? new Date(t.createdAt) : new Date(t.date),
-      updatedAt: t.updatedAt ? new Date(t.updatedAt) : undefined,
-    }));
+    // Determine input shape: array or object with transactions
+    let rawTransactions: any[];
+    if (Array.isArray(parsed)) {
+      rawTransactions = parsed;
+    } else if (parsed.transactions && Array.isArray(parsed.transactions)) {
+      rawTransactions = parsed.transactions;
+    } else {
+      return { success: false, transactions: 0, error: 'Invalid data format: expected an array of transactions or { transactions: [...] }' };
+    }
+    
+    // Validate and normalize each transaction
+    const validTransactions: Transaction[] = [];
+    let skippedCount = 0;
+    
+    for (const t of rawTransactions) {
+      try {
+        // Parse and validate amount
+        const amount = typeof t.amount === 'string' ? parseFloat(t.amount) : t.amount;
+        if (!Number.isFinite(amount) || amount < 0) {
+          skippedCount++;
+          continue;
+        }
+        
+        // Validate and normalize type
+        const typeStr = String(t.type || 'expense').toLowerCase().trim();
+        const type: 'expense' | 'income' = typeStr === 'income' ? 'income' : 'expense';
+        
+        // Validate date
+        const date = t.date ? new Date(t.date) : new Date();
+        if (isNaN(date.getTime())) {
+          skippedCount++;
+          continue;
+        }
+        
+        // Generate ID if missing
+        const id = t.id && typeof t.id === 'string' && t.id.trim() ? t.id.trim() : crypto.randomUUID();
+        
+        // Normalize other fields
+        const category = t.category && typeof t.category === 'string' && t.category.trim() ? t.category.trim() : 'Other';
+        const note = t.note && typeof t.note === 'string' ? t.note.trim() : '';
+        const createdAt = t.createdAt ? new Date(t.createdAt) : date;
+        const updatedAt = t.updatedAt ? new Date(t.updatedAt) : undefined;
+        
+        validTransactions.push({
+          id,
+          amount,
+          type,
+          category,
+          note,
+          date,
+          createdAt,
+          updatedAt,
+        });
+      } catch (err) {
+        skippedCount++;
+        continue;
+      }
+    }
+    
+    if (validTransactions.length === 0) {
+      return { 
+        success: false, 
+        transactions: 0, 
+        error: `No valid transactions found. Skipped ${skippedCount} invalid rows.` 
+      };
+    }
     
     // Save transactions
-    await saveTransactions(transactions);
+    await saveTransactions(validTransactions);
     
     // Import settings if available
-    if (data.settings) {
-      const { error: settingsError } = await supabase
-        .from('user_settings')
-        .upsert({
-          user_id: user.id,
-          currency_code: data.settings.currency?.code || 'INR',
-          currency_symbol: data.settings.currency?.symbol || '₹',
-          currency_name: data.settings.currency?.name || 'Indian Rupee',
-          default_view: data.settings.defaultView || 'monthly',
-          theme: data.settings.theme || 'system',
-        });
-      
-      if (settingsError) console.error('Failed to import settings:', settingsError);
+    if (parsed.settings) {
+      try {
+        const { error: settingsError } = await supabase
+          .from('user_settings')
+          .upsert({
+            user_id: user.id,
+            currency_code: parsed.settings.currency?.code || 'INR',
+            currency_symbol: parsed.settings.currency?.symbol || '₹',
+            currency_name: parsed.settings.currency?.name || 'Indian Rupee',
+            default_view: parsed.settings.defaultView || 'monthly',
+            theme: parsed.settings.theme || 'system',
+          });
+        
+        if (settingsError) console.error('Failed to import settings:', settingsError);
+      } catch (err) {
+        console.error('Failed to import settings:', err);
+      }
     }
     
-    return { success: true, transactions: transactions.length };
-  } catch (error) {
+    return { 
+      success: true, 
+      transactions: validTransactions.length,
+      skipped: skippedCount > 0 ? skippedCount : undefined
+    };
+  } catch (error: any) {
     console.error('Failed to import data:', error);
-    return { success: false, transactions: 0, error: 'Failed to parse data' };
+    return { success: false, transactions: 0, error: error.message || 'Failed to import data' };
   }
 };
 

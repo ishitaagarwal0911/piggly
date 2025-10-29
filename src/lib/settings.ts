@@ -96,7 +96,10 @@ export const loadSettings = async (): Promise<AppSettings> => {
 
     // Database-first: All categories come from database only
     // Default categories are seeded on signup via seed_default_categories()
-    const finalCategories = categories.sort((a, b) => a.order - b.order);
+    // Sort deterministically: expense first, then income, both by order
+    const expenseCategories = categories.filter(c => c.type === 'expense').sort((a, b) => a.order - b.order);
+    const incomeCategories = categories.filter(c => c.type === 'income').sort((a, b) => a.order - b.order);
+    const finalCategories = [...expenseCategories, ...incomeCategories];
     
     // Update categories cache for synchronous access
     setCategoriesCache(finalCategories);
