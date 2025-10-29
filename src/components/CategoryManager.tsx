@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { CustomCategory } from "@/types/settings";
 import { categories } from "@/lib/categories";
 import { addCategory, updateCategory, deleteCategory, loadSettings } from "@/lib/settings";
@@ -45,14 +45,22 @@ export const CategoryManager = ({ onCategoriesChange }: CategoryManagerProps) =>
   const [localIncomeCategories, setLocalIncomeCategories] = useState<CustomCategory[]>([]);
   const [isUpdating, setIsUpdating] = useState(false);
   
+  // Refs to track latest state during drag operations
+  const expenseRef = useRef<CustomCategory[]>([]);
+  const incomeRef = useRef<CustomCategory[]>([]);
+  
   // Load real categories from backend
   useEffect(() => {
     if (!isUpdating) {
       setLoadingCategories(true);
       loadSettings().then(settings => {
         setAllCategories(settings.categories);
-        setLocalExpenseCategories(settings.categories.filter(c => c.type === 'expense'));
-        setLocalIncomeCategories(settings.categories.filter(c => c.type === 'income'));
+        const expenses = settings.categories.filter(c => c.type === 'expense');
+        const incomes = settings.categories.filter(c => c.type === 'income');
+        setLocalExpenseCategories(expenses);
+        setLocalIncomeCategories(incomes);
+        expenseRef.current = expenses;
+        incomeRef.current = incomes;
         setLoadingCategories(false);
       }).catch(error => {
         console.error('Failed to load categories:', error);
@@ -60,6 +68,15 @@ export const CategoryManager = ({ onCategoriesChange }: CategoryManagerProps) =>
       });
     }
   }, [categoryVersion, isUpdating]);
+  
+  // Sync refs with state changes
+  useEffect(() => {
+    expenseRef.current = localExpenseCategories;
+  }, [localExpenseCategories]);
+  
+  useEffect(() => {
+    incomeRef.current = localIncomeCategories;
+  }, [localIncomeCategories]);
 
   const resetForm = () => {
     setName("");
@@ -182,12 +199,13 @@ export const CategoryManager = ({ onCategoriesChange }: CategoryManagerProps) =>
       return;
     }
 
-    const isExpense = draggedCategory.type === 'expense';
-    const finalList = isExpense ? localExpenseCategories : localIncomeCategories;
+    // Use refs to get the latest state at drop time
+    const latestExpense = expenseRef.current;
+    const latestIncome = incomeRef.current;
     
-    // Update database in background (non-blocking)
-    updateCategoriesInDatabase(finalList).catch((error) => {
-      toast.error("Failed to save category order");
+    // Update database with combined global order
+    updateCategoriesInDatabase(latestExpense, latestIncome).catch((error) => {
+      toast.error(error.message || "Failed to save category order");
       console.error("Reorder error:", error);
       // Revert to original order on error
       loadSettings().then(() => {
@@ -200,12 +218,16 @@ export const CategoryManager = ({ onCategoriesChange }: CategoryManagerProps) =>
     setDragOverIndex(null);
   };
 
-  const updateCategoriesInDatabase = async (categories: CustomCategory[]) => {
+  const updateCategoriesInDatabase = async (expenseCategories: CustomCategory[], incomeCategories: CustomCategory[]) => {
     setIsUpdating(true);  // Prevent sync during update
     
     try {
-      // Update with correct order_index values
-      const updates = categories.map((cat, idx) => ({
+      // Build combined array: expenses first, then incomes
+      // This ensures a single global order sequence
+      const combined = [...expenseCategories, ...incomeCategories];
+      
+      // Assign global order_index from 0 to N-1
+      const updates = combined.map((cat, idx) => ({
         ...cat,
         order: idx
       }));
@@ -213,14 +235,13 @@ export const CategoryManager = ({ onCategoriesChange }: CategoryManagerProps) =>
       // Update all categories in parallel
       await Promise.all(updates.map(cat => updateCategory(cat)));
       
-      // Small delay to ensure all DB operations complete
-      await new Promise(resolve => setTimeout(resolve, 100));
-      
       // Reload settings to get fresh data
       await loadSettings();
       setCategoryVersion(prev => prev + 1);
       onCategoriesChange();
-    } catch (error) {
+      
+      toast.success("Category order saved");
+    } catch (error: any) {
       console.error("Failed to update category order:", error);
       throw error;
     } finally {
