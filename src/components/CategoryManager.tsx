@@ -42,12 +42,15 @@ export const CategoryManager = ({ onCategoriesChange }: CategoryManagerProps) =>
   // Local state for optimistic rendering
   const [localExpenseCategories, setLocalExpenseCategories] = useState<CustomCategory[]>([]);
   const [localIncomeCategories, setLocalIncomeCategories] = useState<CustomCategory[]>([]);
+  const [isUpdating, setIsUpdating] = useState(false);
   
   // Sync local state with categories
   useEffect(() => {
-    setLocalExpenseCategories(allCategories.filter(c => c.type === 'expense'));
-    setLocalIncomeCategories(allCategories.filter(c => c.type === 'income'));
-  }, [allCategories, categoryVersion]);
+    if (!isUpdating) {  // Only sync when not actively updating
+      setLocalExpenseCategories(allCategories.filter(c => c.type === 'expense'));
+      setLocalIncomeCategories(allCategories.filter(c => c.type === 'income'));
+    }
+  }, [allCategories, categoryVersion, isUpdating]);
 
   const resetForm = () => {
     setName("");
@@ -188,15 +191,31 @@ export const CategoryManager = ({ onCategoriesChange }: CategoryManagerProps) =>
   };
 
   const updateCategoriesInDatabase = async (categories: CustomCategory[]) => {
-    const updates = categories.map((cat, idx) => ({
-      ...cat,
-      order: idx
-    }));
+    setIsUpdating(true);  // Prevent sync during update
     
-    await Promise.all(updates.map(cat => updateCategory(cat)));
-    await loadSettings();
-    setCategoryVersion(prev => prev + 1);
-    onCategoriesChange();
+    try {
+      // Update with correct order_index values
+      const updates = categories.map((cat, idx) => ({
+        ...cat,
+        order: idx
+      }));
+      
+      // Update all categories in parallel
+      await Promise.all(updates.map(cat => updateCategory(cat)));
+      
+      // Small delay to ensure all DB operations complete
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      // Reload settings to get fresh data
+      await loadSettings();
+      setCategoryVersion(prev => prev + 1);
+      onCategoriesChange();
+    } catch (error) {
+      console.error("Failed to update category order:", error);
+      throw error;
+    } finally {
+      setIsUpdating(false);  // Re-enable sync
+    }
   };
 
   const handleDragEnd = () => {

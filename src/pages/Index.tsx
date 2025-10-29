@@ -43,6 +43,7 @@ const Index = () => {
   const [hasLoadedData, setHasLoadedData] = useState(false);
   const [categoriesLoaded, setCategoriesLoaded] = useState(false);
   const userIdRef = useRef<string | null>(null);
+  const categoryChangeTimeoutRef = useRef<NodeJS.Timeout>();
 
   // Restore page state across cold starts
   usePageRestore(currentDate, viewType);
@@ -171,8 +172,27 @@ const Index = () => {
 
   const handleCategoryChange = useCallback(async () => {
     console.log('[Index] Category changed via realtime');
-    // Just reload settings in background - don't trigger loading state
-    await loadSettings();
+    
+    // Clear any pending reload
+    if (categoryChangeTimeoutRef.current) {
+      clearTimeout(categoryChangeTimeoutRef.current);
+    }
+    
+    // Debounce for 300ms to allow batch updates to complete
+    categoryChangeTimeoutRef.current = setTimeout(async () => {
+      await loadSettings();
+      // Force a re-render without triggering loading state
+      setTransactions(prev => [...prev]);
+    }, 300);
+  }, []);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (categoryChangeTimeoutRef.current) {
+        clearTimeout(categoryChangeTimeoutRef.current);
+      }
+    };
   }, []);
   
   useRealtimeSync(handleRealtimeChange, handleCategoryChange, undefined);

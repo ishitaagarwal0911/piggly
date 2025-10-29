@@ -171,8 +171,7 @@ export const updateCategory = async (category: CustomCategory): Promise<void> =>
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('Not authenticated');
 
-  // First, try to update existing category
-  const { error: updateError, count } = await supabase
+  const { error } = await supabase
     .from('categories')
     .update({
       name: category.name,
@@ -184,23 +183,9 @@ export const updateCategory = async (category: CustomCategory): Promise<void> =>
     .eq('id', category.id)
     .eq('user_id', user.id);
 
-  // If no rows updated, insert new category (for default categories being edited first time)
-  if (count === 0) {
-    const { error: insertError } = await supabase
-      .from('categories')
-      .insert({
-        id: category.id, // Keep original string ID to maintain transaction relationships
-        user_id: user.id,
-        name: category.name,
-        icon: category.icon,
-        color: category.color,
-        type: category.type,
-        order_index: category.order,
-      });
-    
-    if (insertError) throw insertError;
-  } else if (updateError) {
-    throw updateError;
+  if (error) {
+    console.error('Failed to update category:', error);
+    throw error;
   }
 };
 
