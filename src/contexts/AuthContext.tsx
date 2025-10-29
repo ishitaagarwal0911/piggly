@@ -33,6 +33,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     // THEN check for existing session with optimistic loading
     const loadSession = async () => {
+      const startTime = performance.now();
+      console.log('[Auth] Starting session load...');
+      
       // Try to read from cached session immediately
       const cachedSession = localStorage.getItem('sb-bwcbjcboceplmjfieffp-auth-token');
       if (cachedSession) {
@@ -50,11 +53,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
       
       // Verify with server in background
+      console.log('[Auth] Fetching session from server...');
+      const serverStart = performance.now();
       const { data: { session } } = await supabase.auth.getSession();
+      console.log('[Auth] Server response time:', Math.round(performance.now() - serverStart), 'ms');
+      
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
       setIsInitialized(true);
+      
+      console.log('[Auth] Total load time:', Math.round(performance.now() - startTime), 'ms');
     };
     
     loadSession();
