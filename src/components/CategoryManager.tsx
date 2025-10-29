@@ -183,15 +183,11 @@ export const CategoryManager = ({ onCategoriesChange }: CategoryManagerProps) =>
     }
 
     const isExpense = draggedCategory.type === 'expense';
-    
-    // Build combined list with global order
-    const combined = isExpense 
-      ? [...localExpenseCategories, ...localIncomeCategories]
-      : [...localExpenseCategories, ...localIncomeCategories];
+    const finalList = isExpense ? localExpenseCategories : localIncomeCategories;
     
     // Update database in background (non-blocking)
-    updateCategoriesInDatabase(combined).catch((error) => {
-      toast.error(error.message || "Failed to save category order");
+    updateCategoriesInDatabase(finalList).catch((error) => {
+      toast.error("Failed to save category order");
       console.error("Reorder error:", error);
       // Revert to original order on error
       loadSettings().then(() => {
@@ -208,7 +204,7 @@ export const CategoryManager = ({ onCategoriesChange }: CategoryManagerProps) =>
     setIsUpdating(true);  // Prevent sync during update
     
     try {
-      // Assign global order_index to all categories
+      // Update with correct order_index values
       const updates = categories.map((cat, idx) => ({
         ...cat,
         order: idx
@@ -224,8 +220,6 @@ export const CategoryManager = ({ onCategoriesChange }: CategoryManagerProps) =>
       await loadSettings();
       setCategoryVersion(prev => prev + 1);
       onCategoriesChange();
-      
-      toast.success("Category order saved");
     } catch (error) {
       console.error("Failed to update category order:", error);
       throw error;

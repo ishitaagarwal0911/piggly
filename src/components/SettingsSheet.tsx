@@ -104,10 +104,7 @@ export const SettingsSheet = ({ onSettingsChange, open: externalOpen, onOpenChan
         }
         
         if (result.success) {
-          const message = result.skipped 
-            ? `Imported ${result.transactions} transactions (skipped ${result.skipped} invalid rows)`
-            : `Successfully imported ${result.transactions} transactions`;
-          toast.success(message);
+          toast.success(`Successfully imported ${result.transactions} transactions`);
           onSettingsChange();
           setOpen(false);
         } else {
