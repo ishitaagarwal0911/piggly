@@ -133,12 +133,12 @@ const Index = () => {
       // Always fetch fresh data in background
       setIsSyncing(true);
       
-      // Load recent transactions only for faster initial load (last 12 months)
-      const twelveMonthsAgo = new Date();
-      twelveMonthsAgo.setMonth(twelveMonthsAgo.getMonth() - 12);
+      // Load only 2 months for ultra-fast initial load
+      const twoMonthsAgo = new Date();
+      twoMonthsAgo.setMonth(twoMonthsAgo.getMonth() - 2);
       
       const [loaded, settings] = await Promise.all([
-        loadTransactions({ since: twelveMonthsAgo }),
+        loadTransactions({ since: twoMonthsAgo }),
         loadSettings()
       ]);
       
