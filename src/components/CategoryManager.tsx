@@ -17,7 +17,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Trash2, Plus, GripVertical } from "lucide-react";
+import { Trash2, Plus, GripVertical, Save, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
@@ -44,6 +44,8 @@ export const CategoryManager = ({ onCategoriesChange }: CategoryManagerProps) =>
   const [localExpenseCategories, setLocalExpenseCategories] = useState<CustomCategory[]>([]);
   const [localIncomeCategories, setLocalIncomeCategories] = useState<CustomCategory[]>([]);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [isDirty, setIsDirty] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   
   // Refs to track latest state during drag operations
   const expenseRef = useRef<CustomCategory[]>([]);
@@ -199,23 +201,40 @@ export const CategoryManager = ({ onCategoriesChange }: CategoryManagerProps) =>
       return;
     }
 
-    // Use refs to get the latest state at drop time
-    const latestExpense = expenseRef.current;
-    const latestIncome = incomeRef.current;
-    
-    // Update database with combined global order
-    updateCategoriesInDatabase(latestExpense, latestIncome).catch((error) => {
-      toast.error(error.message || "Failed to save category order");
-      console.error("Reorder error:", error);
-      // Revert to original order on error
-      loadSettings().then(() => {
-        setCategoryVersion(prev => prev + 1);
-        onCategoriesChange();
-      });
-    });
+    // Mark as dirty - user needs to click Save to persist
+    setIsDirty(true);
 
     setDraggedCategory(null);
     setDragOverIndex(null);
+  };
+
+  const handleSaveOrder = async () => {
+    setIsSaving(true);
+    
+    try {
+      const latestExpense = expenseRef.current;
+      const latestIncome = incomeRef.current;
+      
+      await updateCategoriesInDatabase(latestExpense, latestIncome);
+      setIsDirty(false);
+    } catch (error: any) {
+      toast.error(error.message || "Failed to save category order");
+      console.error("Save order error:", error);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleResetOrder = async () => {
+    try {
+      await loadSettings();
+      setCategoryVersion(prev => prev + 1);
+      setIsDirty(false);
+      toast.info("Order reset to saved state");
+    } catch (error) {
+      toast.error("Failed to reset order");
+      console.error("Reset error:", error);
+    }
   };
 
   const updateCategoriesInDatabase = async (expenseCategories: CustomCategory[], incomeCategories: CustomCategory[]) => {
@@ -256,7 +275,32 @@ export const CategoryManager = ({ onCategoriesChange }: CategoryManagerProps) =>
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-end mb-4">
+      <div className="flex items-center justify-between mb-4">
+        {isDirty && (
+          <div className="flex items-center gap-2">
+            <Button
+              onClick={handleResetOrder}
+              size="sm"
+              variant="outline"
+              disabled={isSaving}
+              className="transition-smooth"
+            >
+              <RotateCcw className="w-4 h-4 mr-2" />
+              Reset
+            </Button>
+            <Button
+              onClick={handleSaveOrder}
+              size="sm"
+              variant="default"
+              disabled={isSaving}
+              className="transition-smooth"
+            >
+              <Save className="w-4 h-4 mr-2" />
+              Save Order
+            </Button>
+          </div>
+        )}
+        {!isDirty && <div />}
         <Button
           onClick={handleAdd}
           size="icon"
@@ -274,7 +318,7 @@ export const CategoryManager = ({ onCategoriesChange }: CategoryManagerProps) =>
           {localExpenseCategories.map((cat, index) => (
             <div
               key={cat.id}
-              draggable={!loadingCategories}
+              draggable={!loadingCategories && !isSaving}
               onDragStart={(e) => handleDragStart(e, cat)}
               onDragOver={(e) => handleDragOver(e, cat, index)}
               onDragLeave={handleDragLeave}
@@ -333,7 +377,7 @@ export const CategoryManager = ({ onCategoriesChange }: CategoryManagerProps) =>
           {localIncomeCategories.map((cat, index) => (
             <div
               key={cat.id}
-              draggable={!loadingCategories}
+              draggable={!loadingCategories && !isSaving}
               onDragStart={(e) => handleDragStart(e, cat)}
               onDragOver={(e) => handleDragOver(e, cat, index)}
               onDragLeave={handleDragLeave}
