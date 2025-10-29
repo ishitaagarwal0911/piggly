@@ -35,16 +35,26 @@ export const saveTransactions = async (transactions: Transaction[]): Promise<voi
   }
 };
 
-export const loadTransactions = async (): Promise<Transaction[]> => {
+export const loadTransactions = async (options?: { since?: Date; limit?: number }): Promise<Transaction[]> => {
   try {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return [];
 
-    const { data, error } = await supabase
+    let query = supabase
       .from('transactions')
       .select('*')
       .eq('user_id', user.id)
       .order('date', { ascending: false });
+    
+    // Apply optional filters
+    if (options?.since) {
+      query = query.gte('date', options.since.toISOString());
+    }
+    if (options?.limit) {
+      query = query.limit(options.limit);
+    }
+
+    const { data, error } = await query;
     
     if (error) throw error;
     
@@ -98,22 +108,37 @@ export const importData = async (jsonString: string): Promise<{ success: boolean
       return { success: false, transactions: 0, error: 'Invalid data format' };
     }
     
+    // Preload settings once to populate category cache
+    await loadSettings();
+    
     // Import resolveCategoryId helper
     const { resolveCategoryId } = await import('./categories');
     
-    // Parse transactions and resolve category names to IDs with defensive parsing
-    const transactions: Transaction[] = await Promise.all(
-      txsRaw.map(async (t: any) => ({
-        id: t.id || crypto.randomUUID(),
-        amount: parseFloat(String(t.amount)),
-        type: t.type as 'expense' | 'income',
-        category: await resolveCategoryId(t.category, t.type),
-        note: t.note || '',
-        date: new Date(t.date),
-        createdAt: t.createdAt ? new Date(t.createdAt) : new Date(t.date),
-        updatedAt: t.updatedAt ? new Date(t.updatedAt) : undefined,
-      }))
-    );
+    // Process in chunks for large imports (keeps UI responsive)
+    const chunkSize = 500;
+    const transactions: Transaction[] = [];
+    
+    for (let i = 0; i < txsRaw.length; i += chunkSize) {
+      const chunk = txsRaw.slice(i, i + chunkSize);
+      const processed = await Promise.all(
+        chunk.map(async (t: any) => ({
+          id: t.id || crypto.randomUUID(),
+          amount: parseFloat(String(t.amount)),
+          type: t.type as 'expense' | 'income',
+          category: await resolveCategoryId(t.category, t.type),
+          note: t.note || '',
+          date: new Date(t.date),
+          createdAt: t.createdAt ? new Date(t.createdAt) : new Date(t.date),
+          updatedAt: t.updatedAt ? new Date(t.updatedAt) : undefined,
+        }))
+      );
+      transactions.push(...processed);
+      
+      // Yield control for large imports
+      if (i + chunkSize < txsRaw.length) {
+        await Promise.resolve();
+      }
+    }
     
     // Save transactions
     await saveTransactions(transactions);
@@ -168,6 +193,9 @@ export const importCSV = async (csvString: string): Promise<{ success: boolean; 
     if (lines.length < 2) {
       return { success: false, transactions: 0, error: 'CSV file is empty or invalid' };
     }
+    
+    // Preload settings once to populate category cache
+    await loadSettings();
     
     // Import resolveCategoryId helper
     const { resolveCategoryId } = await import('./categories');

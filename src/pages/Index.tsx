@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback, useRef, lazy, Suspense } from 'react'
 import { useNavigate } from 'react-router-dom';
 import { Transaction } from '@/types/transaction';
 import { BalanceSummary } from '@/components/BalanceSummary';
-import { ExpenseChart } from '@/components/ExpenseChart';
 import { SettingsSheet } from '@/components/SettingsSheet';
 import { PeriodSelector } from '@/components/PeriodSelector';
 import { Button } from '@/components/ui/button';
@@ -22,6 +21,7 @@ import piggyTransparent from '@/assets/piggly_header_icon.png';
 // Lazy load heavy components for faster initial load
 const AddTransactionDialog = lazy(() => import('@/components/AddTransactionDialog'));
 const TransactionDetailSheet = lazy(() => import('@/components/TransactionDetailSheet'));
+const ExpenseChart = lazy(() => import('@/components/ExpenseChart').then(module => ({ default: module.ExpenseChart })));
 
 const Index = () => {
   const { user, loading, isInitialized } = useAuth();
@@ -118,9 +118,12 @@ const Index = () => {
       // Always fetch fresh data in background
       setIsSyncing(true);
       
-      // Load transactions and settings in parallel
+      // Load recent transactions only for faster initial load (last 12 months)
+      const twelveMonthsAgo = new Date();
+      twelveMonthsAgo.setMonth(twelveMonthsAgo.getMonth() - 12);
+      
       const [loaded, settings] = await Promise.all([
-        loadTransactions(),
+        loadTransactions({ since: twelveMonthsAgo }),
         loadSettings()
       ]);
       
@@ -444,11 +447,18 @@ const Index = () => {
           onIncomeClick={handleIncomeClick}
           currency={currency}
         />
-        <ExpenseChart 
-          transactions={filteredTransactions}
-          onCategoryClick={handleCategoryClick}
-          currency={currency}
-        />
+        <Suspense fallback={
+          <div className="bg-card rounded-2xl shadow-notion p-6 animate-pulse">
+            <div className="h-5 bg-muted/50 rounded w-40 mb-6" />
+            <div className="h-48 bg-muted/30 rounded" />
+          </div>
+        }>
+          <ExpenseChart 
+            transactions={filteredTransactions}
+            onCategoryClick={handleCategoryClick}
+            currency={currency}
+          />
+        </Suspense>
       </main>
 
       {/* Floating Add Button */}

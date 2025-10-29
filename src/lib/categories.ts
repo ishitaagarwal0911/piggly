@@ -47,14 +47,18 @@ const CATEGORY_ALIASES: Record<string, string[]> = {
 
 // Resolve category name to ID, with fallback to "Other"
 export const resolveCategoryId = async (categoryNameOrId: string, type: 'expense' | 'income'): Promise<string> => {
-  // If it already looks like an ID (contains user_id pattern), return as-is
-  if (categoryNameOrId.includes('_') && categoryNameOrId.length > 30) {
-    return categoryNameOrId;
+  // Use in-memory cache first, only load settings if cache is empty
+  let allCategories = categories();
+  if (!allCategories || allCategories.length === 0) {
+    const settings = await loadSettings();
+    allCategories = settings.categories;
   }
   
-  // Load current categories
-  const settings = await loadSettings();
-  const allCategories = settings.categories;
+  // 1) Check exact ID match first (no type or length check)
+  const idMatch = allCategories.find(c => c.id === categoryNameOrId);
+  if (idMatch) {
+    return idMatch.id;
+  }
   
   // Normalize the input for matching
   const normalizedInput = categoryNameOrId.trim().toLowerCase();
