@@ -25,6 +25,7 @@ interface CategoryManagerProps {
 }
 
 export const CategoryManager = ({ onCategoriesChange }: CategoryManagerProps) => {
+  const [categoryVersion, setCategoryVersion] = useState(0);
   const allCategories = categories();
   const [editingCategory, setEditingCategory] = useState<CustomCategory | null>(null);
   const [deletingCategory, setDeletingCategory] = useState<CustomCategory | null>(null);
@@ -75,6 +76,7 @@ export const CategoryManager = ({ onCategoriesChange }: CategoryManagerProps) =>
 
       resetForm();
       await loadSettings(); // Reload to refresh cache
+      setCategoryVersion(prev => prev + 1);
       onCategoriesChange();
     } catch (error) {
       toast.error("Failed to save category");
@@ -99,6 +101,7 @@ export const CategoryManager = ({ onCategoriesChange }: CategoryManagerProps) =>
         }
         setDeletingCategory(null);
         await loadSettings();
+        setCategoryVersion(prev => prev + 1);
         onCategoriesChange();
       } catch (error) {
         toast.error("Failed to delete category");

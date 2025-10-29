@@ -25,7 +25,10 @@ export const BalanceSummary = ({ transactions, onExpenseClick, onIncomeClick, cu
       <div className="text-center mb-6">
         <p className="text-sm text-muted-foreground mb-2">Current Balance</p>
         <h2 className="text-4xl font-semibold tracking-tight">
-          {currency}{formatAmount(balance)}
+          {balance < 0 
+            ? `-${currency}${formatAmount(Math.abs(balance))}`
+            : `${currency}${formatAmount(balance)}`
+          }
         </h2>
       </div>
       

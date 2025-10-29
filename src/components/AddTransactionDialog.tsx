@@ -42,6 +42,7 @@ export const AddTransactionDialog = ({
   const [showAddCategory, setShowAddCategory] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState('');
   const [newCategoryIcon, setNewCategoryIcon] = useState('');
+  const [isAddingCategory, setIsAddingCategory] = useState(false);
   const quickAddRef = useRef<HTMLDivElement>(null);
 
   // Sync form state when editingTransaction changes
@@ -72,13 +73,13 @@ export const AddTransactionDialog = ({
       setFirstOperand(null);
       setOperator(null);
       setWaitingForSecondOperand(false);
-    } else {
-      // When opening, use initialType
+    } else if (!editingTransaction) {
+      // When opening without editing, use initialType
       setType(initialType);
       const defaultCategory = allCategories.find(c => c.type === initialType);
       setCategory(defaultCategory?.id || '');
     }
-  }, [open, allCategories, initialType]);
+  }, [open, allCategories, initialType, editingTransaction]);
 
   // Auto-scroll to quick add form when it opens
   useEffect(() => {
@@ -188,6 +189,7 @@ export const AddTransactionDialog = ({
       return;
     }
 
+    setIsAddingCategory(true);
     try {
       await addCategory({ 
         name: newCategoryName.trim(), 
@@ -205,6 +207,8 @@ export const AddTransactionDialog = ({
       if (newCat) setCategory(newCat.id);
     } catch (error) {
       toast.error('Failed to add category');
+    } finally {
+      setIsAddingCategory(false);
     }
   };
 
@@ -269,7 +273,12 @@ export const AddTransactionDialog = ({
               {displayCategories.map(cat => (
                 <button
                   key={cat.id}
-                  onClick={() => setCategory(cat.id)}
+                  onClick={() => {
+                    setCategory(cat.id);
+                    setShowAddCategory(false);
+                    setNewCategoryName('');
+                    setNewCategoryIcon('');
+                  }}
                   className={`p-3 rounded-xl flex flex-col items-center gap-1 transition-all ${
                     category === cat.id
                       ? 'ring-2'
@@ -320,8 +329,8 @@ export const AddTransactionDialog = ({
                 }} className="flex-1">
                   Cancel
                 </Button>
-                <Button size="sm" onClick={handleAddCategory} className="flex-1">
-                  Add
+                <Button size="sm" onClick={handleAddCategory} className="flex-1" disabled={isAddingCategory}>
+                  {isAddingCategory ? 'Adding...' : 'Add'}
                 </Button>
               </div>
             </div>

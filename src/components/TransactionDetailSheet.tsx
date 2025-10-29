@@ -126,23 +126,11 @@ export const TransactionDetailSheet = ({
           </SheetTitle>
         </SheetHeader>
 
-        <div className="mt-6 mb-4 flex items-center justify-between">
-          <div>
-            <p className="text-sm text-muted-foreground">Total</p>
-            <p className="text-2xl font-semibold">
-              {currency}{formatAmount(total)}
-            </p>
-          </div>
-          {onAddClick && (
-            <Button 
-              size="sm" 
-              onClick={() => onAddClick(filterType || 'expense')}
-              className="gap-2"
-            >
-              <Plus className="w-4 h-4" />
-              Add
-            </Button>
-          )}
+        <div className="mt-6 mb-4">
+          <p className="text-sm text-muted-foreground">Total</p>
+          <p className="text-2xl font-semibold">
+            {currency}{formatAmount(total)}
+          </p>
         </div>
 
         <Tabs defaultValue={defaultTab || "by-date"} className="mt-6">
@@ -229,6 +217,20 @@ export const TransactionDetailSheet = ({
             )}
           </TabsContent>
         </Tabs>
+
+        {/* Floating Add Button */}
+        {onAddClick && (
+          <div className="fixed bottom-8 left-0 right-0 flex justify-center pointer-events-none z-50">
+            <Button
+              size="lg"
+              className="rounded-full px-6 h-14 shadow-notion-hover pointer-events-auto transition-transform hover:scale-105 active:scale-95 flex items-center gap-2"
+              onClick={() => onAddClick(filterType || 'expense')}
+            >
+              <Plus className="w-5 h-5" />
+              <span className="font-medium">Add</span>
+            </Button>
+          </div>
+        )}
       </SheetContent>
     </Sheet>
   );
