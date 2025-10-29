@@ -33,6 +33,18 @@ export const getCategoryInfo = (categoryIdOrName: string): CustomCategory | unde
   return allCategories.find(c => c.id === categoryIdOrName || c.name === categoryIdOrName);
 };
 
+// Common category name variations and aliases
+const CATEGORY_ALIASES: Record<string, string[]> = {
+  'Food & Drinks': ['food', 'drinks', 'eating', 'dining', 'restaurant', 'groceries'],
+  'Transport': ['transportation', 'travel', 'commute', 'fuel', 'gas', 'uber', 'taxi'],
+  'Shopping': ['shop', 'clothes', 'clothing', 'retail'],
+  'Bills': ['bill', 'utilities', 'electricity', 'water', 'internet', 'phone', 'rent', 'mortgage'],
+  'Entertainment': ['fun', 'movies', 'gaming', 'hobbies', 'leisure'],
+  'Health': ['healthcare', 'medical', 'medicine', 'doctor', 'hospital', 'pharmacy'],
+  'Income': ['salary', 'wage', 'earnings', 'revenue', 'payment'],
+  'Other': ['miscellaneous', 'misc', 'general'],
+};
+
 // Resolve category name to ID, with fallback to "Other"
 export const resolveCategoryId = async (categoryNameOrId: string, type: 'expense' | 'income'): Promise<string> => {
   // If it already looks like an ID (contains user_id pattern), return as-is
@@ -44,13 +56,39 @@ export const resolveCategoryId = async (categoryNameOrId: string, type: 'expense
   const settings = await loadSettings();
   const allCategories = settings.categories;
   
-  // Try to find by name
-  const matchingCategory = allCategories.find(
-    c => c.name === categoryNameOrId && c.type === type
+  // Normalize the input for matching
+  const normalizedInput = categoryNameOrId.trim().toLowerCase();
+  
+  // Try exact match first (case-insensitive)
+  const exactMatch = allCategories.find(
+    c => c.name.toLowerCase() === normalizedInput && c.type === type
   );
   
-  if (matchingCategory) {
-    return matchingCategory.id;
+  if (exactMatch) {
+    return exactMatch.id;
+  }
+  
+  // Try alias matching
+  for (const category of allCategories) {
+    if (category.type !== type) continue;
+    
+    const aliases = CATEGORY_ALIASES[category.name] || [];
+    if (aliases.some(alias => alias === normalizedInput)) {
+      return category.id;
+    }
+  }
+  
+  // Try partial matching (if input contains category name or vice versa)
+  const partialMatch = allCategories.find(
+    c => c.type === type && (
+      normalizedInput.includes(c.name.toLowerCase()) ||
+      c.name.toLowerCase().includes(normalizedInput)
+    )
+  );
+  
+  if (partialMatch) {
+    console.log(`Category fuzzy match: "${categoryNameOrId}" → "${partialMatch.name}"`);
+    return partialMatch.id;
   }
   
   // Fallback to "Other" category
@@ -59,6 +97,7 @@ export const resolveCategoryId = async (categoryNameOrId: string, type: 'expense
   );
   
   if (otherCategory) {
+    console.log(`Category not matched: "${categoryNameOrId}" → "Other"`);
     return otherCategory.id;
   }
   

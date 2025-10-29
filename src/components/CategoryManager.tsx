@@ -290,9 +290,9 @@ export const CategoryManager = ({ onCategoriesChange }: CategoryManagerProps) =>
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-4 gap-4">
         {isDirty && (
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 animate-in fade-in slide-in-from-left-2 duration-300">
             <Button
               onClick={handleResetOrder}
               size="sm"
@@ -315,12 +315,11 @@ export const CategoryManager = ({ onCategoriesChange }: CategoryManagerProps) =>
             </Button>
           </div>
         )}
-        {!isDirty && <div />}
         <Button
           onClick={handleAdd}
           size="icon"
           variant="default"
-          className="rounded-full w-12 h-12 transition-smooth hover:scale-105 shadow-lg"
+          className={`rounded-full w-12 h-12 transition-smooth hover:scale-105 shadow-lg ${!isDirty ? 'ml-auto' : ''}`}
         >
           <Plus className="w-6 h-6" />
         </Button>
