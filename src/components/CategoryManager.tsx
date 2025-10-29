@@ -201,6 +201,8 @@ export const CategoryManager = ({ onCategoriesChange }: CategoryManagerProps) =>
       setLocalIncomeCategories(reordered);
     }
     
+    // Mark as dirty immediately so Save/Reset buttons appear
+    setIsDirty(true);
     setDragOverIndex(targetIndex);
   };
 
