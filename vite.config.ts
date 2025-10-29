@@ -23,10 +23,8 @@ export default defineConfig(({ mode }) => ({
       output: {
         manualChunks: {
           'react-vendor': ['react', 'react-dom', 'react-router-dom'],
-          'ui-core': ['@radix-ui/react-dialog', '@radix-ui/react-sheet', '@radix-ui/react-accordion'],
           'charts': ['recharts', 'date-fns'],
           'supabase': ['@supabase/supabase-js', '@tanstack/react-query'],
-          'forms': ['react-hook-form', '@hookform/resolvers', 'zod']
         },
         chunkFileNames: 'assets/[name]-[hash].js',
         entryFileNames: 'assets/[name]-[hash].js',
