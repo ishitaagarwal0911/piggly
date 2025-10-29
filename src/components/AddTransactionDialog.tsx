@@ -216,12 +216,12 @@ export const AddTransactionDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-hidden flex flex-col animate-in fade-in-0 zoom-in-95 duration-200">
-        <DialogHeader>
-          <DialogTitle className="tracking-tight">{editingTransaction ? 'Edit Transaction' : 'Add Transaction'}</DialogTitle>
+      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-hidden flex flex-col animate-in fade-in-0 zoom-in-95 duration-200 p-4 sm:p-6" centered={false}>
+        <DialogHeader className="mb-3">
+          <DialogTitle className="tracking-tight text-base sm:text-lg">{editingTransaction ? 'Edit Transaction' : 'Add Transaction'}</DialogTitle>
         </DialogHeader>
 
-        <div className="overflow-y-auto flex-1 space-y-6 px-1">
+        <div className="overflow-y-auto flex-1 space-y-3 sm:space-y-4 px-1">
           {/* Type Selector */}
           <Tabs value={type} onValueChange={(v) => setType(v as TransactionType)}>
             <TabsList className="grid w-full grid-cols-2">
@@ -232,14 +232,14 @@ export const AddTransactionDialog = ({
 
           {/* Amount Display */}
           <div className="text-center">
-            <p className="text-sm text-muted-foreground mb-2">Amount</p>
-            <div className="text-4xl font-semibold tracking-tight">
+            <p className="text-sm text-muted-foreground mb-1">Amount</p>
+            <div className="text-3xl sm:text-4xl font-semibold tracking-tight">
               {amount || '0'}
             </div>
           </div>
 
           {/* Numeric Keypad */}
-          <div className="grid grid-cols-4 gap-2">
+          <div className="grid grid-cols-4 gap-1.5 sm:gap-2">
             {['7', '8', '9', '⌫', '4', '5', '6', '×', '1', '2', '3', '+', '.', '0', '=', '-'].map((btn, idx) => {
               const isBackspace = btn === '⌫';
               const isDecimal = btn === '.';
@@ -268,7 +268,7 @@ export const AddTransactionDialog = ({
 
           {/* Category Selector */}
           <div>
-            <p className="text-sm font-medium mb-3">Category</p>
+            <p className="text-sm font-medium mb-2">Category</p>
             <div className="grid grid-cols-4 gap-2">
               {displayCategories.map(cat => (
                 <button
@@ -338,7 +338,7 @@ export const AddTransactionDialog = ({
 
           {/* Note Input */}
           <div>
-            <p className="text-sm font-medium mb-2">Note</p>
+            <p className="text-sm font-medium mb-1">Note</p>
             <Input
               placeholder="What's this for?"
               value={note}
@@ -349,7 +349,7 @@ export const AddTransactionDialog = ({
 
           {/* Date Picker */}
           <div>
-            <p className="text-sm font-medium mb-2">Date</p>
+            <p className="text-sm font-medium mb-1">Date</p>
             <Popover>
               <PopoverTrigger asChild>
                 <Button variant="outline" className="w-full justify-start text-left">
@@ -370,7 +370,7 @@ export const AddTransactionDialog = ({
         </div>
 
         {/* Sticky Footer */}
-        <div className="sticky bottom-0 bg-background border-t pt-4 space-y-2 mt-4">
+        <div className="sticky bottom-0 bg-background border-t pt-3 space-y-2 mt-3">
           <Button
             className="w-full"
             size="lg"
