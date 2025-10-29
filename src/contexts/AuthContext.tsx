@@ -22,51 +22,39 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
-    // Set up auth state listener FIRST
+    // Set loading to false immediately for instant render
+    setLoading(false);
+    setIsInitialized(true);
+    
+    // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
-        setLoading(false);
       }
     );
 
-    // THEN check for existing session with optimistic loading
-    const loadSession = async () => {
-      const startTime = performance.now();
-      console.log('[Auth] Starting session load...');
-      
-      // Try to read from cached session immediately
-      const cachedSession = localStorage.getItem('sb-bwcbjcboceplmjfieffp-auth-token');
-      if (cachedSession) {
-        try {
-          const parsed = JSON.parse(cachedSession);
-          if (parsed && parsed.access_token && parsed.user) {
-            // Optimistically set session from cache for instant render
-            setSession(parsed as Session);
-            setUser(parsed.user as User);
-            setLoading(false);
-          }
-        } catch (e) {
-          // Invalid cache, continue with normal flow
+    // Check for cached session in background (non-blocking)
+    const cachedSession = localStorage.getItem('sb-bwcbjcboceplmjfieffp-auth-token');
+    if (cachedSession) {
+      try {
+        const parsed = JSON.parse(cachedSession);
+        if (parsed && parsed.access_token && parsed.user) {
+          setSession(parsed as Session);
+          setUser(parsed.user as User);
         }
+      } catch (e) {
+        // Invalid cache, will be handled by auth state change
       }
-      
-      // Verify with server in background
-      console.log('[Auth] Fetching session from server...');
-      const serverStart = performance.now();
-      const { data: { session } } = await supabase.auth.getSession();
-      console.log('[Auth] Server response time:', Math.round(performance.now() - serverStart), 'ms');
-      
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-      setIsInitialized(true);
-      
-      console.log('[Auth] Total load time:', Math.round(performance.now() - startTime), 'ms');
-    };
+    }
     
-    loadSession();
+    // Verify with server in background (non-blocking)
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        setSession(session);
+        setUser(session?.user ?? null);
+      }
+    });
 
     return () => subscription.unsubscribe();
   }, []);

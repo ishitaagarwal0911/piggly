@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
 import { Mail, ArrowLeft, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
-import piggyImage from '@/assets/piggly_transparent.png';
+const splashIcon = '/splash-icon.png';
 import { isPWA } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -150,7 +150,7 @@ const Auth = () => {
         <div className="flex flex-col items-center mb-8">
           <div className="w-40 h-40 mb-6 relative">
             <img 
-              src={piggyImage} 
+              src={splashIcon} 
               alt="Piggly - Personal Finance Tracker" 
               className="w-full h-full object-contain drop-shadow-lg"
               fetchPriority="high"
