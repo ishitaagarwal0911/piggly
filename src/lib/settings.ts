@@ -68,21 +68,29 @@ const getDefaultSettings = (): AppSettings => ({
   theme: 'system',
 });
 
-export const loadSettings = async (): Promise<AppSettings> => {
+// In-memory cache for settings (session-scoped)
+let settingsCache: { data: AppSettings; userId: string } | null = null;
+
+export const loadSettings = async (userId?: string): Promise<AppSettings> => {
   try {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return getDefaultSettings();
+    const uid = userId || (await supabase.auth.getUser()).data.user?.id;
+    if (!uid) return getDefaultSettings();
+
+    // Return cached settings if available for this user
+    if (settingsCache && settingsCache.userId === uid) {
+      return settingsCache.data;
+    }
 
     const { data: settingsData } = await supabase
       .from('user_settings')
       .select('*')
-      .eq('user_id', user.id)
+      .eq('user_id', uid)
       .maybeSingle();
 
     const { data: categoriesData } = await supabase
       .from('categories')
       .select('*')
-      .eq('user_id', user.id)
+      .eq('user_id', uid)
       .order('order_index', { ascending: true });
 
     const categories: CustomCategory[] = (categoriesData || []).map(c => ({
@@ -107,12 +115,17 @@ export const loadSettings = async (): Promise<AppSettings> => {
       name: settingsData?.currency_name || 'Indian Rupee',
     };
 
-    return {
+    const settings: AppSettings = {
       categories: finalCategories,
       currency,
       defaultView: (settingsData?.default_view as 'daily' | 'weekly' | 'monthly') || 'monthly',
       theme: (settingsData?.theme as 'light' | 'dark' | 'system') || 'system',
     };
+
+    // Cache the settings
+    settingsCache = { data: settings, userId: uid };
+
+    return settings;
   } catch (error) {
     console.error('Failed to load settings:', error);
     return getDefaultSettings();
@@ -124,31 +137,34 @@ export const getCategoryById = (id: string): CustomCategory | undefined => {
   return settings.categories.find(c => c.id === id);
 };
 
-export const saveSettings = async (settings: AppSettings): Promise<void> => {
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) throw new Error('Not authenticated');
+export const saveSettings = async (settings: AppSettings, userId?: string): Promise<void> => {
+  const uid = userId || (await supabase.auth.getUser()).data.user?.id;
+  if (!uid) throw new Error('Not authenticated');
 
   await supabase
     .from('user_settings')
     .upsert({
-      user_id: user.id,
+      user_id: uid,
       currency_code: settings.currency.code,
       currency_symbol: settings.currency.symbol,
       currency_name: settings.currency.name,
       default_view: settings.defaultView,
       theme: settings.theme,
     });
+
+  // Invalidate cache
+  settingsCache = null;
 };
 
-export const addCategory = async (category: Omit<CustomCategory, 'id' | 'order' | 'color'>): Promise<void> => {
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) throw new Error('Not authenticated');
+export const addCategory = async (category: Omit<CustomCategory, 'id' | 'order' | 'color'>, userId?: string): Promise<void> => {
+  const uid = userId || (await supabase.auth.getUser()).data.user?.id;
+  if (!uid) throw new Error('Not authenticated');
 
   // Get existing categories to determine order
   const { data: existingCategories } = await supabase
     .from('categories')
     .select('*')
-    .eq('user_id', user.id);
+    .eq('user_id', uid);
 
   const order = existingCategories?.length || 0;
   const color = getColorForEmoji(category.icon);
@@ -158,18 +174,21 @@ export const addCategory = async (category: Omit<CustomCategory, 'id' | 'order' 
 
   await supabase.from('categories').insert({
     id: id,
-    user_id: user.id,
+    user_id: uid,
     name: category.name,
     icon: category.icon,
     color,
     type: category.type,
     order_index: order,
   });
+
+  // Invalidate cache
+  settingsCache = null;
 };
 
-export const updateCategory = async (category: CustomCategory): Promise<void> => {
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) throw new Error('Not authenticated');
+export const updateCategory = async (category: CustomCategory, userId?: string): Promise<void> => {
+  const uid = userId || (await supabase.auth.getUser()).data.user?.id;
+  if (!uid) throw new Error('Not authenticated');
 
   const { data, error } = await supabase
     .from('categories')
@@ -181,7 +200,7 @@ export const updateCategory = async (category: CustomCategory): Promise<void> =>
       order_index: category.order,
     })
     .eq('id', category.id)
-    .eq('user_id', user.id)
+    .eq('user_id', uid)
     .select('id');
 
   if (error) {
@@ -194,19 +213,25 @@ export const updateCategory = async (category: CustomCategory): Promise<void> =>
     console.error(errorMsg);
     throw new Error(errorMsg);
   }
+
+  // Invalidate cache
+  settingsCache = null;
 };
 
-export const deleteCategory = async (categoryId: string): Promise<{ deleted: boolean }> => {
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) throw new Error('Not authenticated');
+export const deleteCategory = async (categoryId: string, userId?: string): Promise<{ deleted: boolean }> => {
+  const uid = userId || (await supabase.auth.getUser()).data.user?.id;
+  if (!uid) throw new Error('Not authenticated');
 
   const { error, count } = await supabase
     .from('categories')
     .delete()
     .eq('id', categoryId)
-    .eq('user_id', user.id);
+    .eq('user_id', uid);
 
   if (error) throw error;
+
+  // Invalidate cache
+  settingsCache = null;
   
   return { deleted: (count || 0) > 0 };
 };

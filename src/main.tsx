@@ -4,12 +4,12 @@ import "./index.css";
 
 createRoot(document.getElementById("root")!).render(<App />);
 
-// Register Service Worker with production optimization
+// Register Service Worker - deferred for faster initial load
 if ('serviceWorker' in navigator) {
   const register = () => {
     import('virtual:pwa-register').then(({ registerSW }) => {
       registerSW({ 
-        immediate: import.meta.env.PROD,
+        immediate: false,
         onOfflineReady() {
           console.log('App ready to work offline');
         }
@@ -19,16 +19,11 @@ if ('serviceWorker' in navigator) {
     });
   };
 
-  // In production: register immediately for faster offline capability
-  // In development: defer to avoid conflicts
-  if (import.meta.env.PROD) {
-    register();
+  // Defer in both dev and prod to avoid blocking initial render
+  const w = globalThis as any;
+  if ('requestIdleCallback' in w) {
+    w.requestIdleCallback(register);
   } else {
-    const w = globalThis as any;
-    if ('requestIdleCallback' in w) {
-      w.requestIdleCallback(register);
-    } else {
-      setTimeout(register, 1500);
-    }
+    setTimeout(register, 2000);
   }
 }

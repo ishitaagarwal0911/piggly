@@ -12,7 +12,7 @@ export default defineConfig(({ mode }) => ({
   },
   publicDir: "public",
   build: {
-    target: 'es2015',
+    target: 'es2020',
     cssCodeSplit: true,
     minify: 'esbuild',
     sourcemap: false,
@@ -24,7 +24,8 @@ export default defineConfig(({ mode }) => ({
         manualChunks: {
           'react-vendor': ['react', 'react-dom', 'react-router-dom'],
           'charts': ['recharts', 'date-fns'],
-          'supabase': ['@supabase/supabase-js', '@tanstack/react-query'],
+          'supabase': ['@supabase/supabase-js'],
+          'react-query': ['@tanstack/react-query'],
         },
         chunkFileNames: 'assets/[name]-[hash].js',
         entryFileNames: 'assets/[name]-[hash].js',

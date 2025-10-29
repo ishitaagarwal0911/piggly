@@ -3,13 +3,13 @@ import { supabase } from '@/integrations/supabase/client';
 import { loadSettings } from './settings';
 import { cacheTransactions, getCachedTransactions } from './cache';
 
-export const saveTransactions = async (transactions: Transaction[]): Promise<void> => {
+export const saveTransactions = async (transactions: Transaction[], userId?: string): Promise<void> => {
   try {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error('Not authenticated');
+    const uid = userId || (await supabase.auth.getUser()).data.user?.id;
+    if (!uid) throw new Error('Not authenticated');
 
     // Cache immediately for instant feedback
-    cacheTransactions(transactions, user.id);
+    cacheTransactions(transactions, uid);
 
     // Upsert transactions
     const { error } = await supabase
@@ -17,7 +17,7 @@ export const saveTransactions = async (transactions: Transaction[]): Promise<voi
       .upsert(
         transactions.map(t => ({
           id: t.id,
-          user_id: user.id,
+          user_id: uid,
           amount: t.amount,
           type: t.type,
           category: t.category,
@@ -35,15 +35,15 @@ export const saveTransactions = async (transactions: Transaction[]): Promise<voi
   }
 };
 
-export const loadTransactions = async (options?: { since?: Date; limit?: number }): Promise<Transaction[]> => {
+export const loadTransactions = async (options?: { since?: Date; limit?: number; userId?: string }): Promise<Transaction[]> => {
   try {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return [];
+    const uid = options?.userId || (await supabase.auth.getUser()).data.user?.id;
+    if (!uid) return [];
 
     let query = supabase
       .from('transactions')
       .select('*')
-      .eq('user_id', user.id)
+      .eq('user_id', uid)
       .order('date', { ascending: false });
     
     // Apply optional filters
@@ -70,7 +70,7 @@ export const loadTransactions = async (options?: { since?: Date; limit?: number 
     }));
 
     // Cache the fresh data
-    cacheTransactions(transactions, user.id);
+    cacheTransactions(transactions, uid);
     
     return transactions;
   } catch (error) {
@@ -93,10 +93,10 @@ export const exportData = async (): Promise<string> => {
   return JSON.stringify(exportData, null, 2);
 };
 
-export const importData = async (jsonString: string): Promise<{ success: boolean; transactions: number; error?: string }> => {
+export const importData = async (jsonString: string, userId?: string): Promise<{ success: boolean; transactions: number; error?: string }> => {
   try {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error('Not authenticated');
+    const uid = userId || (await supabase.auth.getUser()).data.user?.id;
+    if (!uid) throw new Error('Not authenticated');
 
     const parsed = JSON.parse(jsonString);
     
@@ -148,7 +148,7 @@ export const importData = async (jsonString: string): Promise<{ success: boolean
       const { error: settingsError } = await supabase
         .from('user_settings')
         .upsert({
-          user_id: user.id,
+          user_id: uid,
           currency_code: parsed.settings.currency?.code || 'INR',
           currency_symbol: parsed.settings.currency?.symbol || '₹',
           currency_name: parsed.settings.currency?.name || 'Indian Rupee',
@@ -166,16 +166,16 @@ export const importData = async (jsonString: string): Promise<{ success: boolean
   }
 };
 
-export const deleteTransaction = async (id: string): Promise<void> => {
+export const deleteTransaction = async (id: string, userId?: string): Promise<void> => {
   try {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error('Not authenticated');
+    const uid = userId || (await supabase.auth.getUser()).data.user?.id;
+    if (!uid) throw new Error('Not authenticated');
 
     const { error } = await supabase
       .from('transactions')
       .delete()
       .eq('id', id)
-      .eq('user_id', user.id);
+      .eq('user_id', uid);
     
     if (error) throw error;
   } catch (error) {
@@ -184,10 +184,10 @@ export const deleteTransaction = async (id: string): Promise<void> => {
   }
 };
 
-export const importCSV = async (csvString: string): Promise<{ success: boolean; transactions: number; error?: string }> => {
+export const importCSV = async (csvString: string, userId?: string): Promise<{ success: boolean; transactions: number; error?: string }> => {
   try {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error('Not authenticated');
+    const uid = userId || (await supabase.auth.getUser()).data.user?.id;
+    if (!uid) throw new Error('Not authenticated');
 
     const lines = csvString.trim().split(/\r?\n/);
     if (lines.length < 2) {

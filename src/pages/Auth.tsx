@@ -154,6 +154,7 @@ const Auth = () => {
               alt="Piggly - Personal Finance Tracker" 
               className="w-full h-full object-contain drop-shadow-lg"
               fetchPriority="high"
+              decoding="async"
             />
           </div>
           <h1 className="text-2xl font-bold text-center text-foreground mb-2">
