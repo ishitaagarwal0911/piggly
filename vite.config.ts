@@ -67,12 +67,38 @@ export default defineConfig(({ mode }) => ({
             },
           },
           {
+            // Cache JS and CSS bundles aggressively (they have hashed names)
+            urlPattern: /\/assets\/.*\.(js|css)$/,
+            handler: "CacheFirst",
+            options: {
+              cacheName: "static-assets",
+              expiration: {
+                maxEntries: 50,
+                maxAgeSeconds: 60 * 60 * 24 * 365, // 1 year
+              },
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
+          {
+            // Cache registerSW.js
+            urlPattern: /\/registerSW\.js$/,
+            handler: "CacheFirst",
+            options: {
+              cacheName: "sw-registration",
+              expiration: {
+                maxEntries: 1,
+                maxAgeSeconds: 60 * 60 * 24 * 7, // 1 week
+              },
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
+          {
             urlPattern: /\/manifest\.json$/,
             handler: "NetworkFirst",
             options: {
               cacheName: "manifest-cache",
               networkTimeoutSeconds: 2,
-              expiration: { maxEntries: 1, maxAgeSeconds: 0 },
+              expiration: { maxEntries: 1, maxAgeSeconds: 60 * 60 * 24 * 7 }, // 1 week
             },
           },
           {
@@ -82,7 +108,7 @@ export default defineConfig(({ mode }) => ({
               cacheName: "fonts-cache",
               expiration: {
                 maxEntries: 20,
-                maxAgeSeconds: 60 * 60 * 24 * 365,
+                maxAgeSeconds: 60 * 60 * 24 * 365, // 1 year
               },
               cacheableResponse: { statuses: [0, 200] },
             },
@@ -94,8 +120,9 @@ export default defineConfig(({ mode }) => ({
               cacheName: "images-cache",
               expiration: {
                 maxEntries: 60,
-                maxAgeSeconds: 60 * 60 * 24 * 30,
+                maxAgeSeconds: 60 * 60 * 24 * 365, // 1 year for images
               },
+              cacheableResponse: { statuses: [0, 200] },
             },
           },
           {
