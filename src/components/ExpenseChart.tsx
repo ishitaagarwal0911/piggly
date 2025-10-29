@@ -1,24 +1,16 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useMemo } from 'react';
 import { Transaction } from '@/types/transaction';
 import { getCategoryInfo } from '@/lib/categories';
-import { loadSettings } from '@/lib/settings';
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
 import { formatAmount } from '@/lib/utils';
 
 interface ExpenseChartProps {
   transactions: Transaction[];
   onCategoryClick?: (category: string) => void;
+  currency?: string;
 }
 
-export const ExpenseChart = ({ transactions, onCategoryClick }: ExpenseChartProps) => {
-  const [currency, setCurrency] = useState('₹');
-  
-  useEffect(() => {
-    loadSettings().then(settings => {
-      setCurrency(settings.currency.symbol);
-    });
-  }, []);
-  
+export const ExpenseChart = ({ transactions, onCategoryClick, currency = '₹' }: ExpenseChartProps) => {
   const expensesByCategory = useMemo(() => {
     const expenses = transactions.filter(t => t.type === 'expense');
     const total = expenses.reduce((sum, t) => sum + t.amount, 0);

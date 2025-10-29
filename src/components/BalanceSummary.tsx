@@ -1,24 +1,15 @@
-import { useState, useEffect } from 'react';
 import { Transaction } from '@/types/transaction';
 import { TrendingUp, TrendingDown } from 'lucide-react';
-import { loadSettings } from '@/lib/settings';
 import { formatAmount } from '@/lib/utils';
 
 interface BalanceSummaryProps {
   transactions: Transaction[];
   onExpenseClick?: () => void;
   onIncomeClick?: () => void;
+  currency?: string;
 }
 
-export const BalanceSummary = ({ transactions, onExpenseClick, onIncomeClick }: BalanceSummaryProps) => {
-  const [currency, setCurrency] = useState('₹');
-  
-  useEffect(() => {
-    loadSettings().then(settings => {
-      setCurrency(settings.currency.symbol);
-    });
-  }, []);
-  
+export const BalanceSummary = ({ transactions, onExpenseClick, onIncomeClick, currency = '₹' }: BalanceSummaryProps) => {
   const income = transactions
     .filter(t => t.type === 'income')
     .reduce((sum, t) => sum + t.amount, 0);

@@ -17,7 +17,7 @@ import { usePageRestore } from '@/hooks/usePageRestore';
 import { getCachedTransactions, isCacheFresh } from '@/lib/cache';
 import { toast } from 'sonner';
 import { useSwipeGesture } from '@/hooks/useSwipeGesture';
-import piggyTransparent from '@/assets/piggly_transparent.png';
+import piggyTransparent from '@/assets/piggly_icon_optimized.webp';
 
 // Lazy load heavy components for faster initial load
 const AddTransactionDialog = lazy(() => import('@/components/AddTransactionDialog'));
@@ -392,6 +392,7 @@ const Index = () => {
               src={piggyTransparent} 
               alt="Piggly" 
               className="h-10 w-10 object-contain"
+              loading="lazy"
             />
           </div>
           <PeriodSelector
@@ -417,10 +418,12 @@ const Index = () => {
           transactions={filteredTransactions}
           onExpenseClick={handleExpenseClick}
           onIncomeClick={handleIncomeClick}
+          currency={currency}
         />
         <ExpenseChart 
           transactions={filteredTransactions}
           onCategoryClick={handleCategoryClick}
+          currency={currency}
         />
       </main>
 
