@@ -17,8 +17,9 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Trash2, Plus } from "lucide-react";
+import { Trash2, Plus, GripVertical } from "lucide-react";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 
 interface CategoryManagerProps {
   onCategoriesChange: () => void;
@@ -34,6 +35,9 @@ export const CategoryManager = ({ onCategoriesChange }: CategoryManagerProps) =>
   const [name, setName] = useState("");
   const [icon, setIcon] = useState("");
   const [type, setType] = useState<"expense" | "income">("expense");
+  
+  const [draggedCategory, setDraggedCategory] = useState<CustomCategory | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 
   const resetForm = () => {
     setName("");
@@ -110,6 +114,69 @@ export const CategoryManager = ({ onCategoriesChange }: CategoryManagerProps) =>
     }
   };
 
+  const handleDragStart = (e: React.DragEvent, category: CustomCategory) => {
+    setDraggedCategory(category);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    setDragOverIndex(index);
+  };
+
+  const handleDragLeave = () => {
+    setDragOverIndex(null);
+  };
+
+  const handleDrop = async (e: React.DragEvent, targetCategory: CustomCategory, targetIndex: number) => {
+    e.preventDefault();
+    
+    if (!draggedCategory || draggedCategory.id === targetCategory.id) {
+      setDraggedCategory(null);
+      setDragOverIndex(null);
+      return;
+    }
+
+    const categoriesList = draggedCategory.type === 'expense' ? expenseCategories : incomeCategories;
+    const currentIndex = categoriesList.findIndex(c => c.id === draggedCategory.id);
+    
+    if (currentIndex === -1 || currentIndex === targetIndex) {
+      setDraggedCategory(null);
+      setDragOverIndex(null);
+      return;
+    }
+
+    try {
+      const reordered = [...categoriesList];
+      const [removed] = reordered.splice(currentIndex, 1);
+      reordered.splice(targetIndex, 0, removed);
+
+      const updates = reordered.map((cat, idx) => ({
+        ...cat,
+        order: idx
+      }));
+
+      await Promise.all(updates.map(cat => updateCategory(cat)));
+      await loadSettings();
+      setCategoryVersion(prev => prev + 1);
+      onCategoriesChange();
+      
+      toast.success("Category order updated");
+    } catch (error) {
+      toast.error("Failed to reorder category");
+      console.error("Reorder error:", error);
+    }
+
+    setDraggedCategory(null);
+    setDragOverIndex(null);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedCategory(null);
+    setDragOverIndex(null);
+  };
+
   const expenseCategories = allCategories.filter((c) => c.type === "expense");
   const incomeCategories = allCategories.filter((c) => c.type === "income");
 
@@ -130,11 +197,21 @@ export const CategoryManager = ({ onCategoriesChange }: CategoryManagerProps) =>
       <div>
         <h4 className="text-sm font-medium mb-3 text-muted-foreground">Expense Categories</h4>
         <div className="space-y-2">
-          {expenseCategories.map((cat) => (
+          {expenseCategories.map((cat, index) => (
             <div
               key={cat.id}
+              draggable={true}
+              onDragStart={(e) => handleDragStart(e, cat)}
+              onDragOver={(e) => handleDragOver(e, index)}
+              onDragLeave={handleDragLeave}
+              onDrop={(e) => handleDrop(e, cat, index)}
+              onDragEnd={handleDragEnd}
               onClick={() => handleEdit(cat)}
-              className="flex items-center justify-between p-3 rounded-lg hover:bg-secondary/50 transition-smooth cursor-pointer relative"
+              className={cn(
+                "flex items-center justify-between p-3 rounded-lg hover:bg-secondary/50 transition-smooth cursor-pointer relative",
+                draggedCategory?.id === cat.id && "opacity-50",
+                dragOverIndex === index && draggedCategory?.type === 'expense' && "border-2 border-primary border-dashed"
+              )}
             >
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-lg flex items-center justify-center text-xl">
@@ -147,17 +224,28 @@ export const CategoryManager = ({ onCategoriesChange }: CategoryManagerProps) =>
                   </div>
                 </div>
               </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setDeletingCategory(cat);
-                }}
-                className="transition-smooth"
-              >
-                <Trash2 className="w-4 h-4" />
-              </Button>
+              <div className="flex items-center gap-1">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="cursor-grab active:cursor-grabbing transition-smooth"
+                  onMouseDown={(e) => e.stopPropagation()}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <GripVertical className="w-4 h-4 text-muted-foreground" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setDeletingCategory(cat);
+                  }}
+                  className="transition-smooth"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </Button>
+              </div>
             </div>
           ))}
         </div>
@@ -167,11 +255,21 @@ export const CategoryManager = ({ onCategoriesChange }: CategoryManagerProps) =>
       <div>
         <h4 className="text-sm font-medium mb-3 text-muted-foreground">Income Categories</h4>
         <div className="space-y-2">
-          {incomeCategories.map((cat) => (
+          {incomeCategories.map((cat, index) => (
             <div
               key={cat.id}
+              draggable={true}
+              onDragStart={(e) => handleDragStart(e, cat)}
+              onDragOver={(e) => handleDragOver(e, index)}
+              onDragLeave={handleDragLeave}
+              onDrop={(e) => handleDrop(e, cat, index)}
+              onDragEnd={handleDragEnd}
               onClick={() => handleEdit(cat)}
-              className="flex items-center justify-between p-3 rounded-lg hover:bg-secondary/50 transition-smooth cursor-pointer relative"
+              className={cn(
+                "flex items-center justify-between p-3 rounded-lg hover:bg-secondary/50 transition-smooth cursor-pointer relative",
+                draggedCategory?.id === cat.id && "opacity-50",
+                dragOverIndex === index && draggedCategory?.type === 'income' && "border-2 border-primary border-dashed"
+              )}
             >
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-lg flex items-center justify-center text-xl">
@@ -184,17 +282,28 @@ export const CategoryManager = ({ onCategoriesChange }: CategoryManagerProps) =>
                   </div>
                 </div>
               </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setDeletingCategory(cat);
-                }}
-                className="transition-smooth"
-              >
-                <Trash2 className="w-4 h-4" />
-              </Button>
+              <div className="flex items-center gap-1">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="cursor-grab active:cursor-grabbing transition-smooth"
+                  onMouseDown={(e) => e.stopPropagation()}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <GripVertical className="w-4 h-4 text-muted-foreground" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setDeletingCategory(cat);
+                  }}
+                  className="transition-smooth"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </Button>
+              </div>
             </div>
           ))}
         </div>
