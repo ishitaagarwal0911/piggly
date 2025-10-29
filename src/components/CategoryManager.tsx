@@ -17,7 +17,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Trash2, Plus, GripVertical, Save, RotateCcw } from "lucide-react";
+import { Trash2, Plus, GripVertical, Save } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -235,7 +235,6 @@ export const CategoryManager = ({ onCategoriesChange }: CategoryManagerProps) =>
       
       // Combine and update in database
       await updateCategoriesInDatabase(latestExpense, latestIncome);
-      setIsDirty(false);
       toast.success("Category order saved");
     } catch (error: any) {
       toast.error(error.message || "Failed to save category order");
@@ -245,17 +244,6 @@ export const CategoryManager = ({ onCategoriesChange }: CategoryManagerProps) =>
     }
   };
 
-  const handleResetOrder = async () => {
-    try {
-      await loadSettings();
-      setCategoryVersion(prev => prev + 1);
-      setIsDirty(false);
-      toast.info("Order reset to saved state");
-    } catch (error) {
-      toast.error("Failed to reset order");
-      console.error("Reset error:", error);
-    }
-  };
 
   const updateCategoriesInDatabase = async (expenseCategories: CustomCategory[], incomeCategories: CustomCategory[]) => {
     setIsUpdating(true);  // Prevent sync during update
@@ -276,6 +264,7 @@ export const CategoryManager = ({ onCategoriesChange }: CategoryManagerProps) =>
       // Reload settings to get fresh data and update cache
       await loadSettings();
       setCategoryVersion(prev => prev + 1);
+      setIsDirty(false); // Hide button after fresh data is loaded
       onCategoriesChange();
     } catch (error: any) {
       console.error("Failed to update category order:", error);
@@ -294,28 +283,16 @@ export const CategoryManager = ({ onCategoriesChange }: CategoryManagerProps) =>
     <div className="space-y-6">
       <div className="flex items-center justify-between mb-4 gap-4">
         {isDirty && (
-          <div className="flex items-center gap-2 animate-in fade-in slide-in-from-left-2 duration-300">
-            <Button
-              onClick={handleResetOrder}
-              size="sm"
-              variant="outline"
-              disabled={isSaving}
-              className="transition-smooth"
-            >
-              <RotateCcw className="w-4 h-4 mr-2" />
-              Reset
-            </Button>
-            <Button
-              onClick={handleSaveOrder}
-              size="sm"
-              variant="default"
-              disabled={isSaving}
-              className="transition-smooth"
-            >
-              <Save className="w-4 h-4 mr-2" />
-              Save Order
-            </Button>
-          </div>
+          <Button
+            onClick={handleSaveOrder}
+            size="sm"
+            variant="default"
+            disabled={isSaving}
+            className="animate-in fade-in slide-in-from-left-2 duration-300 transition-smooth"
+          >
+            <Save className="w-4 h-4 mr-2" />
+            Save
+          </Button>
         )}
         <Button
           onClick={handleAdd}
