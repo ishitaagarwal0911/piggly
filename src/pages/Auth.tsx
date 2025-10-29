@@ -153,6 +153,7 @@ const Auth = () => {
               src={piggyImage} 
               alt="Piggly - Personal Finance Tracker" 
               className="w-full h-full object-contain drop-shadow-lg"
+              fetchPriority="high"
             />
           </div>
           <h1 className="text-2xl font-bold text-center text-foreground mb-2">
