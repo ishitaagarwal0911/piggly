@@ -17,7 +17,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Trash2, Plus, GripVertical, Save } from "lucide-react";
+import { Trash2, Plus, GripVertical } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -104,6 +104,18 @@ export const CategoryManager = ({ onCategoriesChange }: CategoryManagerProps) =>
     incomeRef.current = localIncomeCategories;
   }, [localIncomeCategories]);
 
+  // Global pointer-up safety net for when drag ends outside the grip
+  useEffect(() => {
+    if (!isPointerDragging) return;
+    const end = () => onGripPointerUp();
+    window.addEventListener('pointerup', end);
+    window.addEventListener('pointercancel', end);
+    return () => {
+      window.removeEventListener('pointerup', end);
+      window.removeEventListener('pointercancel', end);
+    };
+  }, [isPointerDragging]);
+
   const resetForm = () => {
     setName("");
     setIcon("");
@@ -179,60 +191,6 @@ export const CategoryManager = ({ onCategoriesChange }: CategoryManagerProps) =>
     }
   };
 
-  const handleDragStart = (e: React.DragEvent, category: CustomCategory) => {
-    if (loadingCategories) return; // Prevent drag while loading
-    setDraggedCategory(category);
-    e.dataTransfer.effectAllowed = 'move';
-  };
-
-  const handleDragOver = (e: React.DragEvent, targetCategory: CustomCategory, targetIndex: number) => {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
-    
-    if (!draggedCategory || draggedCategory.id === targetCategory.id) return;
-    if (draggedCategory.type !== targetCategory.type) return;
-    
-    const isExpense = draggedCategory.type === 'expense';
-    const currentList = isExpense ? localExpenseCategories : localIncomeCategories;
-    
-    const currentIndex = currentList.findIndex(c => c.id === draggedCategory.id);
-    if (currentIndex === -1 || currentIndex === targetIndex) return;
-    
-    // Reorder immediately for smooth visual feedback
-    const reordered = [...currentList];
-    const [removed] = reordered.splice(currentIndex, 1);
-    reordered.splice(targetIndex, 0, removed);
-    
-    if (isExpense) {
-      setLocalExpenseCategories(reordered);
-    } else {
-      setLocalIncomeCategories(reordered);
-    }
-    
-    setHasReorderedDuringDrag(true);
-    setDragOverIndex(targetIndex);
-  };
-
-  const handleDragLeave = () => {
-    setDragOverIndex(null);
-  };
-
-  const handleDrop = async (e: React.DragEvent, targetCategory: CustomCategory, targetIndex: number) => {
-    e.preventDefault();
-    
-    if (loadingCategories || !draggedCategory || draggedCategory.id === targetCategory.id) {
-      setDraggedCategory(null);
-      setDragOverIndex(null);
-      return;
-    }
-
-    // Mark as dirty - user needs to click Save to persist
-    setIsDirty(true);
-
-    setDraggedCategory(null);
-    setDragOverIndex(null);
-  };
-
   const handleSaveOrder = async () => {
     setIsSaving(true);
     
@@ -250,7 +208,6 @@ export const CategoryManager = ({ onCategoriesChange }: CategoryManagerProps) =>
       setIsSaving(false);
     }
   };
-
 
   const updateCategoriesInDatabase = async (expenseCategories: CustomCategory[], incomeCategories: CustomCategory[]) => {
     setIsUpdating(true);  // Prevent sync during update
@@ -283,14 +240,6 @@ export const CategoryManager = ({ onCategoriesChange }: CategoryManagerProps) =>
     }
   };
 
-  const handleDragEnd = () => {
-    if (hasReorderedDuringDrag) {
-      setIsDirty(true);
-    }
-    setDraggedCategory(null);
-    setDragOverIndex(null);
-    setHasReorderedDuringDrag(false);
-  };
 
   const onGripPointerDown = (e: React.PointerEvent, category: CustomCategory) => {
     e.preventDefault();
@@ -342,11 +291,10 @@ export const CategoryManager = ({ onCategoriesChange }: CategoryManagerProps) =>
           <Button
             onClick={handleSaveOrder}
             size="sm"
-            variant="default"
+            variant="secondary"
             disabled={isSaving}
-            className="animate-in fade-in slide-in-from-left-2 duration-300 transition-smooth"
+            className="animate-in fade-in duration-200 rounded-full h-8 px-3 shadow-none"
           >
-            <Save className="w-4 h-4 mr-2" />
             Save
           </Button>
         )}
@@ -387,12 +335,12 @@ export const CategoryManager = ({ onCategoriesChange }: CategoryManagerProps) =>
             localExpenseCategories.map((cat, index) => (
             <div
               key={cat.id}
-              onDragOver={(e) => handleDragOver(e, cat, index)}
-              onDragLeave={handleDragLeave}
-              onDrop={(e) => handleDrop(e, cat, index)}
               onPointerEnter={() => onItemPointerEnter(cat, index)}
               onPointerMove={() => onItemPointerEnter(cat, index)}
-              onClick={() => handleEdit(cat)}
+              onClick={() => {
+                if (isPointerDragging || hasReorderedDuringDrag) return;
+                handleEdit(cat);
+              }}
               className={cn(
                 "flex items-center justify-between p-3 rounded-lg hover:bg-secondary/50 cursor-pointer relative",
                 "transition-all duration-200 ease-out",
@@ -415,9 +363,6 @@ export const CategoryManager = ({ onCategoriesChange }: CategoryManagerProps) =>
                 <Button
                   variant="ghost"
                   size="sm"
-                  draggable={!loadingCategories && !isSaving}
-                  onDragStart={(e) => handleDragStart(e, cat)}
-                  onDragEnd={handleDragEnd}
                   onPointerDown={(e) => onGripPointerDown(e, cat)}
                   onPointerUp={onGripPointerUp}
                   onPointerCancel={onGripPointerUp}
@@ -473,12 +418,12 @@ export const CategoryManager = ({ onCategoriesChange }: CategoryManagerProps) =>
             localIncomeCategories.map((cat, index) => (
             <div
               key={cat.id}
-              onDragOver={(e) => handleDragOver(e, cat, index)}
-              onDragLeave={handleDragLeave}
-              onDrop={(e) => handleDrop(e, cat, index)}
               onPointerEnter={() => onItemPointerEnter(cat, index)}
               onPointerMove={() => onItemPointerEnter(cat, index)}
-              onClick={() => handleEdit(cat)}
+              onClick={() => {
+                if (isPointerDragging || hasReorderedDuringDrag) return;
+                handleEdit(cat);
+              }}
               className={cn(
                 "flex items-center justify-between p-3 rounded-lg hover:bg-secondary/50 cursor-pointer relative",
                 "transition-all duration-200 ease-out",
@@ -501,9 +446,6 @@ export const CategoryManager = ({ onCategoriesChange }: CategoryManagerProps) =>
                 <Button
                   variant="ghost"
                   size="sm"
-                  draggable={!loadingCategories && !isSaving}
-                  onDragStart={(e) => handleDragStart(e, cat)}
-                  onDragEnd={handleDragEnd}
                   onPointerDown={(e) => onGripPointerDown(e, cat)}
                   onPointerUp={onGripPointerUp}
                   onPointerCancel={onGripPointerUp}
