@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription } from '@/components/ui/drawer';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Transaction } from '@/types/transaction';
 import { getCategoryInfo } from '@/lib/categories';
@@ -159,24 +159,15 @@ export const TransactionDetailSheet = ({
   };
 
   return (
-    <Drawer 
-      open={open} 
-      onOpenChange={onOpenChange} 
-      snapPoints={[1]}
-      dismissible={false}
-    >
-      <DrawerContent 
-        className="flex flex-col max-h-screen animate-fade-in" 
-        showHandle={false}
-        noSlideUp={true}
-      >
-        <DrawerHeader className="pt-4 px-4 sm:px-6 flex items-center justify-between">
-          <DrawerTitle>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="flex flex-col h-screen max-h-screen w-full max-w-full m-0 p-0 rounded-none border-none animate-fade-in">
+        <DialogHeader className="pt-4 px-4 sm:px-6 flex flex-row items-center justify-between space-y-0">
+          <DialogTitle>
             {filterType === 'expense' ? 'Expenses' : filterType === 'income' ? 'Income' : 'All Transactions'}
-          </DrawerTitle>
-          <DrawerDescription className="sr-only">
+          </DialogTitle>
+          <DialogDescription className="sr-only">
             View detailed breakdown of {filterType === 'income' ? 'income' : 'expenses'} by date and category
-          </DrawerDescription>
+          </DialogDescription>
           <Button 
             variant="ghost" 
             size="icon" 
@@ -185,7 +176,7 @@ export const TransactionDetailSheet = ({
           >
             <X className="h-6 w-6" />
           </Button>
-        </DrawerHeader>
+        </DialogHeader>
 
         <div className="overflow-y-auto flex-1 pb-20">
           <div className="px-4 sm:px-6">
@@ -296,8 +287,8 @@ export const TransactionDetailSheet = ({
         )}
           </div>
         </div>
-      </DrawerContent>
-    </Drawer>
+      </DialogContent>
+    </Dialog>
   );
 };
 
