@@ -264,8 +264,8 @@ export const AddTransactionDialog = ({
   return (
       <Drawer 
         open={open} 
-        onOpenChange={onOpenChange} 
-        snapPoints={[1]}
+        onOpenChange={onOpenChange}
+        dismissible={true}
       >
         <DrawerContent className="flex flex-col max-h-screen">
         <DrawerHeader className="pt-4 px-4 sm:px-6 flex items-center justify-between">
