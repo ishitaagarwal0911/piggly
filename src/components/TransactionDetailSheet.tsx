@@ -1,11 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
-import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from '@/components/ui/drawer';
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerClose } from '@/components/ui/drawer';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Transaction } from '@/types/transaction';
 import { getCategoryInfo } from '@/lib/categories';
 import { loadSettings } from '@/lib/settings';
 import { format, isSameDay } from 'date-fns';
-import { ChevronDown, ChevronRight, Plus } from 'lucide-react';
+import { ChevronDown, ChevronRight, Plus, X } from 'lucide-react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Button } from '@/components/ui/button';
 import { formatAmount } from '@/lib/utils';
@@ -46,20 +46,26 @@ export const TransactionDetailSheet = ({
     if (!open) return;
 
     const handlePopState = (e: PopStateEvent) => {
-      if (open && window.location.hash === '#detail') {
+      if (window.location.hash === '#transaction-detail') {
+        e.preventDefault();
+        e.stopPropagation();
         onOpenChange(false);
       }
     };
 
-    if (window.location.hash !== '#detail') {
-      window.history.pushState({ detailSheetOpen: true }, "", window.location.pathname + window.location.search + "#detail");
+    if (window.location.hash !== '#transaction-detail') {
+      window.history.pushState(
+        { sheet: 'transaction-detail', timestamp: Date.now() }, 
+        "", 
+        window.location.pathname + window.location.search + "#transaction-detail"
+      );
     }
     window.addEventListener("popstate", handlePopState);
 
     return () => {
       window.removeEventListener("popstate", handlePopState);
-      if (window.location.hash === "#detail") {
-        window.history.replaceState({}, "", window.location.pathname + window.location.search);
+      if (window.location.hash === "#transaction-detail" && window.history.length > 1) {
+        window.history.back();
       }
     };
   }, [open, onOpenChange]);
@@ -151,22 +157,27 @@ export const TransactionDetailSheet = ({
 
   return (
     <Drawer open={open} onOpenChange={onOpenChange}>
-      <DrawerContent className="max-h-[95vh] overflow-y-auto px-4 sm:px-6">
-        <DrawerHeader>
-          <DrawerTitle>
-            {filterCategory ? getCategoryInfo(filterCategory)?.name : 
-             filterType === 'income' ? 'Income' : 'Expenses'}
+      <DrawerContent className="overflow-hidden flex flex-col max-h-screen">
+        <DrawerHeader className="mb-3 px-4 sm:px-6 pt-4 flex items-center justify-between">
+          <DrawerTitle className="tracking-tight text-base sm:text-lg">
+            {filterType === 'expense' ? 'Expenses' : 'Income'}
           </DrawerTitle>
+          <DrawerClose asChild>
+            <Button variant="ghost" size="icon" className="h-10 w-10">
+              <X className="h-6 w-6" />
+            </Button>
+          </DrawerClose>
         </DrawerHeader>
 
-        <div className="mt-6 mb-4">
-          <p className="text-sm text-muted-foreground">Total</p>
-          <p className="text-2xl font-semibold">
-            {currency}{formatAmount(total)}
-          </p>
-        </div>
+        <div className="overflow-y-auto flex-1 px-4 sm:px-6">
+          <div className="mb-4">
+            <p className="text-sm text-muted-foreground">Total</p>
+            <p className="text-2xl font-semibold">
+              {currency}{formatAmount(total)}
+            </p>
+          </div>
 
-        <Tabs defaultValue={defaultTab || "by-date"} className="mt-6">
+          <Tabs defaultValue={defaultTab || "by-date"} className="mt-6">
           <TabsList className="w-full">
             <TabsTrigger value="by-date" className="flex-1">By Date</TabsTrigger>
             <TabsTrigger value="by-category" className="flex-1">By Category</TabsTrigger>
@@ -264,6 +275,7 @@ export const TransactionDetailSheet = ({
             </Button>
           </div>
         )}
+        </div>
       </DrawerContent>
     </Drawer>
   );

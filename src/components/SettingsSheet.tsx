@@ -11,7 +11,7 @@ import { loadSettings, saveSettings } from '@/lib/settings';
 import { CURRENCY_OPTIONS, AppSettings } from '@/types/settings';
 import { exportData, importData, importCSV } from '@/lib/storage';
 import { useAuth } from '@/contexts/AuthContext';
-import { Menu, Download, Upload } from 'lucide-react';
+import { Menu, Download, Upload, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { ViewType } from '@/lib/dateUtils';
 import { useLocation } from 'react-router-dom';
@@ -50,24 +50,30 @@ export const SettingsSheet = ({ onSettingsChange, open: externalOpen, onOpenChan
   useEffect(() => {
     if (!open) return;
 
-    const handlePopState = () => {
-      if (open) {
+    const handlePopState = (e: PopStateEvent) => {
+      if (window.location.hash === '#settings') {
+        e.preventDefault();
+        e.stopPropagation();
         setOpen(false);
       }
     };
 
-    // Push settings state to history
-    window.history.pushState({ settingsOpen: true }, "", location.pathname + location.search + "#settings");
+    if (window.location.hash !== '#settings') {
+      window.history.pushState(
+        { sheet: 'settings', timestamp: Date.now() }, 
+        "", 
+        window.location.pathname + window.location.search + "#settings"
+      );
+    }
     window.addEventListener("popstate", handlePopState);
 
     return () => {
       window.removeEventListener("popstate", handlePopState);
-      // Clean up hash if still present
-      if (window.location.hash === "#settings") {
-        window.history.replaceState({}, "", location.pathname + location.search);
+      if (window.location.hash === "#settings" && window.history.length > 1) {
+        window.history.back();
       }
     };
-  }, [open, location.pathname, location.search, setOpen]);
+  }, [open, setOpen]);
 
   const handleCurrencyChange = async (currencyCode: string) => {
     const currency = CURRENCY_OPTIONS.find(c => c.code === currencyCode);
@@ -166,8 +172,16 @@ export const SettingsSheet = ({ onSettingsChange, open: externalOpen, onOpenChan
         </Button>
       </SheetTrigger>
       <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
-        <div className="flex items-center mb-6">
+        <div className="flex items-center justify-between mb-6">
           <ThemeToggle />
+          <Button 
+            variant="ghost" 
+            size="icon"
+            onClick={() => setOpen(false)}
+            className="h-10 w-10"
+          >
+            <X className="h-6 w-6" />
+          </Button>
         </div>
         <SheetHeader>
           <h2 className="text-2xl font-bold">Settings</h2>

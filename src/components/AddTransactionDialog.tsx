@@ -102,20 +102,26 @@ export const AddTransactionDialog = ({
     if (!open) return;
 
     const handlePopState = (e: PopStateEvent) => {
-      if (open && window.location.hash === '#add') {
+      if (window.location.hash === '#add-transaction') {
+        e.preventDefault();
+        e.stopPropagation();
         onOpenChange(false);
       }
     };
 
-    if (window.location.hash !== '#add') {
-      window.history.pushState({ addTransactionOpen: true }, "", window.location.pathname + window.location.search + "#add");
+    if (window.location.hash !== '#add-transaction') {
+      window.history.pushState(
+        { sheet: 'add-transaction', timestamp: Date.now() }, 
+        "", 
+        window.location.pathname + window.location.search + "#add-transaction"
+      );
     }
     window.addEventListener("popstate", handlePopState);
 
     return () => {
       window.removeEventListener("popstate", handlePopState);
-      if (window.location.hash === "#add") {
-        window.history.replaceState({}, "", window.location.pathname + window.location.search);
+      if (window.location.hash === "#add-transaction" && window.history.length > 1) {
+        window.history.back();
       }
     };
   }, [open, onOpenChange]);
@@ -250,16 +256,13 @@ export const AddTransactionDialog = ({
   return (
     <Drawer open={open} onOpenChange={onOpenChange}>
       <DrawerContent 
-        className={cn(
-          "overflow-hidden flex flex-col max-h-[98vh] px-4 sm:px-6",
-          isMobile ? "pb-4" : "pb-6"
-        )}
+        className="overflow-hidden flex flex-col max-h-screen"
       >
-        <DrawerHeader className="mb-3 pt-4">
+        <DrawerHeader className="mb-3 pt-4 px-4 sm:px-6">
           <DrawerTitle className="tracking-tight text-base sm:text-lg">{editingTransaction ? 'Edit Transaction' : 'Add Transaction'}</DrawerTitle>
         </DrawerHeader>
 
-        <div className="overflow-y-auto flex-1 space-y-3 sm:space-y-4 pb-2">
+        <div className="overflow-y-auto flex-1 space-y-3 sm:space-y-4 pb-2 px-4 sm:px-6">
           {/* Type Selector */}
           <Tabs value={type} onValueChange={(v) => setType(v as TransactionType)}>
             <TabsList className="grid w-full grid-cols-2">
@@ -408,7 +411,7 @@ export const AddTransactionDialog = ({
         </div>
 
         {/* Sticky Footer */}
-        <div className="sticky bottom-0 bg-background border-t pt-3 space-y-2 mt-3 pb-safe">
+        <div className="sticky bottom-0 bg-background border-t pt-3 space-y-2 mt-3 pb-safe px-4 sm:px-6">
           <Button
             className="w-full"
             size="lg"
