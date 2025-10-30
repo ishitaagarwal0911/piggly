@@ -195,6 +195,19 @@ button:active {
   transform: scale(0.98);
 }
 
+/* Disable text selection globally except for editable elements */
+body :not(input):not(textarea):not([contenteditable="true"]) {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+}
+
+input, textarea, [contenteditable="true"] {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
 @layer base {
   * {
     @apply border-border;
