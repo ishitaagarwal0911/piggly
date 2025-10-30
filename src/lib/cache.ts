@@ -83,8 +83,55 @@ export const isCacheFresh = (userId: string): boolean => {
     if (metadata.userId !== userId) return false;
 
     const age = Date.now() - metadata.lastSync;
-    return age < 5 * 60 * 1000; // 5 minutes
+    return age < 30 * 60 * 1000; // 30 minutes
   } catch {
     return false;
+  }
+};
+
+/**
+ * Settings cache
+ */
+const SETTINGS_KEY = `${CACHE_KEY_PREFIX}settings_v${CACHE_VERSION}`;
+
+export const cacheSettings = (settings: any, userId: string): void => {
+  try {
+    const cacheData = {
+      settings,
+      metadata: {
+        lastSync: Date.now(),
+        version: CACHE_VERSION,
+        userId,
+      },
+    };
+    localStorage.setItem(SETTINGS_KEY, JSON.stringify(cacheData));
+  } catch (error) {
+    console.warn('Failed to cache settings:', error);
+  }
+};
+
+export const getCachedSettings = (userId: string): any | null => {
+  try {
+    const cached = localStorage.getItem(SETTINGS_KEY);
+    if (!cached) return null;
+
+    const { settings, metadata } = JSON.parse(cached);
+    
+    if (metadata.version !== CACHE_VERSION || metadata.userId !== userId) {
+      return null;
+    }
+
+    return settings;
+  } catch (error) {
+    console.warn('Failed to read cached settings:', error);
+    return null;
+  }
+};
+
+export const clearSettingsCache = (): void => {
+  try {
+    localStorage.removeItem(SETTINGS_KEY);
+  } catch (error) {
+    console.warn('Failed to clear settings cache:', error);
   }
 };

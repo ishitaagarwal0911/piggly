@@ -82,14 +82,14 @@ export const SettingsSheet = ({ onSettingsChange, open: externalOpen, onOpenChan
 
   const handleViewChange = async (view: ViewType) => {
     const newSettings = { ...settings, defaultView: view };
-    await saveSettings(newSettings);
+    
+    // Immediately update UI (instant visual feedback)
     setSettings(newSettings);
+    onSettingsChange(view); // Pass view to update immediately
     toast.success('Default view updated');
     
-    // Small delay to ensure DB write propagates before triggering refresh
-    setTimeout(() => {
-      onSettingsChange(view);
-    }, 150);
+    // Save to DB in background (non-blocking)
+    saveSettings(newSettings);
   };
 
   const handleExport = async () => {

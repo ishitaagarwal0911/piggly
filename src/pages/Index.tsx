@@ -215,7 +215,7 @@ const Index = () => {
   
   useRealtimeSync(handleRealtimeChange, handleCategoryChange, undefined);
 
-  // Background load of historical data (older than 2 months)
+  // Background load of historical data (older than 2 months) in chunks
   useEffect(() => {
     if (!hasLoadedData || !user) return;
     
@@ -227,19 +227,34 @@ const Index = () => {
         const twoMonthsAgo = new Date();
         twoMonthsAgo.setMonth(twoMonthsAgo.getMonth() - 2);
         
-        // Fetch older data quietly
-        const historical = await loadHistoricalTransactions(twoMonthsAgo, user.id);
+        // Load in chunks of 6 months at a time (oldest to newest)
+        let currentDate = new Date(twoMonthsAgo);
+        let hasMore = true;
         
-        if (historical.length > 0) {
-          // Merge with existing without triggering loading states
+        while (hasMore) {
+          const sixMonthsEarlier = new Date(currentDate);
+          sixMonthsEarlier.setMonth(sixMonthsEarlier.getMonth() - 6);
+          
+          const chunk = await loadHistoricalTransactions(currentDate, user.id, sixMonthsEarlier);
+          
+          if (chunk.length === 0) {
+            hasMore = false;
+            break;
+          }
+          
+          // Merge chunk without triggering re-renders
           setTransactions(prev => {
-            const combined = [...prev, ...historical];
-            // Deduplicate and sort
+            const combined = [...prev, ...chunk];
             const unique = Array.from(
               new Map(combined.map(t => [t.id, t])).values()
             ).sort((a, b) => b.date.getTime() - a.date.getTime());
             return unique;
           });
+          
+          currentDate = sixMonthsEarlier;
+          
+          // Small delay between chunks to avoid blocking UI
+          await new Promise(resolve => setTimeout(resolve, 200));
         }
       } catch (error) {
         console.error('Failed to load historical data:', error);
@@ -396,9 +411,12 @@ const Index = () => {
 
   const handleSettingsChange = async (newView?: ViewType) => {
     if (newView) {
+      // Immediate view change - no reload needed
       setViewType(newView);
+      return; // Exit early - transactions already loaded
     }
-    // Reload both settings and transactions to update UI after import
+    
+    // Only reload data when needed (e.g., after import, currency change, category changes)
     const [settings, loadedTxs] = await Promise.all([
       loadSettings(),
       loadTransactions()

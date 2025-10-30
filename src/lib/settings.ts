@@ -1,6 +1,7 @@
 import { AppSettings, CustomCategory, CurrencyOption, CURRENCY_OPTIONS, DEFAULT_COLORS } from '@/types/settings';
 import { getDefaultCategories, setCategoriesCache } from './categories';
 import { supabase } from '@/integrations/supabase/client';
+import { cacheSettings, getCachedSettings } from './cache';
 
 
 // Smart emoji-to-color mapping based on emoji unicode and visual characteristics
@@ -76,11 +77,19 @@ export const loadSettings = async (userId?: string): Promise<AppSettings> => {
     const uid = userId || (await supabase.auth.getUser()).data.user?.id;
     if (!uid) return getDefaultSettings();
 
-    // Return cached settings if available for this user
+    // Check in-memory cache first
     if (settingsCache && settingsCache.userId === uid) {
       return settingsCache.data;
     }
 
+    // Check localStorage cache
+    const localCached = getCachedSettings(uid);
+    if (localCached) {
+      settingsCache = { data: localCached, userId: uid };
+      return localCached;
+    }
+
+    // Load from database
     const { data: settingsData } = await supabase
       .from('user_settings')
       .select('*')
@@ -118,12 +127,13 @@ export const loadSettings = async (userId?: string): Promise<AppSettings> => {
     const settings: AppSettings = {
       categories: finalCategories,
       currency,
-      defaultView: (settingsData?.default_view as 'daily' | 'weekly' | 'monthly') || 'monthly',
+      defaultView: (settingsData?.default_view as 'daily' | 'weekly' | 'monthly' | 'yearly') || 'monthly',
       theme: (settingsData?.theme as 'light' | 'dark' | 'system') || 'system',
     };
 
     // Cache the settings
     settingsCache = { data: settings, userId: uid };
+    cacheSettings(settings, uid);
 
     return settings;
   } catch (error) {
@@ -152,8 +162,9 @@ export const saveSettings = async (settings: AppSettings, userId?: string): Prom
       theme: settings.theme,
     });
 
-  // Invalidate cache
-  settingsCache = null;
+  // Update both caches
+  settingsCache = { data: settings, userId: uid };
+  cacheSettings(settings, uid);
 };
 
 export const addCategory = async (category: Omit<CustomCategory, 'id' | 'order' | 'color'>, userId?: string): Promise<void> => {

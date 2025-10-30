@@ -79,17 +79,28 @@ export const loadTransactions = async (options?: { since?: Date; limit?: number;
   }
 };
 
-export const loadHistoricalTransactions = async (beforeDate: Date, userId?: string): Promise<Transaction[]> => {
+export const loadHistoricalTransactions = async (
+  beforeDate: Date, 
+  userId?: string,
+  afterDate?: Date  // NEW parameter for chunking
+): Promise<Transaction[]> => {
   try {
     const uid = userId || (await supabase.auth.getUser()).data.user?.id;
     if (!uid) return [];
 
-    const { data, error } = await supabase
+    let query = supabase
       .from('transactions')
       .select('*')
       .eq('user_id', uid)
       .lt('date', beforeDate.toISOString())
       .order('date', { ascending: false });
+    
+    // Add lower bound if provided (for chunking)
+    if (afterDate) {
+      query = query.gte('date', afterDate.toISOString());
+    }
+
+    const { data, error } = await query;
     
     if (error) throw error;
     
