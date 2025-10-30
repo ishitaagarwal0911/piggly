@@ -346,24 +346,16 @@ export const CategoryManager = ({ onCategoriesChange }: CategoryManagerProps) =>
             localExpenseCategories.map((cat, index) => (
             <div
               key={cat.id}
-              draggable={!loadingCategories && !isSaving}
-              onDragStart={(e) => handleDragStart(e, cat)}
               onDragOver={(e) => handleDragOver(e, cat, index)}
               onDragLeave={handleDragLeave}
               onDrop={(e) => handleDrop(e, cat, index)}
-              onDragEnd={handleDragEnd}
               onClick={() => handleEdit(cat)}
               className={cn(
                 "flex items-center justify-between p-3 rounded-lg hover:bg-secondary/50 cursor-pointer relative",
-                "transition-all duration-200 ease-out select-none touch-none",
+                "transition-all duration-200 ease-out",
                 draggedCategory?.id === cat.id && "opacity-50 scale-[0.98]",
                 dragOverIndex === index && draggedCategory?.type === 'expense' && "border-2 border-primary border-dashed"
               )}
-              style={{ 
-                userSelect: 'none',
-                WebkitUserSelect: 'none',
-                touchAction: 'none'
-              }}
             >
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-lg flex items-center justify-center text-xl">
@@ -377,16 +369,19 @@ export const CategoryManager = ({ onCategoriesChange }: CategoryManagerProps) =>
                 </div>
               </div>
               <div className="flex items-center gap-1">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="cursor-grab active:cursor-grabbing transition-smooth"
-                  style={{ touchAction: 'none' }}
-                  onMouseDown={(e) => e.stopPropagation()}
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <GripVertical className="w-4 h-4 text-muted-foreground" />
-                </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    draggable={!loadingCategories && !isSaving}
+                    onDragStart={(e) => handleDragStart(e, cat)}
+                    onDragEnd={handleDragEnd}
+                    className="cursor-grab active:cursor-grabbing transition-smooth select-none"
+                    style={{ touchAction: 'none', userSelect: 'none', WebkitUserSelect: 'none' }}
+                    onMouseDown={(e) => e.stopPropagation()}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <GripVertical className="w-4 h-4 text-muted-foreground" />
+                  </Button>
                 <Button
                   variant="ghost"
                   size="sm"
@@ -432,24 +427,16 @@ export const CategoryManager = ({ onCategoriesChange }: CategoryManagerProps) =>
             localIncomeCategories.map((cat, index) => (
             <div
               key={cat.id}
-              draggable={!loadingCategories && !isSaving}
-              onDragStart={(e) => handleDragStart(e, cat)}
               onDragOver={(e) => handleDragOver(e, cat, index)}
               onDragLeave={handleDragLeave}
               onDrop={(e) => handleDrop(e, cat, index)}
-              onDragEnd={handleDragEnd}
               onClick={() => handleEdit(cat)}
               className={cn(
                 "flex items-center justify-between p-3 rounded-lg hover:bg-secondary/50 cursor-pointer relative",
-                "transition-all duration-200 ease-out select-none touch-none",
+                "transition-all duration-200 ease-out",
                 draggedCategory?.id === cat.id && "opacity-50 scale-[0.98]",
                 dragOverIndex === index && draggedCategory?.type === 'income' && "border-2 border-primary border-dashed"
               )}
-              style={{ 
-                userSelect: 'none',
-                WebkitUserSelect: 'none',
-                touchAction: 'none'
-              }}
             >
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-lg flex items-center justify-center text-xl">
@@ -463,16 +450,19 @@ export const CategoryManager = ({ onCategoriesChange }: CategoryManagerProps) =>
                 </div>
               </div>
               <div className="flex items-center gap-1">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="cursor-grab active:cursor-grabbing transition-smooth"
-                  style={{ touchAction: 'none' }}
-                  onMouseDown={(e) => e.stopPropagation()}
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <GripVertical className="w-4 h-4 text-muted-foreground" />
-                </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    draggable={!loadingCategories && !isSaving}
+                    onDragStart={(e) => handleDragStart(e, cat)}
+                    onDragEnd={handleDragEnd}
+                    className="cursor-grab active:cursor-grabbing transition-smooth select-none"
+                    style={{ touchAction: 'none', userSelect: 'none', WebkitUserSelect: 'none' }}
+                    onMouseDown={(e) => e.stopPropagation()}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <GripVertical className="w-4 h-4 text-muted-foreground" />
+                  </Button>
                 <Button
                   variant="ghost"
                   size="sm"
