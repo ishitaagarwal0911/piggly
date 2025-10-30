@@ -53,6 +53,8 @@ export const CategoryManager = ({ onCategoriesChange }: CategoryManagerProps) =>
   // Refs to track latest state during drag operations
   const expenseRef = useRef<CustomCategory[]>([]);
   const incomeRef = useRef<CustomCategory[]>([]);
+  const expenseListRef = useRef<HTMLDivElement>(null);
+  const incomeListRef = useRef<HTMLDivElement>(null);
   
   // Load categories from cache immediately, then fetch fresh data
   useEffect(() => {
@@ -104,17 +106,71 @@ export const CategoryManager = ({ onCategoriesChange }: CategoryManagerProps) =>
     incomeRef.current = localIncomeCategories;
   }, [localIncomeCategories]);
 
-  // Global pointer-up safety net for when drag ends outside the grip
+  // Global pointer events for drag operations
   useEffect(() => {
     if (!isPointerDragging) return;
+
+    const handlePointerMove = (e: PointerEvent) => {
+      if (!draggedCategory) return;
+      e.preventDefault();
+
+      // Determine active list based on dragged category type
+      const listRef = draggedCategory.type === 'expense' ? expenseListRef : incomeListRef;
+      const container = listRef.current;
+      if (!container) return;
+
+      // Get all category row elements
+      const items = Array.from(container.querySelectorAll('[data-item="true"]')) as HTMLDivElement[];
+      if (items.length === 0) return;
+
+      // Find target index based on pointer Y position
+      let targetIndex = -1;
+      for (let i = 0; i < items.length; i++) {
+        const rect = items[i].getBoundingClientRect();
+        const midpoint = rect.top + rect.height / 2;
+        if (e.clientY < midpoint) {
+          targetIndex = i;
+          break;
+        }
+      }
+      if (targetIndex === -1) targetIndex = items.length - 1;
+
+      // Get current categories array
+      const categories = draggedCategory.type === 'expense' ? expenseRef.current : incomeRef.current;
+      const currentIndex = categories.findIndex(cat => cat.id === draggedCategory.id);
+      
+      if (currentIndex === -1 || currentIndex === targetIndex) return;
+
+      // Reorder categories
+      const newCategories = [...categories];
+      const [removed] = newCategories.splice(currentIndex, 1);
+      newCategories.splice(targetIndex, 0, removed);
+
+      // Update state
+      if (draggedCategory.type === 'expense') {
+        setLocalExpenseCategories(newCategories);
+        expenseRef.current = newCategories;
+      } else {
+        setLocalIncomeCategories(newCategories);
+        incomeRef.current = newCategories;
+      }
+
+      setHasReorderedDuringDrag(true);
+      setDragOverIndex(targetIndex);
+    };
+
     const end = () => onGripPointerUp();
+
+    window.addEventListener('pointermove', handlePointerMove, { passive: false });
     window.addEventListener('pointerup', end);
     window.addEventListener('pointercancel', end);
+
     return () => {
+      window.removeEventListener('pointermove', handlePointerMove);
       window.removeEventListener('pointerup', end);
       window.removeEventListener('pointercancel', end);
     };
-  }, [isPointerDragging]);
+  }, [isPointerDragging, draggedCategory]);
 
   const resetForm = () => {
     setName("");
@@ -244,8 +300,10 @@ export const CategoryManager = ({ onCategoriesChange }: CategoryManagerProps) =>
   const onGripPointerDown = (e: React.PointerEvent, category: CustomCategory) => {
     e.preventDefault();
     e.stopPropagation();
+    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
     setDraggedCategory(category);
     setIsPointerDragging(true);
+    setHasReorderedDuringDrag(false);
   };
 
   const onGripPointerUp = () => {
@@ -260,40 +318,16 @@ export const CategoryManager = ({ onCategoriesChange }: CategoryManagerProps) =>
     }
   };
 
-  const onItemPointerEnter = (category: CustomCategory, index: number) => {
-    if (!isPointerDragging || !draggedCategory) return;
-    if (draggedCategory.type !== category.type) return;
-    if (draggedCategory.id === category.id) return;
-
-    const categories = category.type === 'expense' ? localExpenseCategories : localIncomeCategories;
-    const currentIndex = categories.findIndex(cat => cat.id === draggedCategory.id);
-    
-    if (currentIndex === -1) return;
-
-    const newCategories = [...categories];
-    const [removed] = newCategories.splice(currentIndex, 1);
-    newCategories.splice(index, 0, removed);
-
-    if (category.type === 'expense') {
-      setLocalExpenseCategories(newCategories);
-    } else {
-      setLocalIncomeCategories(newCategories);
-    }
-
-    setHasReorderedDuringDrag(true);
-    setDragOverIndex(index);
-  };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" style={{ touchAction: isPointerDragging ? 'none' : undefined }}>
       <div className="flex items-center justify-between mb-4 gap-4">
         {isDirty && (
           <Button
             onClick={handleSaveOrder}
             size="sm"
-            variant="secondary"
+            variant="outline"
             disabled={isSaving}
-            className="animate-in fade-in duration-200 rounded-full h-8 px-3 shadow-none"
           >
             Save
           </Button>
@@ -311,7 +345,7 @@ export const CategoryManager = ({ onCategoriesChange }: CategoryManagerProps) =>
       {/* Expense Categories */}
       <div>
         <h4 className="text-sm font-medium mb-3 text-muted-foreground">Expense Categories</h4>
-        <div className="space-y-2">
+        <div className="space-y-2" ref={expenseListRef}>
           {loadingCategories ? (
             // Show skeleton placeholders while loading
             <>
@@ -335,8 +369,7 @@ export const CategoryManager = ({ onCategoriesChange }: CategoryManagerProps) =>
             localExpenseCategories.map((cat, index) => (
             <div
               key={cat.id}
-              onPointerEnter={() => onItemPointerEnter(cat, index)}
-              onPointerMove={() => onItemPointerEnter(cat, index)}
+              data-item="true"
               onClick={() => {
                 if (isPointerDragging || hasReorderedDuringDrag) return;
                 handleEdit(cat);
@@ -394,7 +427,7 @@ export const CategoryManager = ({ onCategoriesChange }: CategoryManagerProps) =>
       {/* Income Categories */}
       <div>
         <h4 className="text-sm font-medium mb-3 text-muted-foreground">Income Categories</h4>
-        <div className="space-y-2">
+        <div className="space-y-2" ref={incomeListRef}>
           {loadingCategories ? (
             // Show skeleton placeholders while loading
             <>
@@ -418,8 +451,7 @@ export const CategoryManager = ({ onCategoriesChange }: CategoryManagerProps) =>
             localIncomeCategories.map((cat, index) => (
             <div
               key={cat.id}
-              onPointerEnter={() => onItemPointerEnter(cat, index)}
-              onPointerMove={() => onItemPointerEnter(cat, index)}
+              data-item="true"
               onClick={() => {
                 if (isPointerDragging || hasReorderedDuringDrag) return;
                 handleEdit(cat);
