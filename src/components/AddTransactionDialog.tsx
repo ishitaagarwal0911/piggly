@@ -2,13 +2,13 @@ import { useState, useEffect, useRef } from 'react';
 import { Transaction, TransactionType } from '@/types/transaction';
 import { categories, getCategoryInfo } from '@/lib/categories';
 import { addCategory, loadSettings } from '@/lib/settings';
-import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from '@/components/ui/drawer';
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerClose } from '@/components/ui/drawer';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
-import { CalendarIcon, Plus } from 'lucide-react';
+import { CalendarIcon, Plus, X } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -48,6 +48,7 @@ export const AddTransactionDialog = ({
   const isProcessing = useRef(false);
   const quickAddRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
+  const closedByPopstate = useRef(false);
 
   // Sync form state when editingTransaction changes
   useEffect(() => {
@@ -101,30 +102,32 @@ export const AddTransactionDialog = ({
   useEffect(() => {
     if (!open) return;
 
-    const handlePopState = (e: PopStateEvent) => {
-      if (window.location.hash === '#add-transaction') {
-        e.preventDefault();
-        e.stopPropagation();
+    const handlePopState = () => {
+      if (open && window.location.hash !== "#add-transaction") {
+        closedByPopstate.current = true;
         onOpenChange(false);
       }
     };
 
-    if (window.location.hash !== '#add-transaction') {
-      window.history.pushState(
-        { sheet: 'add-transaction', timestamp: Date.now() }, 
-        "", 
-        window.location.pathname + window.location.search + "#add-transaction"
-      );
+    if (window.location.hash !== "#add-transaction") {
+      window.history.pushState({ addTransaction: true }, "", window.location.pathname + window.location.search + "#add-transaction");
     }
+
     window.addEventListener("popstate", handlePopState);
 
     return () => {
       window.removeEventListener("popstate", handlePopState);
-      if (window.location.hash === "#add-transaction" && window.history.length > 1) {
-        window.history.back();
-      }
     };
   }, [open, onOpenChange]);
+
+  useEffect(() => {
+    if (!open && !closedByPopstate.current && window.location.hash === "#add-transaction") {
+      window.history.back();
+    }
+    if (!open) {
+      closedByPopstate.current = false;
+    }
+  }, [open]);
 
   const performCalculation = (a: number, b: number, op: string): number => {
     switch (op) {
@@ -254,15 +257,21 @@ export const AddTransactionDialog = ({
   const displayCategories = allCategories.filter(cat => cat.type === type);
 
   return (
-    <Drawer open={open} onOpenChange={onOpenChange}>
-      <DrawerContent 
-        className="overflow-hidden flex flex-col max-h-screen"
-      >
-        <DrawerHeader className="mb-3 pt-4 px-4 sm:px-6">
-          <DrawerTitle className="tracking-tight text-base sm:text-lg">{editingTransaction ? 'Edit Transaction' : 'Add Transaction'}</DrawerTitle>
+    <Drawer open={open} onOpenChange={onOpenChange} activeSnapPoint={1}>
+      <DrawerContent className="flex flex-col max-h-screen">
+        <DrawerHeader className="pt-4 px-4 sm:px-6 flex items-center justify-between">
+          <DrawerTitle>
+            {editingTransaction ? "Edit Transaction" : "Add Transaction"}
+          </DrawerTitle>
+          <DrawerClose asChild>
+            <Button variant="ghost" size="icon" className="h-10 w-10">
+              <X className="h-6 w-6" />
+            </Button>
+          </DrawerClose>
         </DrawerHeader>
 
-        <div className="overflow-y-auto flex-1 space-y-3 sm:space-y-4 pb-2 px-4 sm:px-6">
+        <div className="overflow-y-auto flex-1">
+          <div className="px-4 sm:px-6 space-y-3 sm:space-y-4">
           {/* Type Selector */}
           <Tabs value={type} onValueChange={(v) => setType(v as TransactionType)}>
             <TabsList className="grid w-full grid-cols-2">
@@ -408,10 +417,11 @@ export const AddTransactionDialog = ({
               </PopoverContent>
           </Popover>
           </div>
+          </div>
         </div>
 
         {/* Sticky Footer */}
-        <div className="sticky bottom-0 bg-background border-t pt-3 space-y-2 mt-3 pb-safe px-4 sm:px-6">
+        <div className="sticky bottom-0 bg-background border-t pt-3 space-y-2 mt-3 pb-4 sm:pb-6 px-4 sm:px-6">
           <Button
             className="w-full"
             size="lg"

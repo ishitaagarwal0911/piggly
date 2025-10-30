@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { Sheet, SheetContent, SheetHeader, SheetTrigger } from '@/components/ui/sheet';
+import { useState, useEffect, useRef } from 'react';
+import { Sheet, SheetContent, SheetClose, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -37,6 +37,7 @@ export const SettingsSheet = ({ onSettingsChange, open: externalOpen, onOpenChan
   });
   const [isImporting, setIsImporting] = useState(false);
   const { user, signOut } = useAuth();
+  const closedByPopstate = useRef(false);
 
   useEffect(() => {
     const loadData = async () => {
@@ -50,30 +51,32 @@ export const SettingsSheet = ({ onSettingsChange, open: externalOpen, onOpenChan
   useEffect(() => {
     if (!open) return;
 
-    const handlePopState = (e: PopStateEvent) => {
-      if (window.location.hash === '#settings') {
-        e.preventDefault();
-        e.stopPropagation();
+    const handlePopState = () => {
+      if (open && window.location.hash !== "#settings") {
+        closedByPopstate.current = true;
         setOpen(false);
       }
     };
 
-    if (window.location.hash !== '#settings') {
-      window.history.pushState(
-        { sheet: 'settings', timestamp: Date.now() }, 
-        "", 
-        window.location.pathname + window.location.search + "#settings"
-      );
+    if (window.location.hash !== "#settings") {
+      window.history.pushState({ settings: true }, "", window.location.pathname + window.location.search + "#settings");
     }
+
     window.addEventListener("popstate", handlePopState);
 
     return () => {
       window.removeEventListener("popstate", handlePopState);
-      if (window.location.hash === "#settings" && window.history.length > 1) {
-        window.history.back();
-      }
     };
   }, [open, setOpen]);
+
+  useEffect(() => {
+    if (!open && !closedByPopstate.current && window.location.hash === "#settings") {
+      window.history.back();
+    }
+    if (!open) {
+      closedByPopstate.current = false;
+    }
+  }, [open]);
 
   const handleCurrencyChange = async (currencyCode: string) => {
     const currency = CURRENCY_OPTIONS.find(c => c.code === currencyCode);
@@ -171,21 +174,17 @@ export const SettingsSheet = ({ onSettingsChange, open: externalOpen, onOpenChan
           <Menu className="w-5 h-5" />
         </Button>
       </SheetTrigger>
-      <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
+      <SheetContent side="top" hideClose className="inset-0 h-screen w-full overflow-y-auto p-6">
         <div className="flex items-center justify-between mb-6">
           <ThemeToggle />
-          <Button 
-            variant="ghost" 
-            size="icon"
-            onClick={() => setOpen(false)}
-            className="h-10 w-10"
-          >
-            <X className="h-6 w-6" />
-          </Button>
+          <SheetClose asChild>
+            <Button variant="ghost" size="icon" className="h-10 w-10">
+              <X className="h-6 w-6" />
+            </Button>
+          </SheetClose>
         </div>
-        <SheetHeader>
-          <h2 className="text-2xl font-bold">Settings</h2>
-        </SheetHeader>
+        
+        <h2 className="text-xl font-semibold mb-4">Settings</h2>
 
         <Accordion type="multiple" defaultValue={[]} className="mt-2">
           <AccordionItem value="categories">

@@ -5,7 +5,7 @@ import { Transaction } from '@/types/transaction';
 import { getCategoryInfo } from '@/lib/categories';
 import { loadSettings } from '@/lib/settings';
 import { format, isSameDay } from 'date-fns';
-import { ChevronDown, ChevronRight, Plus, X } from 'lucide-react';
+import { Plus, X } from 'lucide-react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Button } from '@/components/ui/button';
 import { formatAmount } from '@/lib/utils';
@@ -34,6 +34,7 @@ export const TransactionDetailSheet = ({
   defaultOpenCategory,
 }: TransactionDetailSheetProps) => {
   const [currency, setCurrency] = useState('₹');
+  const closedByPopstate = useRef(false);
   
   useEffect(() => {
     loadSettings().then(settings => {
@@ -45,30 +46,32 @@ export const TransactionDetailSheet = ({
   useEffect(() => {
     if (!open) return;
 
-    const handlePopState = (e: PopStateEvent) => {
-      if (window.location.hash === '#transaction-detail') {
-        e.preventDefault();
-        e.stopPropagation();
+    const handlePopState = () => {
+      if (open && window.location.hash !== "#transaction-detail") {
+        closedByPopstate.current = true;
         onOpenChange(false);
       }
     };
 
-    if (window.location.hash !== '#transaction-detail') {
-      window.history.pushState(
-        { sheet: 'transaction-detail', timestamp: Date.now() }, 
-        "", 
-        window.location.pathname + window.location.search + "#transaction-detail"
-      );
+    if (window.location.hash !== "#transaction-detail") {
+      window.history.pushState({ transactionDetail: true }, "", window.location.pathname + window.location.search + "#transaction-detail");
     }
+
     window.addEventListener("popstate", handlePopState);
 
     return () => {
       window.removeEventListener("popstate", handlePopState);
-      if (window.location.hash === "#transaction-detail" && window.history.length > 1) {
-        window.history.back();
-      }
     };
   }, [open, onOpenChange]);
+
+  useEffect(() => {
+    if (!open && !closedByPopstate.current && window.location.hash === "#transaction-detail") {
+      window.history.back();
+    }
+    if (!open) {
+      closedByPopstate.current = false;
+    }
+  }, [open]);
 
   // Scroll to selected category when sheet opens
   useEffect(() => {
@@ -156,11 +159,11 @@ export const TransactionDetailSheet = ({
   };
 
   return (
-    <Drawer open={open} onOpenChange={onOpenChange}>
-      <DrawerContent className="overflow-hidden flex flex-col max-h-screen">
-        <DrawerHeader className="mb-3 px-4 sm:px-6 pt-4 flex items-center justify-between">
-          <DrawerTitle className="tracking-tight text-base sm:text-lg">
-            {filterType === 'expense' ? 'Expenses' : 'Income'}
+    <Drawer open={open} onOpenChange={onOpenChange} activeSnapPoint={1}>
+      <DrawerContent className="flex flex-col max-h-screen">
+        <DrawerHeader className="pt-4 px-4 sm:px-6 flex items-center justify-between">
+          <DrawerTitle>
+            {filterType === 'expense' ? 'Expenses' : filterType === 'income' ? 'Income' : 'All Transactions'}
           </DrawerTitle>
           <DrawerClose asChild>
             <Button variant="ghost" size="icon" className="h-10 w-10">
@@ -169,7 +172,8 @@ export const TransactionDetailSheet = ({
           </DrawerClose>
         </DrawerHeader>
 
-        <div className="overflow-y-auto flex-1 px-4 sm:px-6">
+        <div className="overflow-y-auto flex-1 pb-20">
+          <div className="px-4 sm:px-6">
           <div className="mb-4">
             <p className="text-sm text-muted-foreground">Total</p>
             <p className="text-2xl font-semibold">
@@ -275,6 +279,7 @@ export const TransactionDetailSheet = ({
             </Button>
           </div>
         )}
+          </div>
         </div>
       </DrawerContent>
     </Drawer>
