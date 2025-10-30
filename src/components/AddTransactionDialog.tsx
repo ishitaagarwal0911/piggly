@@ -266,9 +266,9 @@ export const AddTransactionDialog = ({
       open={open} 
       onOpenChange={onOpenChange}
       dismissible={true}
-      snapPoints={undefined}
+      snapPoints={null}
     >
-      <DrawerContent className="flex flex-col h-[95vh] max-h-screen">
+      <DrawerContent className="flex flex-col h-screen max-h-screen">
         <DrawerHeader className="pt-4 px-4 sm:px-6 flex items-center justify-between">
           <DrawerTitle>
             {editingTransaction ? "Edit Transaction" : "Add Transaction"}
