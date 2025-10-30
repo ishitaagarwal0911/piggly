@@ -34,7 +34,6 @@ export const TransactionDetailSheet = ({
   defaultOpenCategory,
 }: TransactionDetailSheetProps) => {
   const [currency, setCurrency] = useState('₹');
-  const closedByPopstate = useRef(false);
   
   useEffect(() => {
     loadSettings().then(settings => {
@@ -42,36 +41,6 @@ export const TransactionDetailSheet = ({
     });
   }, []);
 
-  // Handle browser back button
-  useEffect(() => {
-    if (!open) return;
-
-    const handlePopState = () => {
-      if (open && window.location.hash !== "#transaction-detail") {
-        closedByPopstate.current = true;
-        onOpenChange(false);
-      }
-    };
-
-    if (window.location.hash !== "#transaction-detail") {
-      window.history.pushState({ transactionDetail: true }, "", window.location.pathname + window.location.search + "#transaction-detail");
-    }
-
-    window.addEventListener("popstate", handlePopState);
-
-    return () => {
-      window.removeEventListener("popstate", handlePopState);
-    };
-  }, [open, onOpenChange]);
-
-  useEffect(() => {
-    if (!open && !closedByPopstate.current && window.location.hash === "#transaction-detail") {
-      window.history.back();
-    }
-    if (!open) {
-      closedByPopstate.current = false;
-    }
-  }, [open]);
 
   // Scroll to selected category when sheet opens
   useEffect(() => {
@@ -274,7 +243,7 @@ export const TransactionDetailSheet = ({
 
         {/* Floating Add Button */}
         {onAddClick && (
-          <div className="sticky bottom-4 flex justify-center pointer-events-none z-50 mt-6">
+          <div className="fixed bottom-6 left-0 right-0 flex justify-center pointer-events-none z-50">
             <Button
               size="lg"
               className="rounded-full px-6 h-14 shadow-notion-hover pointer-events-auto transition-transform hover:scale-105 active:scale-95 flex items-center gap-2"

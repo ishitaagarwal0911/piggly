@@ -48,7 +48,6 @@ export const AddTransactionDialog = ({
   const isProcessing = useRef(false);
   const quickAddRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
-  const closedByPopstate = useRef(false);
 
   // Sync form state when editingTransaction changes
   useEffect(() => {
@@ -98,41 +97,6 @@ export const AddTransactionDialog = ({
     }
   }, [showAddCategory]);
 
-  // Manage URL hash for iOS back button support
-  useEffect(() => {
-    if (!open) return;
-
-    const handlePopState = () => {
-      // If we're open and back is pressed, close us
-      closedByPopstate.current = true;
-      onOpenChange(false);
-    };
-
-    // Only push hash if not already there
-    if (window.location.hash !== "#add-transaction") {
-      window.history.pushState(
-        { addTransaction: true, timestamp: Date.now() },
-        "",
-        window.location.pathname + window.location.search + "#add-transaction"
-      );
-    }
-
-    window.addEventListener("popstate", handlePopState);
-
-    return () => {
-      window.removeEventListener("popstate", handlePopState);
-    };
-  }, [open, onOpenChange]);
-
-  // Separate effect to handle programmatic closes (via X button)
-  useEffect(() => {
-    if (!open && !closedByPopstate.current && window.location.hash === "#add-transaction") {
-      window.history.back();
-    }
-    if (!open) {
-      closedByPopstate.current = false;
-    }
-  }, [open]);
 
   const performCalculation = (a: number, b: number, op: string): number => {
     switch (op) {

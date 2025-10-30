@@ -530,7 +530,7 @@ const Index = () => {
       </main>
 
       {/* Floating Add Button */}
-      <div className="fixed bottom-8 left-0 right-0 flex justify-center pointer-events-none z-50">
+      <div className="fixed bottom-6 left-0 right-0 flex justify-center pointer-events-none z-50">
         <Button
           size="lg"
           className="rounded-full px-6 h-14 shadow-notion-hover pointer-events-auto transition-transform hover:scale-105 active:scale-95 flex items-center gap-2"
