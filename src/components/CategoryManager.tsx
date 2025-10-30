@@ -396,6 +396,17 @@ export const CategoryManager = ({ onCategoriesChange }: CategoryManagerProps) =>
                 <Button
                   variant="ghost"
                   size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setDeletingCategory(cat);
+                  }}
+                  className="transition-smooth"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
                   onPointerDown={(e) => onGripPointerDown(e, cat)}
                   onPointerUp={onGripPointerUp}
                   onPointerCancel={onGripPointerUp}
@@ -405,17 +416,6 @@ export const CategoryManager = ({ onCategoriesChange }: CategoryManagerProps) =>
                   onClick={(e) => e.stopPropagation()}
                 >
                   <GripVertical className="w-4 h-4 text-muted-foreground" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setDeletingCategory(cat);
-                  }}
-                  className="transition-smooth"
-                >
-                  <Trash2 className="w-4 h-4" />
                 </Button>
               </div>
             </div>
@@ -478,6 +478,17 @@ export const CategoryManager = ({ onCategoriesChange }: CategoryManagerProps) =>
                 <Button
                   variant="ghost"
                   size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setDeletingCategory(cat);
+                  }}
+                  className="transition-smooth"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
                   onPointerDown={(e) => onGripPointerDown(e, cat)}
                   onPointerUp={onGripPointerUp}
                   onPointerCancel={onGripPointerUp}
@@ -487,17 +498,6 @@ export const CategoryManager = ({ onCategoriesChange }: CategoryManagerProps) =>
                   onClick={(e) => e.stopPropagation()}
                 >
                   <GripVertical className="w-4 h-4 text-muted-foreground" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setDeletingCategory(cat);
-                  }}
-                  className="transition-smooth"
-                >
-                  <Trash2 className="w-4 h-4" />
                 </Button>
               </div>
             </div>

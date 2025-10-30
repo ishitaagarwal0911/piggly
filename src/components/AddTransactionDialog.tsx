@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Transaction, TransactionType } from '@/types/transaction';
 import { categories, getCategoryInfo } from '@/lib/categories';
 import { addCategory, loadSettings } from '@/lib/settings';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from '@/components/ui/drawer';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -225,19 +225,16 @@ export const AddTransactionDialog = ({
   const displayCategories = allCategories.filter(cat => cat.type === type);
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent 
+    <Drawer open={open} onOpenChange={onOpenChange}>
+      <DrawerContent 
         className={cn(
-          "overflow-hidden flex flex-col animate-in fade-in-0 duration-200",
-          isMobile 
-            ? "fixed inset-0 max-w-full h-full max-h-full rounded-none p-4 zoom-in-100" 
-            : "sm:max-w-md max-h-[90vh] p-6 zoom-in-95"
+          "overflow-hidden flex flex-col max-h-[95vh]",
+          isMobile ? "pb-4" : "pb-6"
         )}
-        centered={!isMobile}
       >
-        <DialogHeader className="mb-3">
-          <DialogTitle className="tracking-tight text-base sm:text-lg">{editingTransaction ? 'Edit Transaction' : 'Add Transaction'}</DialogTitle>
-        </DialogHeader>
+        <DrawerHeader className="mb-3">
+          <DrawerTitle className="tracking-tight text-base sm:text-lg">{editingTransaction ? 'Edit Transaction' : 'Add Transaction'}</DrawerTitle>
+        </DrawerHeader>
 
         <div className="overflow-y-auto flex-1 space-y-3 sm:space-y-4 px-1">
           {/* Type Selector */}
@@ -388,7 +385,7 @@ export const AddTransactionDialog = ({
         </div>
 
         {/* Sticky Footer */}
-        <div className="sticky bottom-0 bg-background border-t pt-3 space-y-2 mt-3">
+        <div className="sticky bottom-0 bg-background border-t pt-3 space-y-2 mt-3 pb-safe">
           <Button
             className="w-full"
             size="lg"
@@ -409,8 +406,8 @@ export const AddTransactionDialog = ({
             </Button>
           )}
         </div>
-      </DialogContent>
-    </Dialog>
+      </DrawerContent>
+    </Drawer>
   );
 };
 

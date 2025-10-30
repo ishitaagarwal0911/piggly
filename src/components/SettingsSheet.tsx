@@ -166,8 +166,9 @@ export const SettingsSheet = ({ onSettingsChange, open: externalOpen, onOpenChan
         </Button>
       </SheetTrigger>
       <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
-        <SheetHeader className="flex flex-row items-center pb-4">
+        <SheetHeader className="sticky top-0 z-10 bg-background border-b px-6 py-4 flex flex-row items-center justify-between -mx-6 -mt-6 mb-4">
           <ThemeToggle />
+          {/* Close button auto-added by SheetContent */}
         </SheetHeader>
 
         <Accordion type="multiple" defaultValue={[]} className="mt-2">

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from '@/components/ui/drawer';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Transaction } from '@/types/transaction';
 import { getCategoryInfo } from '@/lib/categories';
@@ -127,14 +127,14 @@ export const TransactionDetailSheet = ({
   };
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
-        <SheetHeader>
-          <SheetTitle>
+    <Drawer open={open} onOpenChange={onOpenChange}>
+      <DrawerContent className="max-h-[95vh] overflow-y-auto">
+        <DrawerHeader>
+          <DrawerTitle>
             {filterCategory ? getCategoryInfo(filterCategory)?.name : 
              filterType === 'income' ? 'Income' : 'Expenses'}
-          </SheetTitle>
-        </SheetHeader>
+          </DrawerTitle>
+        </DrawerHeader>
 
         <div className="mt-6 mb-4">
           <p className="text-sm text-muted-foreground">Total</p>
@@ -230,7 +230,7 @@ export const TransactionDetailSheet = ({
 
         {/* Floating Add Button */}
         {onAddClick && (
-          <div className="fixed bottom-8 left-0 right-0 flex justify-center pointer-events-none z-50">
+          <div className="sticky bottom-4 flex justify-center pointer-events-none z-50 mt-6">
             <Button
               size="lg"
               className="rounded-full px-6 h-14 shadow-notion-hover pointer-events-auto transition-transform hover:scale-105 active:scale-95 flex items-center gap-2"
@@ -241,8 +241,8 @@ export const TransactionDetailSheet = ({
             </Button>
           </div>
         )}
-      </SheetContent>
-    </Sheet>
+      </DrawerContent>
+    </Drawer>
   );
 };
 
