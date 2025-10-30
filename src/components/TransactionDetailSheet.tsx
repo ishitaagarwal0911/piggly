@@ -45,18 +45,20 @@ export const TransactionDetailSheet = ({
   useEffect(() => {
     if (!open) return;
 
-    const handlePopState = () => {
-      if (open) {
+    const handlePopState = (e: PopStateEvent) => {
+      if (open && window.location.hash === '#detail') {
         onOpenChange(false);
       }
     };
 
-    window.history.pushState({ detailSheetOpen: true }, "", window.location.pathname + window.location.search + "#details");
+    if (window.location.hash !== '#detail') {
+      window.history.pushState({ detailSheetOpen: true }, "", window.location.pathname + window.location.search + "#detail");
+    }
     window.addEventListener("popstate", handlePopState);
 
     return () => {
       window.removeEventListener("popstate", handlePopState);
-      if (window.location.hash === "#details") {
+      if (window.location.hash === "#detail") {
         window.history.replaceState({}, "", window.location.pathname + window.location.search);
       }
     };

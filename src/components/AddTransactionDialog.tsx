@@ -101,13 +101,15 @@ export const AddTransactionDialog = ({
   useEffect(() => {
     if (!open) return;
 
-    const handlePopState = () => {
-      if (open) {
+    const handlePopState = (e: PopStateEvent) => {
+      if (open && window.location.hash === '#add') {
         onOpenChange(false);
       }
     };
 
-    window.history.pushState({ addTransactionOpen: true }, "", window.location.pathname + window.location.search + "#add");
+    if (window.location.hash !== '#add') {
+      window.history.pushState({ addTransactionOpen: true }, "", window.location.pathname + window.location.search + "#add");
+    }
     window.addEventListener("popstate", handlePopState);
 
     return () => {
@@ -249,15 +251,15 @@ export const AddTransactionDialog = ({
     <Drawer open={open} onOpenChange={onOpenChange}>
       <DrawerContent 
         className={cn(
-          "overflow-hidden flex flex-col max-h-[95vh] px-4 sm:px-6",
+          "overflow-hidden flex flex-col max-h-[98vh] px-4 sm:px-6",
           isMobile ? "pb-4" : "pb-6"
         )}
       >
-        <DrawerHeader className="mb-3">
+        <DrawerHeader className="mb-3 pt-4">
           <DrawerTitle className="tracking-tight text-base sm:text-lg">{editingTransaction ? 'Edit Transaction' : 'Add Transaction'}</DrawerTitle>
         </DrawerHeader>
 
-        <div className="overflow-y-auto flex-1 space-y-3 sm:space-y-4">
+        <div className="overflow-y-auto flex-1 space-y-3 sm:space-y-4 pb-2">
           {/* Type Selector */}
           <Tabs value={type} onValueChange={(v) => setType(v as TransactionType)}>
             <TabsList className="grid w-full grid-cols-2">
