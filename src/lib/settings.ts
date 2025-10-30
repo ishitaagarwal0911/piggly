@@ -1,7 +1,7 @@
 import { AppSettings, CustomCategory, CurrencyOption, CURRENCY_OPTIONS, DEFAULT_COLORS } from '@/types/settings';
 import { getDefaultCategories, setCategoriesCache } from './categories';
 import { supabase } from '@/integrations/supabase/client';
-import { cacheSettings, getCachedSettings } from './cache';
+import { cacheSettings, getCachedSettings, clearSettingsCache } from './cache';
 
 
 // Smart emoji-to-color mapping based on emoji unicode and visual characteristics
@@ -195,8 +195,9 @@ export const addCategory = async (category: Omit<CustomCategory, 'id' | 'order' 
     order_index: order,
   });
 
-  // Invalidate cache
+  // Invalidate BOTH caches to ensure fresh data
   settingsCache = null;
+  clearSettingsCache();
 };
 
 export const updateCategory = async (category: CustomCategory, userId?: string): Promise<void> => {
@@ -227,8 +228,9 @@ export const updateCategory = async (category: CustomCategory, userId?: string):
     throw new Error(errorMsg);
   }
 
-  // Invalidate cache
+  // Invalidate BOTH caches to ensure fresh data
   settingsCache = null;
+  clearSettingsCache();
 };
 
 export const deleteCategory = async (categoryId: string, userId?: string): Promise<{ deleted: boolean }> => {
@@ -243,8 +245,9 @@ export const deleteCategory = async (categoryId: string, userId?: string): Promi
 
   if (error) throw error;
 
-  // Invalidate cache
+  // Invalidate BOTH caches to ensure fresh data
   settingsCache = null;
+  clearSettingsCache();
   
   return { deleted: (count || 0) > 0 };
 };

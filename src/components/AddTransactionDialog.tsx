@@ -45,6 +45,7 @@ export const AddTransactionDialog = ({
   const [newCategoryName, setNewCategoryName] = useState('');
   const [newCategoryIcon, setNewCategoryIcon] = useState('');
   const [isAddingCategory, setIsAddingCategory] = useState(false);
+  const isProcessing = useRef(false);
   const quickAddRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
 
@@ -187,12 +188,17 @@ export const AddTransactionDialog = ({
   };
 
   const handleAddCategory = async () => {
+    // Prevent duplicate submissions (critical for iOS PWA)
+    if (isProcessing.current || isAddingCategory) return;
+    
     if (!newCategoryName.trim() || !newCategoryIcon.trim()) {
       toast.error('Please enter both name and icon');
       return;
     }
 
+    isProcessing.current = true;
     setIsAddingCategory(true);
+    
     try {
       await addCategory({ 
         name: newCategoryName.trim(), 
@@ -212,6 +218,7 @@ export const AddTransactionDialog = ({
       toast.error('Failed to add category');
     } finally {
       setIsAddingCategory(false);
+      isProcessing.current = false;
     }
   };
 
