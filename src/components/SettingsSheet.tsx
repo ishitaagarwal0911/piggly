@@ -47,19 +47,23 @@ export const SettingsSheet = ({ onSettingsChange, open: externalOpen, onOpenChan
     loadData();
   }, []);
 
-  // Handle back button navigation
+  // Manage URL hash for iOS back button support
   useEffect(() => {
     if (!open) return;
 
     const handlePopState = () => {
-      if (open && window.location.hash !== "#settings") {
-        closedByPopstate.current = true;
-        setOpen(false);
-      }
+      // If we're open and back is pressed, close us
+      closedByPopstate.current = true;
+      setOpen(false);
     };
 
+    // Only push hash if not already there
     if (window.location.hash !== "#settings") {
-      window.history.pushState({ settings: true }, "", window.location.pathname + window.location.search + "#settings");
+      window.history.pushState(
+        { settingsSheet: true, timestamp: Date.now() },
+        "",
+        window.location.pathname + window.location.search + "#settings"
+      );
     }
 
     window.addEventListener("popstate", handlePopState);
@@ -69,6 +73,7 @@ export const SettingsSheet = ({ onSettingsChange, open: externalOpen, onOpenChan
     };
   }, [open, setOpen]);
 
+  // Separate effect to handle programmatic closes (via X button)
   useEffect(() => {
     if (!open && !closedByPopstate.current && window.location.hash === "#settings") {
       window.history.back();
@@ -174,7 +179,7 @@ export const SettingsSheet = ({ onSettingsChange, open: externalOpen, onOpenChan
           <Menu className="w-5 h-5" />
         </Button>
       </SheetTrigger>
-      <SheetContent side="top" hideClose className="inset-0 h-screen w-full overflow-y-auto p-6">
+      <SheetContent side="right" hideClose className="h-screen w-full overflow-y-auto p-6">
         <div className="flex items-center justify-between mb-6">
           <ThemeToggle />
           <SheetClose asChild>

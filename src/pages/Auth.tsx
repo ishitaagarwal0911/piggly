@@ -153,7 +153,6 @@ const Auth = () => {
               src={authIcon} 
               alt="Piggly - Personal Finance Tracker" 
               className="w-full h-full object-contain drop-shadow-lg"
-              fetchPriority="high"
               decoding="async"
             />
           </div>

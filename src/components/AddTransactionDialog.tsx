@@ -98,19 +98,23 @@ export const AddTransactionDialog = ({
     }
   }, [showAddCategory]);
 
-  // Handle browser back button
+  // Manage URL hash for iOS back button support
   useEffect(() => {
     if (!open) return;
 
     const handlePopState = () => {
-      if (open && window.location.hash !== "#add-transaction") {
-        closedByPopstate.current = true;
-        onOpenChange(false);
-      }
+      // If we're open and back is pressed, close us
+      closedByPopstate.current = true;
+      onOpenChange(false);
     };
 
+    // Only push hash if not already there
     if (window.location.hash !== "#add-transaction") {
-      window.history.pushState({ addTransaction: true }, "", window.location.pathname + window.location.search + "#add-transaction");
+      window.history.pushState(
+        { addTransaction: true, timestamp: Date.now() },
+        "",
+        window.location.pathname + window.location.search + "#add-transaction"
+      );
     }
 
     window.addEventListener("popstate", handlePopState);
@@ -120,6 +124,7 @@ export const AddTransactionDialog = ({
     };
   }, [open, onOpenChange]);
 
+  // Separate effect to handle programmatic closes (via X button)
   useEffect(() => {
     if (!open && !closedByPopstate.current && window.location.hash === "#add-transaction") {
       window.history.back();
@@ -257,7 +262,13 @@ export const AddTransactionDialog = ({
   const displayCategories = allCategories.filter(cat => cat.type === type);
 
   return (
-    <Drawer open={open} onOpenChange={onOpenChange} activeSnapPoint={1}>
+    <Drawer 
+      open={open} 
+      onOpenChange={onOpenChange} 
+      snapPoints={[1]} 
+      activeSnapPoint={1}
+      dismissible={false}
+    >
       <DrawerContent className="flex flex-col max-h-screen">
         <DrawerHeader className="pt-4 px-4 sm:px-6 flex items-center justify-between">
           <DrawerTitle>

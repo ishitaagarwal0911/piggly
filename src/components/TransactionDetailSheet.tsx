@@ -159,7 +159,13 @@ export const TransactionDetailSheet = ({
   };
 
   return (
-    <Drawer open={open} onOpenChange={onOpenChange} activeSnapPoint={1}>
+    <Drawer 
+      open={open} 
+      onOpenChange={onOpenChange} 
+      snapPoints={[1]} 
+      activeSnapPoint={1}
+      dismissible={false}
+    >
       <DrawerContent className="flex flex-col max-h-screen">
         <DrawerHeader className="pt-4 px-4 sm:px-6 flex items-center justify-between">
           <DrawerTitle>
