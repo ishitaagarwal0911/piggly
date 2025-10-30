@@ -6,7 +6,7 @@ import { SettingsSheet } from '@/components/SettingsSheet';
 import { PeriodSelector } from '@/components/PeriodSelector';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
-import { loadTransactions, saveTransactions, deleteTransaction } from '@/lib/storage';
+import { loadTransactions, saveTransactions, deleteTransaction, loadHistoricalTransactions } from '@/lib/storage';
 import { loadSettings } from '@/lib/settings';
 import { getFilteredTransactions, getPreviousPeriod, getNextPeriod, ViewType } from '@/lib/dateUtils';
 import { useAuth } from '@/contexts/AuthContext';
@@ -214,6 +214,40 @@ const Index = () => {
   }, []);
   
   useRealtimeSync(handleRealtimeChange, handleCategoryChange, undefined);
+
+  // Background load of historical data (older than 2 months)
+  useEffect(() => {
+    if (!hasLoadedData || !user) return;
+    
+    const loadHistorical = async () => {
+      try {
+        // Wait for UI to be interactive
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        const twoMonthsAgo = new Date();
+        twoMonthsAgo.setMonth(twoMonthsAgo.getMonth() - 2);
+        
+        // Fetch older data quietly
+        const historical = await loadHistoricalTransactions(twoMonthsAgo, user.id);
+        
+        if (historical.length > 0) {
+          // Merge with existing without triggering loading states
+          setTransactions(prev => {
+            const combined = [...prev, ...historical];
+            // Deduplicate and sort
+            const unique = Array.from(
+              new Map(combined.map(t => [t.id, t])).values()
+            ).sort((a, b) => b.date.getTime() - a.date.getTime());
+            return unique;
+          });
+        }
+      } catch (error) {
+        console.error('Failed to load historical data:', error);
+      }
+    };
+    
+    loadHistorical();
+  }, [hasLoadedData, user?.id]);
 
   // Only show skeleton on initial cold load without cache or when categories aren't loaded
   if (loading || (dataLoading && transactions.length === 0) || !categoriesLoaded) {

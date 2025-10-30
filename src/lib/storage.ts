@@ -79,6 +79,36 @@ export const loadTransactions = async (options?: { since?: Date; limit?: number;
   }
 };
 
+export const loadHistoricalTransactions = async (beforeDate: Date, userId?: string): Promise<Transaction[]> => {
+  try {
+    const uid = userId || (await supabase.auth.getUser()).data.user?.id;
+    if (!uid) return [];
+
+    const { data, error } = await supabase
+      .from('transactions')
+      .select('*')
+      .eq('user_id', uid)
+      .lt('date', beforeDate.toISOString())
+      .order('date', { ascending: false });
+    
+    if (error) throw error;
+    
+    return data.map(t => ({
+      id: t.id,
+      amount: parseFloat(String(t.amount)),
+      type: t.type as 'expense' | 'income',
+      category: t.category,
+      note: t.note || '',
+      date: new Date(t.date),
+      createdAt: new Date(t.created_at),
+      updatedAt: t.updated_at ? new Date(t.updated_at) : undefined,
+    }));
+  } catch (error) {
+    console.error('Failed to load historical transactions:', error);
+    return [];
+  }
+};
+
 export const exportData = async (): Promise<string> => {
   const transactions = await loadTransactions();
   const settings = await loadSettings();
