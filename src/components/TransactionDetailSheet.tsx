@@ -41,6 +41,27 @@ export const TransactionDetailSheet = ({
     });
   }, []);
 
+  // Handle browser back button
+  useEffect(() => {
+    if (!open) return;
+
+    const handlePopState = () => {
+      if (open) {
+        onOpenChange(false);
+      }
+    };
+
+    window.history.pushState({ detailSheetOpen: true }, "", window.location.pathname + window.location.search + "#details");
+    window.addEventListener("popstate", handlePopState);
+
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+      if (window.location.hash === "#details") {
+        window.history.replaceState({}, "", window.location.pathname + window.location.search);
+      }
+    };
+  }, [open, onOpenChange]);
+
   // Scroll to selected category when sheet opens
   useEffect(() => {
     if (open && defaultOpenCategory) {
@@ -128,7 +149,7 @@ export const TransactionDetailSheet = ({
 
   return (
     <Drawer open={open} onOpenChange={onOpenChange}>
-      <DrawerContent className="max-h-[95vh] overflow-y-auto">
+      <DrawerContent className="max-h-[95vh] overflow-y-auto px-4 sm:px-6">
         <DrawerHeader>
           <DrawerTitle>
             {filterCategory ? getCategoryInfo(filterCategory)?.name : 

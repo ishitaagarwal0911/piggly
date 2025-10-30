@@ -97,6 +97,27 @@ export const AddTransactionDialog = ({
     }
   }, [showAddCategory]);
 
+  // Handle browser back button
+  useEffect(() => {
+    if (!open) return;
+
+    const handlePopState = () => {
+      if (open) {
+        onOpenChange(false);
+      }
+    };
+
+    window.history.pushState({ addTransactionOpen: true }, "", window.location.pathname + window.location.search + "#add");
+    window.addEventListener("popstate", handlePopState);
+
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+      if (window.location.hash === "#add") {
+        window.history.replaceState({}, "", window.location.pathname + window.location.search);
+      }
+    };
+  }, [open, onOpenChange]);
+
   const performCalculation = (a: number, b: number, op: string): number => {
     switch (op) {
       case '+': return a + b;
@@ -228,7 +249,7 @@ export const AddTransactionDialog = ({
     <Drawer open={open} onOpenChange={onOpenChange}>
       <DrawerContent 
         className={cn(
-          "overflow-hidden flex flex-col max-h-[95vh]",
+          "overflow-hidden flex flex-col max-h-[95vh] px-4 sm:px-6",
           isMobile ? "pb-4" : "pb-6"
         )}
       >
@@ -236,7 +257,7 @@ export const AddTransactionDialog = ({
           <DrawerTitle className="tracking-tight text-base sm:text-lg">{editingTransaction ? 'Edit Transaction' : 'Add Transaction'}</DrawerTitle>
         </DrawerHeader>
 
-        <div className="overflow-y-auto flex-1 space-y-3 sm:space-y-4 px-1">
+        <div className="overflow-y-auto flex-1 space-y-3 sm:space-y-4">
           {/* Type Selector */}
           <Tabs value={type} onValueChange={(v) => setType(v as TransactionType)}>
             <TabsList className="grid w-full grid-cols-2">

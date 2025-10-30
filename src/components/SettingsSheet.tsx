@@ -11,7 +11,7 @@ import { loadSettings, saveSettings } from '@/lib/settings';
 import { CURRENCY_OPTIONS, AppSettings } from '@/types/settings';
 import { exportData, importData, importCSV } from '@/lib/storage';
 import { useAuth } from '@/contexts/AuthContext';
-import { Menu, Download, Upload } from 'lucide-react';
+import { Menu, Download, Upload, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { ViewType } from '@/lib/dateUtils';
 import { useLocation } from 'react-router-dom';
@@ -166,9 +166,19 @@ export const SettingsSheet = ({ onSettingsChange, open: externalOpen, onOpenChan
         </Button>
       </SheetTrigger>
       <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
-        <SheetHeader className="sticky top-0 z-10 bg-background border-b px-6 py-4 flex flex-row items-center justify-between -mx-6 -mt-6 mb-4">
+        <div className="flex items-center justify-between mb-6">
           <ThemeToggle />
-          {/* Close button auto-added by SheetContent */}
+          <Button 
+            variant="ghost" 
+            size="icon"
+            onClick={() => setOpen(false)}
+            className="h-9 w-9"
+          >
+            <X className="h-5 w-5" />
+          </Button>
+        </div>
+        <SheetHeader>
+          <h2 className="text-2xl font-bold">Settings</h2>
         </SheetHeader>
 
         <Accordion type="multiple" defaultValue={[]} className="mt-2">

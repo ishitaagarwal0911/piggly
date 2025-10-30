@@ -63,13 +63,13 @@ const Index = () => {
   // Restore page state across cold starts
   usePageRestore(currentDate, viewType);
 
-  // Swipe gesture to open settings menu (mobile)
-  useSwipeGesture({
-    onSwipeRight: () => {
-      setSettingsOpen(true);
-    },
-    edgeThreshold: 50, // Start swipe within 50px from left edge
-  });
+  // Disabled to prevent conflict with iOS back gesture
+  // useSwipeGesture({
+  //   onSwipeRight: () => {
+  //     setSettingsOpen(true);
+  //   },
+  //   edgeThreshold: 50,
+  // });
 
   // Debug: Track component lifecycle
   useEffect(() => {
