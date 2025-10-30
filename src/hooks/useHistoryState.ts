@@ -20,8 +20,13 @@ export function useHistoryState<T>(initialValue: T, modalKey: string): [T, (valu
     if (newValue && !value) {
       // Use pushState to create a proper history entry (so back button can close modal)
       try {
+        const currentStack = (window.history.state?.modalStack || []) as string[];
         window.history.pushState(
-          { ...window.history.state, modal: modalKey, timestamp: Date.now() },
+          { 
+            ...window.history.state, 
+            modalStack: [...currentStack, modalKey],
+            timestamp: Date.now() 
+          },
           '',
           window.location.href
         );
@@ -42,9 +47,12 @@ export function useHistoryState<T>(initialValue: T, modalKey: string): [T, (valu
       // Only close this modal if it's currently open
       if (value) {
         const state = event.state;
+        const currentStack = (state?.modalStack || []) as string[];
         
-        // If we're navigating back and this modal is open, close it
-        if (!state || state.modal !== currentModalKey.current) {
+        // Only close if we're NOT in the current modal stack
+        const isInStack = currentStack.includes(currentModalKey.current);
+        
+        if (!isInStack) {
           isSettingFromPopState.current = true;
           setValueState(initialValue);
           isSettingFromPopState.current = false;
@@ -67,7 +75,10 @@ export function useHistoryState<T>(initialValue: T, modalKey: string): [T, (valu
         // Only call history.back() if we have more than 1 entry (prevents tab closure)
         try {
           const state = window.history.state;
-          if (state && state.modal === currentModalKey.current && window.history.length > 1) {
+          const currentStack = (state?.modalStack || []) as string[];
+          
+          // Only go back if we're the last item in the stack
+          if (currentStack[currentStack.length - 1] === currentModalKey.current && window.history.length > 1) {
             window.history.back();
           }
         } catch (e) {
