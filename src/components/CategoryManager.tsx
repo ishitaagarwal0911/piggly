@@ -41,6 +41,7 @@ export const CategoryManager = ({ onCategoriesChange }: CategoryManagerProps) =>
   const [draggedCategory, setDraggedCategory] = useState<CustomCategory | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
   const [isPointerDragging, setIsPointerDragging] = useState(false);
+  const [hasReorderedDuringDrag, setHasReorderedDuringDrag] = useState(false);
   
   // Local state for optimistic rendering
   const [localExpenseCategories, setLocalExpenseCategories] = useState<CustomCategory[]>([]);
@@ -179,16 +180,9 @@ export const CategoryManager = ({ onCategoriesChange }: CategoryManagerProps) =>
   };
 
   const handleDragStart = (e: React.DragEvent, category: CustomCategory) => {
-    e.preventDefault(); // Prevent text selection on iOS
     if (loadingCategories) return; // Prevent drag while loading
     setDraggedCategory(category);
     e.dataTransfer.effectAllowed = 'move';
-    
-    // iOS Safari specific: prevent text selection
-    if (e.currentTarget) {
-      (e.currentTarget as HTMLElement).style.userSelect = 'none';
-      (e.currentTarget as HTMLElement).style.webkitUserSelect = 'none';
-    }
   };
 
   const handleDragOver = (e: React.DragEvent, targetCategory: CustomCategory, targetIndex: number) => {
@@ -215,8 +209,7 @@ export const CategoryManager = ({ onCategoriesChange }: CategoryManagerProps) =>
       setLocalIncomeCategories(reordered);
     }
     
-    // Mark as dirty immediately so Save/Reset buttons appear
-    setIsDirty(true);
+    setHasReorderedDuringDrag(true);
     setDragOverIndex(targetIndex);
   };
 
@@ -291,8 +284,12 @@ export const CategoryManager = ({ onCategoriesChange }: CategoryManagerProps) =>
   };
 
   const handleDragEnd = () => {
+    if (hasReorderedDuringDrag) {
+      setIsDirty(true);
+    }
     setDraggedCategory(null);
     setDragOverIndex(null);
+    setHasReorderedDuringDrag(false);
   };
 
   const onGripPointerDown = (e: React.PointerEvent, category: CustomCategory) => {
@@ -304,10 +301,13 @@ export const CategoryManager = ({ onCategoriesChange }: CategoryManagerProps) =>
 
   const onGripPointerUp = () => {
     if (isPointerDragging) {
-      setIsDirty(true);
+      if (hasReorderedDuringDrag) {
+        setIsDirty(true);
+      }
       setDraggedCategory(null);
       setDragOverIndex(null);
       setIsPointerDragging(false);
+      setHasReorderedDuringDrag(false);
     }
   };
 
@@ -331,7 +331,7 @@ export const CategoryManager = ({ onCategoriesChange }: CategoryManagerProps) =>
       setLocalIncomeCategories(newCategories);
     }
 
-    setIsDirty(true);
+    setHasReorderedDuringDrag(true);
     setDragOverIndex(index);
   };
 
@@ -391,6 +391,7 @@ export const CategoryManager = ({ onCategoriesChange }: CategoryManagerProps) =>
               onDragLeave={handleDragLeave}
               onDrop={(e) => handleDrop(e, cat, index)}
               onPointerEnter={() => onItemPointerEnter(cat, index)}
+              onPointerMove={() => onItemPointerEnter(cat, index)}
               onClick={() => handleEdit(cat)}
               className={cn(
                 "flex items-center justify-between p-3 rounded-lg hover:bg-secondary/50 cursor-pointer relative",
@@ -476,6 +477,7 @@ export const CategoryManager = ({ onCategoriesChange }: CategoryManagerProps) =>
               onDragLeave={handleDragLeave}
               onDrop={(e) => handleDrop(e, cat, index)}
               onPointerEnter={() => onItemPointerEnter(cat, index)}
+              onPointerMove={() => onItemPointerEnter(cat, index)}
               onClick={() => handleEdit(cat)}
               className={cn(
                 "flex items-center justify-between p-3 rounded-lg hover:bg-secondary/50 cursor-pointer relative",
