@@ -79,6 +79,7 @@ export const loadSettings = async (userId?: string): Promise<AppSettings> => {
 
     // Check in-memory cache first
     if (settingsCache && settingsCache.userId === uid) {
+      setCategoriesCache(settingsCache.data.categories);
       return settingsCache.data;
     }
 
@@ -86,6 +87,7 @@ export const loadSettings = async (userId?: string): Promise<AppSettings> => {
     const localCached = getCachedSettings(uid);
     if (localCached) {
       settingsCache = { data: localCached, userId: uid };
+      setCategoriesCache(localCached.categories);
       return localCached;
     }
 
