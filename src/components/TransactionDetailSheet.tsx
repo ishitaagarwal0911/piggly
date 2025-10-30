@@ -160,7 +160,7 @@ export const TransactionDetailSheet = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex flex-col h-screen max-h-screen w-full max-w-full m-0 p-0 rounded-none !border-none !shadow-none outline-none animate-fade-in" hideClose={true}>
+      <DialogContent className="flex flex-col h-screen max-h-screen w-full max-w-full m-0 p-0 rounded-none !border-0 !border-none !shadow-none outline-none animate-fade-in" hideClose={true}>
         <DialogHeader className="pt-4 px-4 sm:px-6 flex flex-row items-center justify-between space-y-0">
           <DialogTitle>
             {filterType === 'expense' ? 'Expenses' : filterType === 'income' ? 'Income' : 'All Transactions'}

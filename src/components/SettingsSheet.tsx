@@ -179,7 +179,7 @@ export const SettingsSheet = ({ onSettingsChange, open: externalOpen, onOpenChan
           <Menu className="w-5 h-5" />
         </Button>
       </SheetTrigger>
-      <SheetContent side="right" hideClose className="h-screen w-full overflow-y-auto p-6">
+      <SheetContent side="right" hideClose className="h-screen w-full overflow-y-auto p-6 !border-none">
         <SheetTitle className="sr-only">Settings</SheetTitle>
         <div className="flex items-center justify-between mb-6">
           <ThemeToggle />

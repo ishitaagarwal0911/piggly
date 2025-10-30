@@ -262,12 +262,13 @@ export const AddTransactionDialog = ({
   const displayCategories = allCategories.filter(cat => cat.type === type);
 
   return (
-      <Drawer 
-        open={open} 
-        onOpenChange={onOpenChange}
-        dismissible={true}
-      >
-        <DrawerContent className="flex flex-col max-h-screen">
+    <Drawer 
+      open={open} 
+      onOpenChange={onOpenChange}
+      dismissible={true}
+      snapPoints={undefined}
+    >
+      <DrawerContent className="flex flex-col h-[95vh] max-h-screen">
         <DrawerHeader className="pt-4 px-4 sm:px-6 flex items-center justify-between">
           <DrawerTitle>
             {editingTransaction ? "Edit Transaction" : "Add Transaction"}
