@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Sheet, SheetContent, SheetClose, SheetTrigger } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetClose, SheetTrigger, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -180,6 +180,7 @@ export const SettingsSheet = ({ onSettingsChange, open: externalOpen, onOpenChan
         </Button>
       </SheetTrigger>
       <SheetContent side="right" hideClose className="h-screen w-full overflow-y-auto p-6">
+        <SheetTitle className="sr-only">Settings</SheetTitle>
         <div className="flex items-center justify-between mb-6">
           <ThemeToggle />
           <SheetClose asChild>

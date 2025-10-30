@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Transaction, TransactionType } from '@/types/transaction';
 import { categories, getCategoryInfo } from '@/lib/categories';
 import { addCategory, loadSettings } from '@/lib/settings';
-import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerClose } from '@/components/ui/drawer';
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription } from '@/components/ui/drawer';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -265,20 +265,24 @@ export const AddTransactionDialog = ({
     <Drawer 
       open={open} 
       onOpenChange={onOpenChange} 
-      snapPoints={[1]} 
-      activeSnapPoint={1}
-      dismissible={false}
+      snapPoints={[1]}
     >
       <DrawerContent className="flex flex-col max-h-screen">
         <DrawerHeader className="pt-4 px-4 sm:px-6 flex items-center justify-between">
           <DrawerTitle>
             {editingTransaction ? "Edit Transaction" : "Add Transaction"}
           </DrawerTitle>
-          <DrawerClose asChild>
-            <Button variant="ghost" size="icon" className="h-10 w-10">
-              <X className="h-6 w-6" />
-            </Button>
-          </DrawerClose>
+          <DrawerDescription className="sr-only">
+            Add or edit a transaction with amount, category, and notes
+          </DrawerDescription>
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="h-10 w-10 relative z-10"
+            onClick={() => onOpenChange(false)}
+          >
+            <X className="h-6 w-6" />
+          </Button>
         </DrawerHeader>
 
         <div className="overflow-y-auto flex-1">

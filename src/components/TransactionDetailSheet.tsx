@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerClose } from '@/components/ui/drawer';
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription } from '@/components/ui/drawer';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Transaction } from '@/types/transaction';
 import { getCategoryInfo } from '@/lib/categories';
@@ -162,20 +162,25 @@ export const TransactionDetailSheet = ({
     <Drawer 
       open={open} 
       onOpenChange={onOpenChange} 
-      snapPoints={[1]} 
-      activeSnapPoint={1}
+      snapPoints={[1]}
       dismissible={false}
     >
-      <DrawerContent className="flex flex-col max-h-screen">
+      <DrawerContent className="flex flex-col max-h-screen animate-fade-in" showHandle={false}>
         <DrawerHeader className="pt-4 px-4 sm:px-6 flex items-center justify-between">
           <DrawerTitle>
             {filterType === 'expense' ? 'Expenses' : filterType === 'income' ? 'Income' : 'All Transactions'}
           </DrawerTitle>
-          <DrawerClose asChild>
-            <Button variant="ghost" size="icon" className="h-10 w-10">
-              <X className="h-6 w-6" />
-            </Button>
-          </DrawerClose>
+          <DrawerDescription className="sr-only">
+            View detailed breakdown of {filterType === 'income' ? 'income' : 'expenses'} by date and category
+          </DrawerDescription>
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="h-10 w-10 relative z-10"
+            onClick={() => onOpenChange(false)}
+          >
+            <X className="h-6 w-6" />
+          </Button>
         </DrawerHeader>
 
         <div className="overflow-y-auto flex-1 pb-20">
