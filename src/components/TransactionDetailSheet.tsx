@@ -165,7 +165,11 @@ export const TransactionDetailSheet = ({
       snapPoints={[1]}
       dismissible={false}
     >
-      <DrawerContent className="flex flex-col max-h-screen animate-fade-in" showHandle={false}>
+      <DrawerContent 
+        className="flex flex-col max-h-screen animate-fade-in" 
+        showHandle={false}
+        noSlideUp={true}
+      >
         <DrawerHeader className="pt-4 px-4 sm:px-6 flex items-center justify-between">
           <DrawerTitle>
             {filterType === 'expense' ? 'Expenses' : filterType === 'income' ? 'Income' : 'All Transactions'}
