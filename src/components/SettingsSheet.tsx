@@ -212,6 +212,10 @@ export const SettingsSheet = ({ onSettingsChange, open: externalOpen, onOpenChan
                     <RadioGroupItem value="monthly" id="monthly" />
                     <Label htmlFor="monthly" className="font-normal cursor-pointer">Monthly</Label>
                   </div>
+                  <div className="flex items-center space-x-2 py-2">
+                    <RadioGroupItem value="yearly" id="yearly" />
+                    <Label htmlFor="yearly" className="font-normal cursor-pointer">Yearly</Label>
+                  </div>
                 </RadioGroup>
               </div>
             </AccordionContent>

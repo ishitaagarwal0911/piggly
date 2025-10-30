@@ -25,7 +25,7 @@ export const PeriodSelector = ({
         <ChevronLeft className="w-5 h-5" />
       </Button>
 
-      {viewType === 'monthly' ? (
+      {viewType === 'monthly' || viewType === 'yearly' ? (
         <div className="text-lg font-semibold">
           {formatPeriod(currentDate, viewType)}
         </div>

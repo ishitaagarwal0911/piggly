@@ -16,7 +16,7 @@ export interface CurrencyOption {
 export interface AppSettings {
   categories: CustomCategory[];
   currency: CurrencyOption;
-  defaultView: 'daily' | 'weekly' | 'monthly';
+  defaultView: 'daily' | 'weekly' | 'monthly' | 'yearly';
   theme: 'light' | 'dark' | 'system';
 }
 
