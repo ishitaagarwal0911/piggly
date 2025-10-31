@@ -78,7 +78,7 @@ export const ExpenseChart = ({ transactions, onCategoryClick, currency = '₹' }
       {/* Ring Chart */}
       <div className="relative mb-6">
         <ResponsiveContainer width="100%" height={220}>
-          <PieChart>
+          <PieChart key={`pie-${expensesByCategory.length}-${totalExpenses}`}>
             <Pie
               data={expensesByCategory}
               cx="50%"
@@ -87,9 +87,11 @@ export const ExpenseChart = ({ transactions, onCategoryClick, currency = '₹' }
               outerRadius={90}
               paddingAngle={3}
               dataKey="amount"
-              animationDuration={600}
+              animationDuration={800}
               animationBegin={0}
+              animationEasing="ease-out"
               stroke="none"
+              isAnimationActive={true}
             >
               {expensesByCategory.map((entry, index) => (
                 <Cell 

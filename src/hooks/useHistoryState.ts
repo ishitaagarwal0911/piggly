@@ -50,23 +50,25 @@ export function useHistoryState<T>(initialValue: T, modalKey: string): [T, (valu
         const state = event.state;
         const currentStack = (state?.modalStack || []) as string[];
         
-        // Check if this modal was the last item in the previous stack
-        const wasLastInPreviousStack = 
-          previousModalStack.current.length > 0 && 
-          previousModalStack.current[previousModalStack.current.length - 1] === currentModalKey.current;
+        // Initialize previousModalStack on first popstate if empty
+        if (previousModalStack.current.length === 0) {
+          previousModalStack.current = currentStack;
+          return; // Don't process first popstate, just initialize
+        }
         
-        // Check if this modal is NOT in the current stack
+        // Check if this modal was in the previous stack but is NOT in current stack
+        const wasInPreviousStack = previousModalStack.current.includes(currentModalKey.current);
         const isInCurrentStack = currentStack.includes(currentModalKey.current);
         
-        // Close if we WERE the last item in the previous stack and are NOW removed
-        if (wasLastInPreviousStack && !isInCurrentStack) {
+        // Close if we WERE in the stack and are NOW removed
+        if (wasInPreviousStack && !isInCurrentStack) {
           isSettingFromPopState.current = true;
           setValueState(initialValue);
           isSettingFromPopState.current = false;
           hasAddedHistoryEntry.current = false;
         }
         
-        // Update previous stack for next popstate
+        // Always update previous stack for next popstate
         previousModalStack.current = currentStack;
       }
     };

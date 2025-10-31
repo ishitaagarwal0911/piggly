@@ -45,6 +45,7 @@ export const AddTransactionDialog = ({
   const [newCategoryName, setNewCategoryName] = useState('');
   const [newCategoryIcon, setNewCategoryIcon] = useState('');
   const [isAddingCategory, setIsAddingCategory] = useState(false);
+  const [isInputFocused, setIsInputFocused] = useState(false);
   const isProcessing = useRef(false);
   const quickAddRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
@@ -232,8 +233,10 @@ export const AddTransactionDialog = ({
     <Drawer 
       open={open} 
       onOpenChange={onOpenChange}
-      dismissible={true}
+      dismissible={!isInputFocused}
       snapPoints={null}
+      modal={true}
+      noBodyStyles={true}
     >
       <DrawerContent className="flex flex-col h-screen max-h-screen">
         <DrawerHeader className="pt-4 px-4 sm:px-6 flex items-center justify-between">
@@ -345,12 +348,16 @@ export const AddTransactionDialog = ({
                 placeholder="Category name"
                 value={newCategoryName}
                 onChange={(e) => setNewCategoryName(e.target.value)}
+                onFocus={() => setIsInputFocused(true)}
+                onBlur={() => setIsInputFocused(false)}
                 maxLength={30}
               />
               <Input
                 placeholder="Emoji"
                 value={newCategoryIcon}
                 onChange={(e) => setNewCategoryIcon(e.target.value)}
+                onFocus={() => setIsInputFocused(true)}
+                onBlur={() => setIsInputFocused(false)}
                 maxLength={5}
                 className="text-center"
               />

@@ -85,7 +85,7 @@ export const ExpensePieChart = ({ transactions }: ExpensePieChartProps) => {
     <div className="bg-card rounded-2xl p-6 shadow-notion">
       <h3 className="text-sm font-medium mb-4">Spending by Category</h3>
       <ResponsiveContainer width="100%" height={300}>
-        <PieChart>
+        <PieChart key={`pie-${chartData.length}`}>
           <Pie
             data={chartData}
             cx="50%"
@@ -95,6 +95,10 @@ export const ExpensePieChart = ({ transactions }: ExpensePieChartProps) => {
             fill="#8884d8"
             dataKey="value"
             label={({ percent }) => `${(percent * 100).toFixed(0)}%`}
+            animationDuration={800}
+            animationBegin={0}
+            animationEasing="ease-out"
+            isAnimationActive={true}
           >
             {chartData.map((entry, index) => (
               <Cell key={`cell-${index}`} fill={entry.color} />

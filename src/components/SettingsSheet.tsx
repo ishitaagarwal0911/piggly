@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from 'react';
-import { useHistoryState } from '@/hooks/useHistoryState';
 import { Sheet, SheetContent, SheetClose, SheetTrigger, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -24,7 +23,7 @@ interface SettingsSheetProps {
 }
 
 export const SettingsSheet = ({ onSettingsChange, open: externalOpen, onOpenChange: externalOnOpenChange }: SettingsSheetProps) => {
-  const [internalOpen, setInternalOpen] = useHistoryState(false, 'settings-sheet');
+  const [internalOpen, setInternalOpen] = useState(false);
   const location = useLocation();
   
   // Use external control if provided, otherwise use internal state
