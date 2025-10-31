@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useHistoryState } from '@/hooks/useHistoryState';
 import { Sheet, SheetContent, SheetClose, SheetTrigger, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -23,7 +24,7 @@ interface SettingsSheetProps {
 }
 
 export const SettingsSheet = ({ onSettingsChange, open: externalOpen, onOpenChange: externalOnOpenChange }: SettingsSheetProps) => {
-  const [internalOpen, setInternalOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useHistoryState(false, 'settings-sheet');
   const location = useLocation();
   
   // Use external control if provided, otherwise use internal state
@@ -37,7 +38,6 @@ export const SettingsSheet = ({ onSettingsChange, open: externalOpen, onOpenChan
   });
   const [isImporting, setIsImporting] = useState(false);
   const { user, signOut } = useAuth();
-  const closedByPopstate = useRef(false);
 
   useEffect(() => {
     const loadData = async () => {
@@ -46,42 +46,6 @@ export const SettingsSheet = ({ onSettingsChange, open: externalOpen, onOpenChan
     };
     loadData();
   }, []);
-
-  // Manage URL hash for iOS back button support
-  useEffect(() => {
-    if (!open) return;
-
-    const handlePopState = () => {
-      // If we're open and back is pressed, close us
-      closedByPopstate.current = true;
-      setOpen(false);
-    };
-
-    // Only push hash if not already there
-    if (window.location.hash !== "#settings") {
-      window.history.pushState(
-        { settingsSheet: true, timestamp: Date.now() },
-        "",
-        window.location.pathname + window.location.search + "#settings"
-      );
-    }
-
-    window.addEventListener("popstate", handlePopState);
-
-    return () => {
-      window.removeEventListener("popstate", handlePopState);
-    };
-  }, [open, setOpen]);
-
-  // Separate effect to handle programmatic closes (via X button)
-  useEffect(() => {
-    if (!open && !closedByPopstate.current && window.location.hash === "#settings") {
-      window.history.back();
-    }
-    if (!open) {
-      closedByPopstate.current = false;
-    }
-  }, [open]);
 
   const handleCurrencyChange = async (currencyCode: string) => {
     const currency = CURRENCY_OPTIONS.find(c => c.code === currencyCode);
