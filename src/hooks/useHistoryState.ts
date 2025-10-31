@@ -22,6 +22,10 @@ export function useHistoryState<T>(initialValue: T, modalKey: string): [T, (valu
       // Use pushState to create a proper history entry (so back button can close modal)
       try {
         const currentStack = (window.history.state?.modalStack || []) as string[];
+        
+        // Initialize previous stack BEFORE pushing
+        previousModalStack.current = currentStack;
+        
         window.history.pushState(
           { 
             ...window.history.state, 
@@ -50,10 +54,14 @@ export function useHistoryState<T>(initialValue: T, modalKey: string): [T, (valu
         const state = event.state;
         const currentStack = (state?.modalStack || []) as string[];
         
-        // Initialize previousModalStack on first popstate if empty
+        // If previous stack is empty, we're closing on first back press
         if (previousModalStack.current.length === 0) {
+          isSettingFromPopState.current = true;
+          setValueState(initialValue);
+          isSettingFromPopState.current = false;
+          hasAddedHistoryEntry.current = false;
           previousModalStack.current = currentStack;
-          return; // Don't process first popstate, just initialize
+          return;
         }
         
         // Check if this modal was in the previous stack but is NOT in current stack
