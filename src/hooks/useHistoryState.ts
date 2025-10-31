@@ -14,6 +14,7 @@ export function useHistoryState<T>(initialValue: T, modalKey: string): [T, (valu
   const isSettingFromPopState = useRef(false);
   const currentModalKey = useRef(modalKey);
   const hasAddedHistoryEntry = useRef(false);
+  const previousModalStack = useRef<string[]>([]);
 
   const setValue = useCallback((newValue: T) => {
     // When opening a modal (setting to truthy value)
@@ -49,15 +50,24 @@ export function useHistoryState<T>(initialValue: T, modalKey: string): [T, (valu
         const state = event.state;
         const currentStack = (state?.modalStack || []) as string[];
         
-        // Only close if we're NOT in the current modal stack
-        const isInStack = currentStack.includes(currentModalKey.current);
+        // Check if this modal was the last item in the previous stack
+        const wasLastInPreviousStack = 
+          previousModalStack.current.length > 0 && 
+          previousModalStack.current[previousModalStack.current.length - 1] === currentModalKey.current;
         
-        if (!isInStack) {
+        // Check if this modal is NOT in the current stack
+        const isInCurrentStack = currentStack.includes(currentModalKey.current);
+        
+        // Close if we WERE the last item in the previous stack and are NOW removed
+        if (wasLastInPreviousStack && !isInCurrentStack) {
           isSettingFromPopState.current = true;
           setValueState(initialValue);
           isSettingFromPopState.current = false;
           hasAddedHistoryEntry.current = false;
         }
+        
+        // Update previous stack for next popstate
+        previousModalStack.current = currentStack;
       }
     };
 

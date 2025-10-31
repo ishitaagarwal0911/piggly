@@ -77,6 +77,9 @@ export const AddTransactionDialog = ({
       setFirstOperand(null);
       setOperator(null);
       setWaitingForSecondOperand(false);
+      setShowAddCategory(false);
+      setNewCategoryName('');
+      setNewCategoryIcon('');
     } else if (!editingTransaction) {
       // When opening without editing, use initialType
       setType(initialType);
