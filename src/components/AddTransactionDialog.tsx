@@ -102,18 +102,36 @@ export const AddTransactionDialog = ({
     }
   }, [showAddCategory]);
 
-  // iOS keyboard detection
+  // iOS keyboard detection with keyboard height calculation
   useEffect(() => {
     const handleResize = () => {
       if (typeof window !== 'undefined' && window.visualViewport) {
-        const keyboardOpen = window.visualViewport.height < window.innerHeight * 0.75;
+        const viewportHeight = window.visualViewport.height;
+        const windowHeight = window.innerHeight;
+        
+        const threshold = windowHeight * 0.85;
+        const keyboardOpen = viewportHeight < threshold;
+        
+        if (keyboardOpen) {
+          const keyboardHeight = windowHeight - viewportHeight;
+          document.documentElement.style.setProperty('--keyboard-offset', `${keyboardHeight}px`);
+        } else {
+          document.documentElement.style.setProperty('--keyboard-offset', '0px');
+        }
+        
         setIsKeyboardVisible(keyboardOpen);
       }
     };
 
     if (window.visualViewport) {
+      handleResize();
       window.visualViewport.addEventListener('resize', handleResize);
-      return () => window.visualViewport.removeEventListener('resize', handleResize);
+      window.visualViewport.addEventListener('scroll', handleResize);
+      return () => {
+        window.visualViewport.removeEventListener('resize', handleResize);
+        window.visualViewport.removeEventListener('scroll', handleResize);
+        document.documentElement.style.setProperty('--keyboard-offset', '0px');
+      };
     }
   }, []);
 
@@ -256,10 +274,12 @@ export const AddTransactionDialog = ({
       shouldScaleBackground={false}
     >
       <DrawerContent 
-        className={cn(
-          "flex flex-col",
-          isKeyboardVisible ? "max-h-[50vh] h-[50vh]" : "max-h-[85vh] h-[85vh]"
-        )}
+        className="flex flex-col max-h-[85vh]"
+        style={{
+          height: '85vh',
+          transition: 'bottom 0.3s ease-out',
+          bottom: isKeyboardVisible ? 'var(--keyboard-offset, 0px)' : '0'
+        }}
       >
         <DrawerHeader className="pt-4 px-4 sm:px-6 flex items-center justify-between">
           <DrawerTitle>
@@ -433,10 +453,7 @@ export const AddTransactionDialog = ({
         </div>
 
         {/* Sticky Footer */}
-        <div 
-          className="sticky bottom-0 bg-background border-t pt-3 space-y-2 mt-3 pb-4 sm:pb-6 px-4 sm:px-6"
-          style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}
-        >
+        <div className="sticky bottom-0 bg-background border-t pt-3 space-y-2 mt-3 pb-6 px-4 sm:px-6">
           <Button
             className="w-full"
             size="lg"
