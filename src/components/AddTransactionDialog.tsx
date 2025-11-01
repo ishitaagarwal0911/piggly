@@ -46,6 +46,7 @@ export const AddTransactionDialog = ({
   const [newCategoryIcon, setNewCategoryIcon] = useState('');
   const [isAddingCategory, setIsAddingCategory] = useState(false);
   const [isInputFocused, setIsInputFocused] = useState(false);
+  const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
   const isProcessing = useRef(false);
   const quickAddRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
@@ -100,6 +101,21 @@ export const AddTransactionDialog = ({
       }, 100);
     }
   }, [showAddCategory]);
+
+  // iOS keyboard detection
+  useEffect(() => {
+    const handleResize = () => {
+      if (typeof window !== 'undefined' && window.visualViewport) {
+        const keyboardOpen = window.visualViewport.height < window.innerHeight * 0.75;
+        setIsKeyboardVisible(keyboardOpen);
+      }
+    };
+
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', handleResize);
+      return () => window.visualViewport.removeEventListener('resize', handleResize);
+    }
+  }, []);
 
 
   const performCalculation = (a: number, b: number, op: string): number => {
@@ -237,8 +253,14 @@ export const AddTransactionDialog = ({
       snapPoints={null}
       modal={true}
       noBodyStyles={true}
+      shouldScaleBackground={false}
     >
-      <DrawerContent className="flex flex-col h-screen max-h-screen">
+      <DrawerContent 
+        className={cn(
+          "flex flex-col",
+          isKeyboardVisible ? "max-h-[50vh] h-[50vh]" : "max-h-[85vh] h-[85vh]"
+        )}
+      >
         <DrawerHeader className="pt-4 px-4 sm:px-6 flex items-center justify-between">
           <DrawerTitle>
             {editingTransaction ? "Edit Transaction" : "Add Transaction"}
@@ -256,7 +278,7 @@ export const AddTransactionDialog = ({
           </Button>
         </DrawerHeader>
 
-        <div className="overflow-y-auto flex-1">
+        <div className="overflow-y-auto flex-1 min-h-0">
           <div className="px-4 sm:px-6 space-y-3 sm:space-y-4">
           {/* Type Selector */}
           <Tabs value={type} onValueChange={(v) => setType(v as TransactionType)}>
@@ -411,7 +433,10 @@ export const AddTransactionDialog = ({
         </div>
 
         {/* Sticky Footer */}
-        <div className="sticky bottom-0 bg-background border-t pt-3 space-y-2 mt-3 pb-4 sm:pb-6 px-4 sm:px-6">
+        <div 
+          className="sticky bottom-0 bg-background border-t pt-3 space-y-2 mt-3 pb-4 sm:pb-6 px-4 sm:px-6"
+          style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}
+        >
           <Button
             className="w-full"
             size="lg"
