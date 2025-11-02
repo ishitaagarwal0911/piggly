@@ -286,15 +286,11 @@ export const AddTransactionDialog = ({
       noBodyStyles={true}
       shouldScaleBackground={false}
     >
-      <DrawerContent 
-        className="flex flex-col"
-        style={{
+        <DrawerContent 
+          className="flex flex-col"
+          style={{
           height: 'calc(100dvh - env(safe-area-inset-top, 0px))',
-          maxHeight: 'calc(100dvh - env(safe-area-inset-top, 0px))',
-          paddingBottom: isKeyboardVisible 
-            ? 'var(--keyboard-offset, 0px)' 
-            : 'env(safe-area-inset-bottom, 1rem)',
-          transition: 'padding-bottom 0.3s ease-out'
+          maxHeight: 'calc(100dvh - env(safe-area-inset-top, 0px))'
         }}
       >
         <DrawerHeader className="pt-4 px-4 sm:px-6 flex items-center justify-between">
@@ -314,7 +310,7 @@ export const AddTransactionDialog = ({
           </Button>
         </DrawerHeader>
 
-        <div className="overflow-y-auto flex-1 min-h-0" style={{ maxHeight: '100%' }}>
+        <div className="overflow-y-auto flex-1 min-h-0 pb-32" style={{ maxHeight: '100%' }}>
           <div className="px-4 sm:px-6 space-y-3 sm:space-y-4">
           {/* Type Selector */}
           <Tabs value={type} onValueChange={(v) => setType(v as TransactionType)}>
@@ -472,10 +468,13 @@ export const AddTransactionDialog = ({
         <div 
           className="bg-background border-t pt-3 space-y-2 px-4 sm:px-6"
           style={{ 
-            position: 'sticky',
-            bottom: '0',
-            paddingBottom: '1rem',
-            marginTop: 'auto'
+            position: 'fixed',
+            left: '0',
+            right: '0',
+            bottom: isKeyboardVisible ? 'var(--keyboard-offset, 0px)' : '0',
+            paddingBottom: isKeyboardVisible ? '1rem' : 'calc(1rem + env(safe-area-inset-bottom, 0px))',
+            transition: 'bottom 0.3s ease-out',
+            zIndex: 50
           }}
         >
           <Button
