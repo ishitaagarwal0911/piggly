@@ -239,7 +239,7 @@ export const AddTransactionDialog = ({
       noBodyStyles={true}
       shouldScaleBackground={false}
     >
-        <DrawerContent className="flex flex-col">
+        <DrawerContent className="flex flex-col" noSlideUp={true}>
         <DrawerHeader className="pt-4 px-4 sm:px-6 flex items-center justify-between">
           <DrawerTitle>
             {editingTransaction ? "Edit Transaction" : "Add Transaction"}
