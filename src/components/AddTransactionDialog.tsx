@@ -46,6 +46,8 @@ export const AddTransactionDialog = ({
   const [newCategoryIcon, setNewCategoryIcon] = useState('');
   const [isAddingCategory, setIsAddingCategory] = useState(false);
   const [isInputFocused, setIsInputFocused] = useState(false);
+  const [isIOS, setIsIOS] = useState(false);
+  const [viewportHeight, setViewportHeight] = useState(0);
   const isProcessing = useRef(false);
   const quickAddRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
@@ -101,7 +103,31 @@ export const AddTransactionDialog = ({
     }
   }, [showAddCategory]);
 
-
+  // iOS-specific keyboard detection using Visual Viewport API
+  useEffect(() => {
+    // Detect iOS
+    const iOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
+    setIsIOS(iOS);
+    
+    if (!iOS || !window.visualViewport) return;
+    
+    const handleResize = () => {
+      if (window.visualViewport) {
+        setViewportHeight(window.visualViewport.height);
+      }
+    };
+    
+    // Set initial height
+    handleResize();
+    
+    window.visualViewport.addEventListener('resize', handleResize);
+    window.visualViewport.addEventListener('scroll', handleResize);
+    
+    return () => {
+      window.visualViewport?.removeEventListener('resize', handleResize);
+      window.visualViewport?.removeEventListener('scroll', handleResize);
+    };
+  }, []);
 
   const performCalculation = (a: number, b: number, op: string): number => {
     switch (op) {
@@ -427,9 +453,12 @@ export const AddTransactionDialog = ({
             position: 'fixed',
             left: '0',
             right: '0',
-            bottom: '0',
+            bottom: isIOS && viewportHeight > 0 
+              ? `${window.innerHeight - viewportHeight}px` 
+              : '0',
             paddingBottom: 'calc(1rem + env(safe-area-inset-bottom, 0px))',
-            zIndex: 50
+            zIndex: 50,
+            transition: 'bottom 0.3s ease-out'
           }}
         >
           <Button
