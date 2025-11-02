@@ -47,6 +47,7 @@ export const AddTransactionDialog = ({
   const [isAddingCategory, setIsAddingCategory] = useState(false);
   const [isInputFocused, setIsInputFocused] = useState(false);
   const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
   const isProcessing = useRef(false);
   const quickAddRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
@@ -102,31 +103,23 @@ export const AddTransactionDialog = ({
     }
   }, [showAddCategory]);
 
-  // iOS keyboard detection - simpler approach
+  // Detect keyboard and store its height
   useEffect(() => {
     const handleResize = () => {
       if (typeof window !== 'undefined' && window.visualViewport) {
         const viewportHeight = window.visualViewport.height;
         const windowHeight = window.innerHeight;
         
-        // Detect keyboard
         const threshold = windowHeight * 0.85;
         const keyboardOpen = viewportHeight < threshold;
         
         setIsKeyboardVisible(keyboardOpen);
         
-        // Store the actual visible viewport height
         if (keyboardOpen) {
-          // When keyboard is open, we want to position relative to visual viewport
-          document.documentElement.style.setProperty(
-            '--visible-viewport-height', 
-            `${viewportHeight}px`
-          );
+          // Keyboard height = window height - visible viewport height
+          setKeyboardHeight(windowHeight - viewportHeight);
         } else {
-          document.documentElement.style.setProperty(
-            '--visible-viewport-height', 
-            `${windowHeight}px`
-          );
+          setKeyboardHeight(0);
         }
       }
     };
@@ -134,11 +127,8 @@ export const AddTransactionDialog = ({
     if (window.visualViewport) {
       handleResize();
       window.visualViewport.addEventListener('resize', handleResize);
-      window.visualViewport.addEventListener('scroll', handleResize);
       return () => {
         window.visualViewport.removeEventListener('resize', handleResize);
-        window.visualViewport.removeEventListener('scroll', handleResize);
-        document.documentElement.style.setProperty('--keyboard-offset', '0px');
       };
     }
   }, []);
@@ -466,12 +456,9 @@ export const AddTransactionDialog = ({
             position: 'fixed',
             left: '0',
             right: '0',
-            bottom: '0',
+            bottom: `${keyboardHeight}px`,
             paddingBottom: 'calc(1rem + env(safe-area-inset-bottom, 0px))',
-            transition: 'transform 0.3s ease-out',
-            transform: isKeyboardVisible 
-              ? 'translateY(calc(-1 * (100vh - var(--visible-viewport-height, 100vh))))' 
-              : 'translateY(0)',
+            transition: 'bottom 0.2s ease-out',
             zIndex: 50
           }}
         >
