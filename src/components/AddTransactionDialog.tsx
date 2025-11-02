@@ -109,12 +109,25 @@ export const AddTransactionDialog = ({
         const viewportHeight = window.visualViewport.height;
         const windowHeight = window.innerHeight;
         
-        const threshold = windowHeight * 0.85;
+        // More sensitive threshold for iOS
+        const threshold = windowHeight * 0.9;
         const keyboardOpen = viewportHeight < threshold;
         
         if (keyboardOpen) {
+          // Calculate keyboard height + safe area
           const keyboardHeight = windowHeight - viewportHeight;
-          document.documentElement.style.setProperty('--keyboard-offset', `${keyboardHeight}px`);
+          // Add safe area bottom to ensure button sits above keyboard
+          const safeAreaBottom = parseInt(
+            getComputedStyle(document.documentElement)
+              .getPropertyValue('--sab')
+              .replace('px', '')
+          ) || 20;
+          
+          const totalOffset = keyboardHeight + safeAreaBottom;
+          document.documentElement.style.setProperty(
+            '--keyboard-offset', 
+            `${totalOffset}px`
+          );
         } else {
           document.documentElement.style.setProperty('--keyboard-offset', '0px');
         }
@@ -274,11 +287,17 @@ export const AddTransactionDialog = ({
       shouldScaleBackground={false}
     >
       <DrawerContent 
-        className="flex flex-col max-h-[85vh]"
+        className="flex flex-col"
         style={{
-          height: '85vh',
-          transition: 'bottom 0.3s ease-out',
-          bottom: isKeyboardVisible ? 'var(--keyboard-offset, 0px)' : '0'
+          height: 'calc(100dvh - env(safe-area-inset-top, 0px))',
+          maxHeight: 'calc(100dvh - env(safe-area-inset-top, 0px))',
+          paddingBottom: isKeyboardVisible 
+            ? '0' 
+            : 'env(safe-area-inset-bottom, 1rem)',
+          transform: isKeyboardVisible 
+            ? `translateY(calc(-1 * var(--keyboard-offset, 0px)))` 
+            : 'translateY(0)',
+          transition: 'transform 0.3s ease-out, padding-bottom 0.3s ease-out'
         }}
       >
         <DrawerHeader className="pt-4 px-4 sm:px-6 flex items-center justify-between">
@@ -453,7 +472,12 @@ export const AddTransactionDialog = ({
         </div>
 
         {/* Sticky Footer */}
-        <div className="sticky bottom-0 bg-background border-t pt-3 space-y-2 mt-3 pb-6 px-4 sm:px-6">
+        <div 
+          className="sticky bottom-0 bg-background border-t pt-3 space-y-2 mt-3 px-4 sm:px-6"
+          style={{ 
+            paddingBottom: isKeyboardVisible ? '1rem' : 'calc(1rem + env(safe-area-inset-bottom, 0px))'
+          }}
+        >
           <Button
             className="w-full"
             size="lg"

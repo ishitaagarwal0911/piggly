@@ -41,6 +41,10 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
+    /* iOS Safe Area Variables */
+    --sab: env(safe-area-inset-bottom, 0px);
+    --sat: env(safe-area-inset-top, 0px);
+    
     /* Notion-inspired neutral palette */
     --background: 40 25% 97%;
     --foreground: 0 0% 20%;
