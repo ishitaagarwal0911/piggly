@@ -46,9 +46,6 @@ export const AddTransactionDialog = ({
   const [newCategoryIcon, setNewCategoryIcon] = useState('');
   const [isAddingCategory, setIsAddingCategory] = useState(false);
   const [isInputFocused, setIsInputFocused] = useState(false);
-  const [isNoteFocused, setIsNoteFocused] = useState(false);
-  const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
-  const [keyboardHeight, setKeyboardHeight] = useState(0);
   const isProcessing = useRef(false);
   const quickAddRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
@@ -104,46 +101,6 @@ export const AddTransactionDialog = ({
     }
   }, [showAddCategory]);
 
-  // Only detect keyboard when Note input is focused
-  useEffect(() => {
-    if (!isNoteFocused) {
-      // Note is not focused - reset keyboard state
-      setKeyboardHeight(0);
-      setIsKeyboardVisible(false);
-      return;
-    }
-
-    // Note IS focused - measure keyboard height
-    const handleResize = () => {
-      if (typeof window !== 'undefined' && window.visualViewport) {
-        const viewportHeight = window.visualViewport.height;
-        const windowHeight = window.innerHeight;
-        const calculatedKeyboardHeight = windowHeight - viewportHeight;
-        
-        if (calculatedKeyboardHeight > 50) {
-          setKeyboardHeight(calculatedKeyboardHeight);
-          setIsKeyboardVisible(true);
-        } else {
-          setKeyboardHeight(0);
-          setIsKeyboardVisible(false);
-        }
-      }
-    };
-
-    // Small delay to allow keyboard animation
-    const timeout = setTimeout(handleResize, 150);
-
-    if (window.visualViewport) {
-      window.visualViewport.addEventListener('resize', handleResize);
-    }
-
-    return () => {
-      clearTimeout(timeout);
-      if (window.visualViewport) {
-        window.visualViewport.removeEventListener('resize', handleResize);
-      }
-    };
-  }, [isNoteFocused]);
 
 
   const performCalculation = (a: number, b: number, op: string): number => {
@@ -434,8 +391,8 @@ export const AddTransactionDialog = ({
               placeholder="What's this for?"
               value={note}
               onChange={(e) => setNote(e.target.value)}
-              onFocus={() => setIsNoteFocused(true)}
-              onBlur={() => setIsNoteFocused(false)}
+              onFocus={() => setIsInputFocused(true)}
+              onBlur={() => setIsInputFocused(false)}
               maxLength={50}
             />
           </div>
@@ -472,11 +429,7 @@ export const AddTransactionDialog = ({
             right: '0',
             bottom: '0',
             paddingBottom: 'calc(1rem + env(safe-area-inset-bottom, 0px))',
-            zIndex: 50,
-            transform: isKeyboardVisible 
-              ? `translateY(-${keyboardHeight}px)` 
-              : 'translateY(0)',
-            transition: 'transform 0.2s ease-out'
+            zIndex: 50
           }}
         >
           <Button
