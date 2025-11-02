@@ -271,7 +271,7 @@ export const AddTransactionDialog = ({
       noBodyStyles={true}
       shouldScaleBackground={false}
     >
-        <DrawerContent className="flex flex-col h-[100dvh]" noSlideUp={true}>
+        <DrawerContent className="flex flex-col h-screen" noSlideUp={true}>
         <DrawerHeader className="pt-4 px-4 sm:px-6 flex items-center justify-between">
           <DrawerTitle>
             {editingTransaction ? "Edit Transaction" : "Add Transaction"}
@@ -289,7 +289,7 @@ export const AddTransactionDialog = ({
           </Button>
         </DrawerHeader>
 
-        <div className="overflow-y-auto flex-shrink pb-4" style={{ maxHeight: 'calc(100dvh - 200px)' }}>
+        <div className="overflow-y-auto flex-shrink pb-4" style={{ maxHeight: 'calc(100vh - 200px)' }}>
           <div className="px-4 sm:px-6 space-y-3 sm:space-y-4">
           {/* Type Selector */}
           <Tabs value={type} onValueChange={(v) => setType(v as TransactionType)}>

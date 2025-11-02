@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 
 const Drawer = ({ 
   shouldScaleBackground = true, 
-  snapPoints = [0.6, 0.9, 1],
+  snapPoints = [1],
   ...props 
 }: React.ComponentProps<typeof DrawerPrimitive.Root>) => (
   <DrawerPrimitive.Root 
@@ -42,7 +42,7 @@ const DrawerContent = React.forwardRef<
     <DrawerPrimitive.Content
       ref={ref}
       className={cn(
-        "fixed inset-x-0 bottom-0 z-50 flex h-auto flex-col border bg-background",
+        noSlideUp ? "fixed inset-0 z-50 flex flex-col border bg-background" : "fixed inset-x-0 bottom-0 z-50 flex h-auto flex-col border bg-background",
         !noSlideUp && "rounded-t-[10px]",
         className,
       )}
