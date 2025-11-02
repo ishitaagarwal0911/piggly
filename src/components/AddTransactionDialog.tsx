@@ -47,6 +47,9 @@ export const AddTransactionDialog = ({
   const [isAddingCategory, setIsAddingCategory] = useState(false);
   const [isInputFocused, setIsInputFocused] = useState(false);
   const [isKeyboardOpen, setIsKeyboardOpen] = useState(false);
+  const [viewportHeight, setViewportHeight] = useState<number>(
+    window.visualViewport?.height || window.innerHeight
+  );
   const isProcessing = useRef(false);
   const quickAddRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
@@ -110,7 +113,9 @@ export const AddTransactionDialog = ({
     
     const handleResize = () => {
       if (window.visualViewport) {
-        const keyboardOpen = window.visualViewport.height < window.innerHeight * 0.75;
+        const vpHeight = window.visualViewport.height;
+        const keyboardOpen = vpHeight < window.innerHeight * 0.75;
+        setViewportHeight(vpHeight);
         setIsKeyboardOpen(keyboardOpen);
       }
     };
@@ -264,11 +269,11 @@ export const AddTransactionDialog = ({
         <DrawerContent 
           className="flex flex-col"
         style={{
-          height: window.visualViewport && window.visualViewport.height < window.innerHeight * 0.75
-            ? `${window.visualViewport.height}px`
+          height: isKeyboardOpen
+            ? `${viewportHeight}px`
             : 'calc(100dvh - env(safe-area-inset-top, 0px))',
-          maxHeight: window.visualViewport && window.visualViewport.height < window.innerHeight * 0.75
-            ? `${window.visualViewport.height}px`
+          maxHeight: isKeyboardOpen
+            ? `${viewportHeight}px`
             : 'calc(100dvh - env(safe-area-inset-top, 0px))'
         }}
       >
