@@ -110,16 +110,20 @@ export const AddTransactionDialog = ({
         const viewportHeight = window.visualViewport.height;
         const windowHeight = window.innerHeight;
         
-        const threshold = windowHeight * 0.85;
-        const keyboardOpen = viewportHeight < threshold;
+        // Calculate the difference between the full window height and the visible viewport height
+        const calculatedKeyboardHeight = windowHeight - viewportHeight;
         
-        setIsKeyboardVisible(keyboardOpen);
+        // Use a fixed pixel threshold to determine if keyboard is open
+        const keyboardThreshold = 50;
         
-        if (keyboardOpen) {
-          // Keyboard height = window height - visible viewport height
-          setKeyboardHeight(windowHeight - viewportHeight);
+        if (calculatedKeyboardHeight > keyboardThreshold) {
+          // Keyboard is open
+          setKeyboardHeight(calculatedKeyboardHeight);
+          setIsKeyboardVisible(true);
         } else {
+          // Keyboard is closed
           setKeyboardHeight(0);
+          setIsKeyboardVisible(false);
         }
       }
     };
