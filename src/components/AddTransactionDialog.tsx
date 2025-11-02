@@ -46,10 +46,6 @@ export const AddTransactionDialog = ({
   const [newCategoryIcon, setNewCategoryIcon] = useState('');
   const [isAddingCategory, setIsAddingCategory] = useState(false);
   const [isInputFocused, setIsInputFocused] = useState(false);
-  const [isKeyboardOpen, setIsKeyboardOpen] = useState(false);
-  const [viewportHeight, setViewportHeight] = useState<number>(
-    window.visualViewport?.height || window.innerHeight
-  );
   const isProcessing = useRef(false);
   const quickAddRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
@@ -105,29 +101,6 @@ export const AddTransactionDialog = ({
     }
   }, [showAddCategory]);
 
-  // iOS-specific keyboard detection
-  useEffect(() => {
-    const iOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
-    
-    if (!iOS || !window.visualViewport) return;
-    
-    const handleResize = () => {
-      if (window.visualViewport) {
-        const vpHeight = window.visualViewport.height;
-        const keyboardOpen = vpHeight < window.innerHeight * 0.75;
-        setViewportHeight(vpHeight);
-        setIsKeyboardOpen(keyboardOpen);
-      }
-    };
-    
-    handleResize();
-    
-    window.visualViewport.addEventListener('resize', handleResize);
-    
-    return () => {
-      window.visualViewport?.removeEventListener('resize', handleResize);
-    };
-  }, []);
 
   const performCalculation = (a: number, b: number, op: string): number => {
     switch (op) {
@@ -266,17 +239,7 @@ export const AddTransactionDialog = ({
       noBodyStyles={true}
       shouldScaleBackground={false}
     >
-        <DrawerContent 
-          className="flex flex-col"
-        style={{
-          height: isKeyboardOpen
-            ? `${viewportHeight}px`
-            : 'calc(100dvh - env(safe-area-inset-top, 0px))',
-          maxHeight: isKeyboardOpen
-            ? `${viewportHeight}px`
-            : 'calc(100dvh - env(safe-area-inset-top, 0px))'
-        }}
-      >
+        <DrawerContent className="flex flex-col h-[100dvh]">
         <DrawerHeader className="pt-4 px-4 sm:px-6 flex items-center justify-between">
           <DrawerTitle>
             {editingTransaction ? "Edit Transaction" : "Add Transaction"}
@@ -452,18 +415,9 @@ export const AddTransactionDialog = ({
 
         {/* Sticky Footer */}
         <div 
-          className="bg-background border-t pt-3 space-y-2 px-4 sm:px-6"
+          className="bg-background border-t pt-3 pb-4 space-y-2 px-4 sm:px-6 absolute bottom-0 left-0 right-0 z-50"
           style={{ 
-            position: 'fixed',
-            left: '0',
-            right: '0',
-            bottom: '0',
-            paddingBottom: isKeyboardOpen 
-              ? '0.5rem' 
-              : 'calc(1rem + env(safe-area-inset-bottom, 0px))',
-            zIndex: 50,
-            transition: 'padding-bottom 0.2s ease-out',
-            backgroundColor: 'hsl(var(--background))'
+            paddingBottom: 'calc(1rem + env(safe-area-inset-bottom, 0px))'
           }}
         >
           <Button
