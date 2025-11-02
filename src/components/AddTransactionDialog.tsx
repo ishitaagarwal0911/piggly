@@ -101,13 +101,35 @@ export const AddTransactionDialog = ({
     }
   }, [showAddCategory]);
 
-  // Reset scroll position when drawer opens
+  // Reset scroll position when drawer opens (with multiple attempts for iOS)
   useEffect(() => {
     if (open) {
+      // Immediate attempt
       const scrollContainer = document.querySelector('.overflow-y-auto');
       if (scrollContainer) {
         scrollContainer.scrollTop = 0;
       }
+      
+      // Delayed attempt after drawer renders (100ms)
+      const timer1 = setTimeout(() => {
+        const scrollContainer = document.querySelector('.overflow-y-auto');
+        if (scrollContainer) {
+          scrollContainer.scrollTop = 0;
+        }
+      }, 100);
+      
+      // Final attempt to override iOS auto-scroll (300ms)
+      const timer2 = setTimeout(() => {
+        const scrollContainer = document.querySelector('.overflow-y-auto');
+        if (scrollContainer) {
+          scrollContainer.scrollTop = 0;
+        }
+      }, 300);
+      
+      return () => {
+        clearTimeout(timer1);
+        clearTimeout(timer2);
+      };
     }
   }, [open]);
 
@@ -249,7 +271,7 @@ export const AddTransactionDialog = ({
       noBodyStyles={true}
       shouldScaleBackground={false}
     >
-        <DrawerContent className="flex flex-col max-h-[90vh]" noSlideUp={true}>
+        <DrawerContent className="flex flex-col h-[100dvh]" noSlideUp={true}>
         <DrawerHeader className="pt-4 px-4 sm:px-6 flex items-center justify-between">
           <DrawerTitle>
             {editingTransaction ? "Edit Transaction" : "Add Transaction"}
@@ -267,7 +289,7 @@ export const AddTransactionDialog = ({
           </Button>
         </DrawerHeader>
 
-        <div className="overflow-y-auto flex-shrink pb-4" style={{ maxHeight: 'calc(90vh - 200px)' }}>
+        <div className="overflow-y-auto flex-shrink pb-4" style={{ maxHeight: 'calc(100dvh - 200px)' }}>
           <div className="px-4 sm:px-6 space-y-3 sm:space-y-4">
           {/* Type Selector */}
           <Tabs value={type} onValueChange={(v) => setType(v as TransactionType)}>
