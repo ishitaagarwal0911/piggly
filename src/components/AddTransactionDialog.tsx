@@ -239,7 +239,7 @@ export const AddTransactionDialog = ({
       noBodyStyles={true}
       shouldScaleBackground={false}
     >
-        <DrawerContent className="flex flex-col h-[100dvh]">
+        <DrawerContent className="flex flex-col">
         <DrawerHeader className="pt-4 px-4 sm:px-6 flex items-center justify-between">
           <DrawerTitle>
             {editingTransaction ? "Edit Transaction" : "Add Transaction"}
@@ -257,7 +257,7 @@ export const AddTransactionDialog = ({
           </Button>
         </DrawerHeader>
 
-        <div className="overflow-y-auto flex-1 min-h-0 pb-32" style={{ maxHeight: '100%' }}>
+        <div className="overflow-y-auto flex-1 min-h-0 pb-4" style={{ maxHeight: '100%' }}>
           <div className="px-4 sm:px-6 space-y-3 sm:space-y-4">
           {/* Type Selector */}
           <Tabs value={type} onValueChange={(v) => setType(v as TransactionType)}>
@@ -413,9 +413,9 @@ export const AddTransactionDialog = ({
           </div>
         </div>
 
-        {/* Sticky Footer */}
+        {/* Footer */}
         <div 
-          className="bg-background border-t pt-3 pb-4 space-y-2 px-4 sm:px-6 absolute bottom-0 left-0 right-0 z-50"
+          className="bg-background border-t pt-3 space-y-2 px-4 sm:px-6 mt-auto"
           style={{ 
             paddingBottom: 'calc(1rem + env(safe-area-inset-bottom, 0px))'
           }}
