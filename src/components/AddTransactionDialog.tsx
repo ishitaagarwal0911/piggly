@@ -460,10 +460,13 @@ export const AddTransactionDialog = ({
             position: 'fixed',
             left: '0',
             right: '0',
-            bottom: `${keyboardHeight}px`,
+            bottom: '0',
             paddingBottom: 'calc(1rem + env(safe-area-inset-bottom, 0px))',
-            transition: 'bottom 0.2s ease-out',
-            zIndex: 50
+            zIndex: 50,
+            transform: isKeyboardVisible 
+              ? `translateY(-${keyboardHeight}px)` 
+              : 'translateY(0)',
+            transition: 'transform 0.2s ease-out'
           }}
         >
           <Button
