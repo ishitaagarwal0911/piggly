@@ -46,6 +46,7 @@ export const AddTransactionDialog = ({
   const [newCategoryIcon, setNewCategoryIcon] = useState('');
   const [isAddingCategory, setIsAddingCategory] = useState(false);
   const [isInputFocused, setIsInputFocused] = useState(false);
+  const [isKeyboardOpen, setIsKeyboardOpen] = useState(false);
   const isProcessing = useRef(false);
   const quickAddRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
@@ -101,6 +102,28 @@ export const AddTransactionDialog = ({
     }
   }, [showAddCategory]);
 
+  // iOS-specific keyboard detection
+  useEffect(() => {
+    const iOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
+    
+    if (!iOS || !window.visualViewport) return;
+    
+    const handleResize = () => {
+      if (window.visualViewport) {
+        // Keyboard is open when viewport height is significantly reduced
+        const keyboardOpen = window.visualViewport.height < window.innerHeight * 0.75;
+        setIsKeyboardOpen(keyboardOpen);
+      }
+    };
+    
+    handleResize();
+    
+    window.visualViewport.addEventListener('resize', handleResize);
+    
+    return () => {
+      window.visualViewport?.removeEventListener('resize', handleResize);
+    };
+  }, []);
 
   const performCalculation = (a: number, b: number, op: string): number => {
     switch (op) {
@@ -427,8 +450,11 @@ export const AddTransactionDialog = ({
             left: '0',
             right: '0',
             bottom: '0',
-            paddingBottom: 'calc(1rem + env(safe-area-inset-bottom, 0px))',
-            zIndex: 50
+            paddingBottom: isKeyboardOpen 
+              ? '0.5rem' 
+              : 'calc(1rem + env(safe-area-inset-bottom, 0px))',
+            zIndex: 50,
+            transition: 'padding-bottom 0.2s ease-out'
           }}
         >
           <Button
