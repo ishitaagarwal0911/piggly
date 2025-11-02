@@ -101,6 +101,16 @@ export const AddTransactionDialog = ({
     }
   }, [showAddCategory]);
 
+  // Reset scroll position when drawer opens
+  useEffect(() => {
+    if (open) {
+      const scrollContainer = document.querySelector('.overflow-y-auto');
+      if (scrollContainer) {
+        scrollContainer.scrollTop = 0;
+      }
+    }
+  }, [open]);
+
 
   const performCalculation = (a: number, b: number, op: string): number => {
     switch (op) {
@@ -239,7 +249,7 @@ export const AddTransactionDialog = ({
       noBodyStyles={true}
       shouldScaleBackground={false}
     >
-        <DrawerContent className="flex flex-col" noSlideUp={true}>
+        <DrawerContent className="flex flex-col max-h-[90vh]" noSlideUp={true}>
         <DrawerHeader className="pt-4 px-4 sm:px-6 flex items-center justify-between">
           <DrawerTitle>
             {editingTransaction ? "Edit Transaction" : "Add Transaction"}
@@ -257,7 +267,7 @@ export const AddTransactionDialog = ({
           </Button>
         </DrawerHeader>
 
-        <div className="overflow-y-auto flex-1 min-h-0 pb-4" style={{ maxHeight: '100%' }}>
+        <div className="overflow-y-auto flex-shrink pb-4" style={{ maxHeight: 'calc(90vh - 200px)' }}>
           <div className="px-4 sm:px-6 space-y-3 sm:space-y-4">
           {/* Type Selector */}
           <Tabs value={type} onValueChange={(v) => setType(v as TransactionType)}>
@@ -400,7 +410,7 @@ export const AddTransactionDialog = ({
                   {format(date, 'PPP')}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
+              <PopoverContent className="w-auto p-0" align="start" side="top">
                 <Calendar
                   mode="single"
                   selected={date}
