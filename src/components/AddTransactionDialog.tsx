@@ -264,8 +264,12 @@ export const AddTransactionDialog = ({
         <DrawerContent 
           className="flex flex-col"
         style={{
-          height: 'calc(100dvh - env(safe-area-inset-top, 0px))',
-          maxHeight: 'calc(100dvh - env(safe-area-inset-top, 0px))'
+          height: window.visualViewport && window.visualViewport.height < window.innerHeight * 0.75
+            ? `${window.visualViewport.height}px`
+            : 'calc(100dvh - env(safe-area-inset-top, 0px))',
+          maxHeight: window.visualViewport && window.visualViewport.height < window.innerHeight * 0.75
+            ? `${window.visualViewport.height}px`
+            : 'calc(100dvh - env(safe-area-inset-top, 0px))'
         }}
       >
         <DrawerHeader className="pt-4 px-4 sm:px-6 flex items-center justify-between">
@@ -448,14 +452,12 @@ export const AddTransactionDialog = ({
             position: 'fixed',
             left: '0',
             right: '0',
-            bottom: isKeyboardOpen && window.visualViewport
-              ? `${window.innerHeight - window.visualViewport.height}px`
-              : '0',
+            bottom: '0',
             paddingBottom: isKeyboardOpen 
               ? '0.5rem' 
               : 'calc(1rem + env(safe-area-inset-bottom, 0px))',
             zIndex: 50,
-            transition: 'bottom 0.2s ease-out, padding-bottom 0.2s ease-out',
+            transition: 'padding-bottom 0.2s ease-out',
             backgroundColor: 'hsl(var(--background))'
           }}
         >
