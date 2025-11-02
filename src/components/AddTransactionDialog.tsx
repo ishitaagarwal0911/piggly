@@ -451,7 +451,7 @@ export const AddTransactionDialog = ({
             right: '0',
             bottom: '0',
             paddingBottom: isKeyboardOpen 
-              ? '0.5rem' 
+              ? '0' 
               : 'calc(1rem + env(safe-area-inset-bottom, 0px))',
             zIndex: 50,
             transition: 'padding-bottom 0.2s ease-out'
