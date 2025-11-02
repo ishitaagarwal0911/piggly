@@ -292,12 +292,9 @@ export const AddTransactionDialog = ({
           height: 'calc(100dvh - env(safe-area-inset-top, 0px))',
           maxHeight: 'calc(100dvh - env(safe-area-inset-top, 0px))',
           paddingBottom: isKeyboardVisible 
-            ? '0' 
+            ? 'var(--keyboard-offset, 0px)' 
             : 'env(safe-area-inset-bottom, 1rem)',
-          transform: isKeyboardVisible 
-            ? `translateY(calc(-1 * var(--keyboard-offset, 0px)))` 
-            : 'translateY(0)',
-          transition: 'transform 0.3s ease-out, padding-bottom 0.3s ease-out'
+          transition: 'padding-bottom 0.3s ease-out'
         }}
       >
         <DrawerHeader className="pt-4 px-4 sm:px-6 flex items-center justify-between">
@@ -317,7 +314,7 @@ export const AddTransactionDialog = ({
           </Button>
         </DrawerHeader>
 
-        <div className="overflow-y-auto flex-1 min-h-0">
+        <div className="overflow-y-auto flex-1 min-h-0" style={{ maxHeight: '100%' }}>
           <div className="px-4 sm:px-6 space-y-3 sm:space-y-4">
           {/* Type Selector */}
           <Tabs value={type} onValueChange={(v) => setType(v as TransactionType)}>
@@ -473,9 +470,12 @@ export const AddTransactionDialog = ({
 
         {/* Sticky Footer */}
         <div 
-          className="sticky bottom-0 bg-background border-t pt-3 space-y-2 mt-3 px-4 sm:px-6"
+          className="bg-background border-t pt-3 space-y-2 px-4 sm:px-6"
           style={{ 
-            paddingBottom: isKeyboardVisible ? '1rem' : 'calc(1rem + env(safe-area-inset-bottom, 0px))'
+            position: 'sticky',
+            bottom: '0',
+            paddingBottom: '1rem',
+            marginTop: 'auto'
           }}
         >
           <Button
