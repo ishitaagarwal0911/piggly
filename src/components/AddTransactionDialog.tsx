@@ -110,7 +110,6 @@ export const AddTransactionDialog = ({
     
     const handleResize = () => {
       if (window.visualViewport) {
-        // Keyboard is open when viewport height is significantly reduced
         const keyboardOpen = window.visualViewport.height < window.innerHeight * 0.75;
         setIsKeyboardOpen(keyboardOpen);
       }
@@ -264,9 +263,13 @@ export const AddTransactionDialog = ({
     >
         <DrawerContent 
           className="flex flex-col"
-          style={{
-          height: 'calc(100dvh - env(safe-area-inset-top, 0px))',
-          maxHeight: 'calc(100dvh - env(safe-area-inset-top, 0px))'
+        style={{
+          height: isKeyboardOpen && window.visualViewport
+            ? `${window.visualViewport.height}px`
+            : 'calc(100dvh - env(safe-area-inset-top, 0px))',
+          maxHeight: isKeyboardOpen && window.visualViewport
+            ? `${window.visualViewport.height}px`
+            : 'calc(100dvh - env(safe-area-inset-top, 0px))'
         }}
       >
         <DrawerHeader className="pt-4 px-4 sm:px-6 flex items-center justify-between">
