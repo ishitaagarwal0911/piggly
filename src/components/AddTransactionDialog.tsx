@@ -46,6 +46,7 @@ export const AddTransactionDialog = ({
   const [newCategoryIcon, setNewCategoryIcon] = useState('');
   const [isAddingCategory, setIsAddingCategory] = useState(false);
   const [isInputFocused, setIsInputFocused] = useState(false);
+  const [isNoteFocused, setIsNoteFocused] = useState(false);
   const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
   const [keyboardHeight, setKeyboardHeight] = useState(0);
   const isProcessing = useRef(false);
@@ -103,39 +104,46 @@ export const AddTransactionDialog = ({
     }
   }, [showAddCategory]);
 
-  // Detect keyboard and store its height
+  // Only detect keyboard when Note input is focused
   useEffect(() => {
+    if (!isNoteFocused) {
+      // Note is not focused - reset keyboard state
+      setKeyboardHeight(0);
+      setIsKeyboardVisible(false);
+      return;
+    }
+
+    // Note IS focused - measure keyboard height
     const handleResize = () => {
       if (typeof window !== 'undefined' && window.visualViewport) {
         const viewportHeight = window.visualViewport.height;
         const windowHeight = window.innerHeight;
-        
-        // Calculate the difference between the full window height and the visible viewport height
         const calculatedKeyboardHeight = windowHeight - viewportHeight;
         
-        // Use a fixed pixel threshold to determine if keyboard is open
-        const keyboardThreshold = 50;
-        
-        if (calculatedKeyboardHeight > keyboardThreshold) {
-          // Keyboard is open
+        if (calculatedKeyboardHeight > 50) {
           setKeyboardHeight(calculatedKeyboardHeight);
           setIsKeyboardVisible(true);
         } else {
-          // Keyboard is closed
           setKeyboardHeight(0);
           setIsKeyboardVisible(false);
         }
       }
     };
 
+    // Small delay to allow keyboard animation
+    const timeout = setTimeout(handleResize, 150);
+
     if (window.visualViewport) {
-      handleResize();
       window.visualViewport.addEventListener('resize', handleResize);
-      return () => {
-        window.visualViewport.removeEventListener('resize', handleResize);
-      };
     }
-  }, []);
+
+    return () => {
+      clearTimeout(timeout);
+      if (window.visualViewport) {
+        window.visualViewport.removeEventListener('resize', handleResize);
+      }
+    };
+  }, [isNoteFocused]);
 
 
   const performCalculation = (a: number, b: number, op: string): number => {
@@ -426,6 +434,8 @@ export const AddTransactionDialog = ({
               placeholder="What's this for?"
               value={note}
               onChange={(e) => setNote(e.target.value)}
+              onFocus={() => setIsNoteFocused(true)}
+              onBlur={() => setIsNoteFocused(false)}
               maxLength={50}
             />
           </div>
