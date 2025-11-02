@@ -102,37 +102,32 @@ export const AddTransactionDialog = ({
     }
   }, [showAddCategory]);
 
-  // iOS keyboard detection with keyboard height calculation
+  // iOS keyboard detection - simpler approach
   useEffect(() => {
     const handleResize = () => {
       if (typeof window !== 'undefined' && window.visualViewport) {
         const viewportHeight = window.visualViewport.height;
         const windowHeight = window.innerHeight;
         
-        // More sensitive threshold for iOS
-        const threshold = windowHeight * 0.9;
+        // Detect keyboard
+        const threshold = windowHeight * 0.85;
         const keyboardOpen = viewportHeight < threshold;
         
+        setIsKeyboardVisible(keyboardOpen);
+        
+        // Store the actual visible viewport height
         if (keyboardOpen) {
-          // Calculate keyboard height + safe area
-          const keyboardHeight = windowHeight - viewportHeight;
-          // Add safe area bottom to ensure button sits above keyboard
-          const safeAreaBottom = parseInt(
-            getComputedStyle(document.documentElement)
-              .getPropertyValue('--sab')
-              .replace('px', '')
-          ) || 20;
-          
-          const totalOffset = keyboardHeight + safeAreaBottom;
+          // When keyboard is open, we want to position relative to visual viewport
           document.documentElement.style.setProperty(
-            '--keyboard-offset', 
-            `${totalOffset}px`
+            '--visible-viewport-height', 
+            `${viewportHeight}px`
           );
         } else {
-          document.documentElement.style.setProperty('--keyboard-offset', '0px');
+          document.documentElement.style.setProperty(
+            '--visible-viewport-height', 
+            `${windowHeight}px`
+          );
         }
-        
-        setIsKeyboardVisible(keyboardOpen);
       }
     };
 
@@ -471,9 +466,12 @@ export const AddTransactionDialog = ({
             position: 'fixed',
             left: '0',
             right: '0',
-            bottom: isKeyboardVisible ? 'var(--keyboard-offset, 0px)' : '0',
-            paddingBottom: isKeyboardVisible ? '1rem' : 'calc(1rem + env(safe-area-inset-bottom, 0px))',
-            transition: 'bottom 0.3s ease-out',
+            bottom: '0',
+            paddingBottom: 'calc(1rem + env(safe-area-inset-bottom, 0px))',
+            transition: 'transform 0.3s ease-out',
+            transform: isKeyboardVisible 
+              ? 'translateY(calc(-1 * (100vh - var(--visible-viewport-height, 100vh))))' 
+              : 'translateY(0)',
             zIndex: 50
           }}
         >
