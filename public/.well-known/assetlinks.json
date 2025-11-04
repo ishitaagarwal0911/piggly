@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "in.recessclub.piggly",
+      "sha256_cert_fingerprints": [
+        "DF:D6:A0:22:14:A0:6D:5C:88:55:05:A1:45:70:3C:F4:E0:4B:AA:E1:35:0B:6E:C4:CD:51:60:A5:04:BC:97:15"
+      ]
+    }
+  }
+]
