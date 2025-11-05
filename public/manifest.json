@@ -28,7 +28,7 @@
       "description": "Quickly add a new expense",
       "url": "/?action=add-expense",
       "icons": [{ 
-        "src": "/add-expense-512.png", 
+        "src": "/add-expense-512v2.png", 
         "sizes": "512x512",
         "type": "image/png",
         "purpose": "any maskable"
@@ -40,7 +40,7 @@
       "description": "Quickly add income",
       "url": "/?action=add-income",
       "icons": [{ 
-        "src": "/add-income-512.png", 
+        "src": "/add-income-512v2.png", 
         "sizes": "512x512",
         "type": "image/png",
         "purpose": "any maskable"
