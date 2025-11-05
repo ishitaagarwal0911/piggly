@@ -27,14 +27,14 @@
       "short_name": "Expense",
       "description": "Quickly add a new expense",
       "url": "/?action=add-expense",
-      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+      "icons": [{ "src": "/icon-512.png", "sizes": "192x192" }]
     },
     {
       "name": "Add Income",
       "short_name": "Income",
       "description": "Quickly add income",
       "url": "/?action=add-income",
-      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+      "icons": [{ "src": "/icon-512.png", "sizes": "192x192" }]
     }
   ]
 }
