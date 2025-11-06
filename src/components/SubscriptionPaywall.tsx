@@ -4,11 +4,12 @@ import {
   DrawerContent,
   DrawerHeader,
   DrawerTitle,
-  DrawerDescription,
 } from '@/components/ui/drawer';
 import { Button } from '@/components/ui/button';
 import { Check, Sparkles } from 'lucide-react';
 import { useSubscription } from '@/contexts/SubscriptionContext';
+import { useDigitalGoods } from '@/hooks/useDigitalGoods';
+import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 
 interface SubscriptionPaywallProps {
@@ -23,7 +24,11 @@ export const SubscriptionPaywall = ({
   onSubscribed,
 }: SubscriptionPaywallProps) => {
   const { purchaseSubscription } = useSubscription();
+  const { isAvailable } = useDigitalGoods();
+  const { user } = useAuth();
   const [purchasing, setPurchasing] = useState(false);
+
+  const canPurchase = !!user && isAvailable && !purchasing;
 
   const benefits = [
     'Unlimited transactions',
@@ -43,10 +48,21 @@ export const SubscriptionPaywall = ({
       onSubscribed?.();
     } catch (error) {
       console.error('Subscription error:', error);
-      toast.error('Failed to complete subscription. Please try again.');
+      const errorMessage = error instanceof Error ? error.message : '';
+      if (errorMessage.includes('Digital Goods service not available')) {
+        toast.error('Open the app installed from Google Play to complete the purchase.');
+      } else {
+        toast.error('Failed to complete subscription. Please try again.');
+      }
     } finally {
       setPurchasing(false);
     }
+  };
+
+  const getHelperText = () => {
+    if (!user) return 'Please sign in to subscribe.';
+    if (!isAvailable) return 'Open the app installed from Google Play to subscribe.';
+    return null;
   };
 
   return (
@@ -56,15 +72,15 @@ export const SubscriptionPaywall = ({
           <div className="mx-auto w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-4">
             <Sparkles className="w-6 h-6 text-primary" />
           </div>
-          <DrawerTitle className="text-2xl">Unlock Full Access</DrawerTitle>
+          <DrawerTitle>Unlock Full Access</DrawerTitle>
         </DrawerHeader>
 
         <div className="px-4 sm:px-6 pb-8 space-y-6">
           {/* Pricing */}
           <div className="bg-gradient-to-br from-primary/10 to-primary/5 rounded-2xl p-6 text-center border border-primary/20 shadow-notion">
-            <div className="text-4xl font-bold text-foreground mb-1">
+            <div className="text-3xl font-bold text-foreground mb-1">
               ₹50
-              <span className="text-lg font-normal text-muted-foreground">/month</span>
+              <span className="text-sm font-normal text-muted-foreground">/month</span>
             </div>
             <p className="text-sm text-muted-foreground">Cancel anytime</p>
           </div>
@@ -87,12 +103,18 @@ export const SubscriptionPaywall = ({
           {/* CTA Button */}
           <Button
             onClick={handleSubscribe}
-            disabled={purchasing}
+            disabled={!canPurchase}
             size="lg"
-            className="w-full text-lg h-14 rounded-xl"
+            className="w-full"
           >
             {purchasing ? 'Processing...' : 'Subscribe Now'}
           </Button>
+
+          {getHelperText() && (
+            <p className="text-sm text-center text-muted-foreground -mt-3">
+              {getHelperText()}
+            </p>
+          )}
 
           <p className="text-xs text-center text-muted-foreground">
             Charged monthly via Google Play. Cancel anytime from your Google Play subscriptions.
