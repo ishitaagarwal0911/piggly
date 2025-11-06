@@ -1,28 +1,30 @@
-import { useState, useEffect, useCallback, useRef, lazy, Suspense } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Transaction } from '@/types/transaction';
-import { BalanceSummary } from '@/components/BalanceSummary';
-import { SettingsSheet } from '@/components/SettingsSheet';
-import { PeriodSelector } from '@/components/PeriodSelector';
-import { Button } from '@/components/ui/button';
-import { Plus } from 'lucide-react';
-import { loadTransactions, saveTransactions, deleteTransaction, loadHistoricalTransactions } from '@/lib/storage';
-import { loadSettings } from '@/lib/settings';
-import { getFilteredTransactions, getPreviousPeriod, getNextPeriod, ViewType } from '@/lib/dateUtils';
-import { useAuth } from '@/contexts/AuthContext';
-import { useSubscription } from '@/contexts/SubscriptionContext';
-import { useRealtimeSync } from '@/hooks/useRealtimeSync';
-import { useHistoryState } from '@/hooks/useHistoryState';
-import { usePageRestore } from '@/hooks/usePageRestore';
-import { getCachedTransactions, isCacheFresh } from '@/lib/cache';
-import { toast } from 'sonner';
-import { useSwipeGesture } from '@/hooks/useSwipeGesture';
-import piggyTransparent from '@/assets/piggly_header_icon.png';
+import { useState, useEffect, useCallback, useRef, lazy, Suspense } from "react";
+import { useNavigate } from "react-router-dom";
+import { Transaction } from "@/types/transaction";
+import { BalanceSummary } from "@/components/BalanceSummary";
+import { SettingsSheet } from "@/components/SettingsSheet";
+import { PeriodSelector } from "@/components/PeriodSelector";
+import { Button } from "@/components/ui/button";
+import { Plus } from "lucide-react";
+import { loadTransactions, saveTransactions, deleteTransaction, loadHistoricalTransactions } from "@/lib/storage";
+import { loadSettings } from "@/lib/settings";
+import { getFilteredTransactions, getPreviousPeriod, getNextPeriod, ViewType } from "@/lib/dateUtils";
+import { useAuth } from "@/contexts/AuthContext";
+import { useSubscription } from "@/contexts/SubscriptionContext";
+import { useRealtimeSync } from "@/hooks/useRealtimeSync";
+import { useHistoryState } from "@/hooks/useHistoryState";
+import { usePageRestore } from "@/hooks/usePageRestore";
+import { getCachedTransactions, isCacheFresh } from "@/lib/cache";
+import { toast } from "sonner";
+import { useSwipeGesture } from "@/hooks/useSwipeGesture";
+import piggyTransparent from "@/assets/piggly_header_icon.png";
 
 // Lazy load heavy components for faster initial load
-const AddTransactionDialog = lazy(() => import('@/components/AddTransactionDialog'));
-const TransactionDetailSheet = lazy(() => import('@/components/TransactionDetailSheet'));
-const ExpenseChart = lazy(() => import('@/components/ExpenseChart').then(module => ({ default: module.ExpenseChart })));
+const AddTransactionDialog = lazy(() => import("@/components/AddTransactionDialog"));
+const TransactionDetailSheet = lazy(() => import("@/components/TransactionDetailSheet"));
+const ExpenseChart = lazy(() =>
+  import("@/components/ExpenseChart").then((module) => ({ default: module.ExpenseChart })),
+);
 
 const Index = () => {
   const { user, loading, isInitialized } = useAuth();
@@ -31,17 +33,17 @@ const Index = () => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [dataLoading, setDataLoading] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
-  const [showAddDialog, setShowAddDialog] = useHistoryState(false, 'add-transaction');
-  const [transactionType, setTransactionType] = useState<'income' | 'expense'>('expense');
+  const [showAddDialog, setShowAddDialog] = useHistoryState(false, "add-transaction");
+  const [transactionType, setTransactionType] = useState<"income" | "expense">("expense");
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [viewType, setViewType] = useState<ViewType>('monthly');
-  const [detailSheetOpen, setDetailSheetOpen] = useHistoryState(false, 'detail-sheet');
-  const [detailFilter, setDetailFilter] = useState<{ type?: 'expense' | 'income'; category?: string }>({});
+  const [viewType, setViewType] = useState<ViewType>("monthly");
+  const [detailSheetOpen, setDetailSheetOpen] = useHistoryState(false, "detail-sheet");
+  const [detailFilter, setDetailFilter] = useState<{ type?: "expense" | "income"; category?: string }>({});
   const [selectedCategory, setSelectedCategory] = useState<string | undefined>();
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
-  const [currency, setCurrency] = useState('₹');
-  const [settingsOpen, setSettingsOpen] = useHistoryState(false, 'settings');
-  
+  const [currency, setCurrency] = useState("₹");
+  const [settingsOpen, setSettingsOpen] = useHistoryState(false, "settings");
+
   // Track user ID to prevent unnecessary reloads
   const [hasLoadedData, setHasLoadedData] = useState(false);
   const [categoriesLoaded, setCategoriesLoaded] = useState(false);
@@ -51,13 +53,13 @@ const Index = () => {
   // Handle PWA shortcuts (add-expense, add-income)
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const action = params.get('action');
-    
-    if (action === 'add-expense') {
-      setTransactionType('expense');
+    const action = params.get("action");
+
+    if (action === "add-expense") {
+      setTransactionType("expense");
       setShowAddDialog(true);
-    } else if (action === 'add-income') {
-      setTransactionType('income');
+    } else if (action === "add-income") {
+      setTransactionType("income");
       setShowAddDialog(true);
     }
   }, []);
@@ -76,10 +78,10 @@ const Index = () => {
   // Debug: Track component lifecycle
   useEffect(() => {
     if (import.meta.env.DEV) {
-      console.log('[Index] Component mounted/updated', {
+      console.log("[Index] Component mounted/updated", {
         userId: user?.id,
         transactionCount: transactions.length,
-        timestamp: Date.now()
+        timestamp: Date.now(),
       });
     }
   }, [user?.id, transactions.length]);
@@ -88,17 +90,17 @@ const Index = () => {
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (import.meta.env.DEV) {
-        console.log('[Index] Visibility changed:', document.hidden ? 'hidden' : 'visible');
+        console.log("[Index] Visibility changed:", document.hidden ? "hidden" : "visible");
       }
     };
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
   }, []);
 
   // Redirect to auth if not authenticated
   useEffect(() => {
     if (!loading && !user && isInitialized) {
-      navigate('/auth', { replace: true });
+      navigate("/auth", { replace: true });
     }
   }, [user, loading, isInitialized, navigate]);
 
@@ -106,44 +108,41 @@ const Index = () => {
   useEffect(() => {
     const loadData = async () => {
       if (!user) return;
-      
+
       // Only load if user changed OR first load
       if (hasLoadedData && userIdRef.current === user.id) {
         if (import.meta.env.DEV) {
-          console.log('[Index] Skipping data load - same user already loaded');
+          console.log("[Index] Skipping data load - same user already loaded");
         }
         return;
       }
-      
+
       if (import.meta.env.DEV) {
-        console.log('[Index] Loading data for user:', user.id);
+        console.log("[Index] Loading data for user:", user.id);
       }
       userIdRef.current = user.id;
       setCategoriesLoaded(false);
-      
+
       // Try to load from cache first (synchronous, instant)
       const cached = getCachedTransactions(user.id);
       if (cached) {
         setTransactions(cached);
-        
+
         // If cache is fresh, skip loading state entirely
         if (isCacheFresh(user.id)) {
           setDataLoading(false);
         }
       }
-      
+
       // Always fetch fresh data in background
       setIsSyncing(true);
-      
+
       // Load only 2 months for ultra-fast initial load
       const twoMonthsAgo = new Date();
       twoMonthsAgo.setMonth(twoMonthsAgo.getMonth() - 2);
-      
-      const [loaded, settings] = await Promise.all([
-        loadTransactions({ since: twoMonthsAgo }),
-        loadSettings()
-      ]);
-      
+
+      const [loaded, settings] = await Promise.all([loadTransactions({ since: twoMonthsAgo }), loadSettings()]);
+
       setTransactions(loaded);
       setViewType(settings.defaultView);
       setCurrency(settings.currency.symbol);
@@ -157,52 +156,52 @@ const Index = () => {
 
   // Real-time sync with stable callback
   const handleRealtimeChange = useCallback((payload: any) => {
-    console.log('[Index] Realtime event:', payload.eventType);
-    if (payload.eventType === 'INSERT') {
+    console.log("[Index] Realtime event:", payload.eventType);
+    if (payload.eventType === "INSERT") {
       const newTransaction: Transaction = {
         id: payload.new.id,
         amount: parseFloat(String(payload.new.amount)),
         type: payload.new.type,
         category: payload.new.category,
-        note: payload.new.note || '',
+        note: payload.new.note || "",
         date: new Date(payload.new.date),
         createdAt: new Date(payload.new.created_at),
         updatedAt: payload.new.updated_at ? new Date(payload.new.updated_at) : undefined,
       };
-      setTransactions(prev => {
-        const exists = prev.some(t => t.id === newTransaction.id);
+      setTransactions((prev) => {
+        const exists = prev.some((t) => t.id === newTransaction.id);
         return exists ? prev : [newTransaction, ...prev];
       });
-    } else if (payload.eventType === 'UPDATE') {
+    } else if (payload.eventType === "UPDATE") {
       const updatedTransaction: Transaction = {
         id: payload.new.id,
         amount: parseFloat(String(payload.new.amount)),
         type: payload.new.type,
         category: payload.new.category,
-        note: payload.new.note || '',
+        note: payload.new.note || "",
         date: new Date(payload.new.date),
         createdAt: new Date(payload.new.created_at),
         updatedAt: payload.new.updated_at ? new Date(payload.new.updated_at) : undefined,
       };
-      setTransactions(prev => prev.map(t => t.id === updatedTransaction.id ? updatedTransaction : t));
-    } else if (payload.eventType === 'DELETE') {
-      setTransactions(prev => prev.filter(t => t.id !== payload.old.id));
+      setTransactions((prev) => prev.map((t) => (t.id === updatedTransaction.id ? updatedTransaction : t)));
+    } else if (payload.eventType === "DELETE") {
+      setTransactions((prev) => prev.filter((t) => t.id !== payload.old.id));
     }
   }, []); // No dependencies - uses functional updates
 
   const handleCategoryChange = useCallback(async () => {
-    console.log('[Index] Category changed via realtime');
-    
+    console.log("[Index] Category changed via realtime");
+
     // Clear any pending reload
     if (categoryChangeTimeoutRef.current) {
       clearTimeout(categoryChangeTimeoutRef.current);
     }
-    
+
     // Debounce for 300ms to allow batch updates to complete
     categoryChangeTimeoutRef.current = setTimeout(async () => {
       await loadSettings();
       // Force a re-render without triggering loading state
-      setTransactions(prev => [...prev]);
+      setTransactions((prev) => [...prev]);
     }, 300);
   }, []);
 
@@ -214,55 +213,55 @@ const Index = () => {
       }
     };
   }, []);
-  
+
   useRealtimeSync(handleRealtimeChange, handleCategoryChange, undefined);
 
   // Background load of historical data (older than 2 months) in chunks
   useEffect(() => {
     if (!hasLoadedData || !user) return;
-    
+
     const loadHistorical = async () => {
       try {
         // Wait for UI to be interactive
-        await new Promise(resolve => setTimeout(resolve, 500));
-        
+        await new Promise((resolve) => setTimeout(resolve, 500));
+
         const twoMonthsAgo = new Date();
         twoMonthsAgo.setMonth(twoMonthsAgo.getMonth() - 2);
-        
+
         // Load in chunks of 6 months at a time (oldest to newest)
         let currentDate = new Date(twoMonthsAgo);
         let hasMore = true;
-        
+
         while (hasMore) {
           const sixMonthsEarlier = new Date(currentDate);
           sixMonthsEarlier.setMonth(sixMonthsEarlier.getMonth() - 6);
-          
+
           const chunk = await loadHistoricalTransactions(currentDate, user.id, sixMonthsEarlier);
-          
+
           if (chunk.length === 0) {
             hasMore = false;
             break;
           }
-          
+
           // Merge chunk without triggering re-renders
-          setTransactions(prev => {
+          setTransactions((prev) => {
             const combined = [...prev, ...chunk];
-            const unique = Array.from(
-              new Map(combined.map(t => [t.id, t])).values()
-            ).sort((a, b) => b.date.getTime() - a.date.getTime());
+            const unique = Array.from(new Map(combined.map((t) => [t.id, t])).values()).sort(
+              (a, b) => b.date.getTime() - a.date.getTime(),
+            );
             return unique;
           });
-          
+
           currentDate = sixMonthsEarlier;
-          
+
           // Small delay between chunks to avoid blocking UI
-          await new Promise(resolve => setTimeout(resolve, 200));
+          await new Promise((resolve) => setTimeout(resolve, 200));
         }
       } catch (error) {
-        console.error('Failed to load historical data:', error);
+        console.error("Failed to load historical data:", error);
       }
     };
-    
+
     loadHistorical();
   }, [hasLoadedData, user?.id]);
 
@@ -273,7 +272,7 @@ const Index = () => {
         <header className="bg-background border-b border-border">
           <div className="max-w-2xl mx-auto px-4 py-3 h-14 flex items-center justify-between">
             <div className="h-6 bg-muted/50 rounded w-32 animate-pulse" />
-            <div className="h-8 w-8 bg-muted/50 rounded-full animate-pulse" style={{ animationDelay: '100ms' }} />
+            <div className="h-8 w-8 bg-muted/50 rounded-full animate-pulse" style={{ animationDelay: "100ms" }} />
           </div>
         </header>
         <main className="max-w-2xl mx-auto px-4 py-6 space-y-6">
@@ -285,12 +284,15 @@ const Index = () => {
             </div>
             {/* Large balance amount */}
             <div className="flex justify-center">
-              <div className="h-12 bg-muted/60 rounded-lg w-48 animate-pulse" style={{ animationDelay: '100ms' }} />
+              <div className="h-12 bg-muted/60 rounded-lg w-48 animate-pulse" style={{ animationDelay: "100ms" }} />
             </div>
             {/* Income/Expense cards */}
             <div className="grid grid-cols-2 gap-4">
               {/* Income card */}
-              <div className="bg-card border border-border rounded-xl p-4 space-y-3 animate-pulse" style={{ animationDelay: '200ms' }}>
+              <div
+                className="bg-card border border-border rounded-xl p-4 space-y-3 animate-pulse"
+                style={{ animationDelay: "200ms" }}
+              >
                 <div className="flex items-center gap-2">
                   <div className="h-8 w-8 bg-muted/50 rounded-full" />
                   <div className="h-3 bg-muted/50 rounded w-12" />
@@ -298,7 +300,10 @@ const Index = () => {
                 <div className="h-6 bg-muted/60 rounded w-20" />
               </div>
               {/* Expense card */}
-              <div className="bg-card border border-border rounded-xl p-4 space-y-3 animate-pulse" style={{ animationDelay: '250ms' }}>
+              <div
+                className="bg-card border border-border rounded-xl p-4 space-y-3 animate-pulse"
+                style={{ animationDelay: "250ms" }}
+              >
                 <div className="flex items-center gap-2">
                   <div className="h-8 w-8 bg-muted/50 rounded-full" />
                   <div className="h-3 bg-muted/50 rounded w-14" />
@@ -309,13 +314,16 @@ const Index = () => {
           </div>
 
           {/* Chart skeleton */}
-          <div className="bg-card rounded-2xl shadow-notion p-6 space-y-6 animate-fade-in" style={{ animationDelay: '300ms' }}>
+          <div
+            className="bg-card rounded-2xl shadow-notion p-6 space-y-6 animate-fade-in"
+            style={{ animationDelay: "300ms" }}
+          >
             {/* Header */}
             <div className="h-5 bg-muted/50 rounded w-40 animate-pulse" />
-            
+
             <div className="flex flex-col items-center gap-6">
               {/* Circular ring chart skeleton */}
-              <div className="relative w-48 h-48 animate-pulse" style={{ animationDelay: '350ms' }}>
+              <div className="relative w-48 h-48 animate-pulse" style={{ animationDelay: "350ms" }}>
                 <svg className="w-full h-full" viewBox="0 0 100 100">
                   <circle
                     cx="50"
@@ -348,11 +356,7 @@ const Index = () => {
               {/* Category list skeleton */}
               <div className="w-full space-y-4">
                 {[0, 1, 2].map((i) => (
-                  <div 
-                    key={i} 
-                    className="space-y-2 animate-pulse" 
-                    style={{ animationDelay: `${400 + i * 50}ms` }}
-                  >
+                  <div key={i} className="space-y-2 animate-pulse" style={{ animationDelay: `${400 + i * 50}ms` }}>
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <div className="h-10 w-10 bg-muted/50 rounded-full" />
@@ -373,17 +377,15 @@ const Index = () => {
 
   if (!user) return null;
 
-  const handleAddTransaction = async (newTransaction: Omit<Transaction, 'id' | 'createdAt'>) => {
+  const handleAddTransaction = async (newTransaction: Omit<Transaction, "id" | "createdAt">) => {
     if (editingTransaction) {
       // Update existing transaction
-      const updated = transactions.map(t =>
-        t.id === editingTransaction.id
-          ? { ...editingTransaction, ...newTransaction }
-          : t
+      const updated = transactions.map((t) =>
+        t.id === editingTransaction.id ? { ...editingTransaction, ...newTransaction } : t,
       );
       setTransactions(updated);
       await saveTransactions(updated);
-      toast.success('Transaction updated');
+      toast.success("Transaction updated");
       setEditingTransaction(null);
     } else {
       // Add new transaction
@@ -396,9 +398,9 @@ const Index = () => {
       const updated = [transaction, ...transactions];
       setTransactions(updated);
       await saveTransactions(updated);
-      
-      toast.success('Transaction added', {
-        description: `${newTransaction.type === 'income' ? '+' : '-'}${currency}${newTransaction.amount.toFixed(2)} ${newTransaction.note}`,
+
+      toast.success("Transaction added", {
+        description: `${newTransaction.type === "income" ? "+" : "-"}${currency}${newTransaction.amount.toFixed(2)} ${newTransaction.note}`,
       });
     }
   };
@@ -417,29 +419,26 @@ const Index = () => {
       setViewType(newView);
       return; // Exit early - transactions already loaded
     }
-    
+
     // Only reload data when needed (e.g., after import, currency change, category changes)
-    const [settings, loadedTxs] = await Promise.all([
-      loadSettings(),
-      loadTransactions()
-    ]);
+    const [settings, loadedTxs] = await Promise.all([loadSettings(), loadTransactions()]);
     setCurrency(settings.currency.symbol);
     setTransactions(loadedTxs);
   };
 
   const handleCategoryClick = (category: string) => {
     setSelectedCategory(category);
-    setDetailFilter({ type: 'expense' });
+    setDetailFilter({ type: "expense" });
     setDetailSheetOpen(true);
   };
 
   const handleExpenseClick = () => {
-    setDetailFilter({ type: 'expense' });
+    setDetailFilter({ type: "expense" });
     setDetailSheetOpen(true);
   };
 
   const handleIncomeClick = () => {
-    setDetailFilter({ type: 'income' });
+    setDetailFilter({ type: "income" });
     setDetailSheetOpen(true);
   };
 
@@ -463,15 +462,15 @@ const Index = () => {
   const handleDeleteTransaction = async (id: string) => {
     try {
       await deleteTransaction(id);
-      toast.success('Transaction deleted');
+      toast.success("Transaction deleted");
       setEditingTransaction(null);
     } catch (error) {
-      toast.error('Failed to delete transaction');
-      console.error('Delete error:', error);
+      toast.error("Failed to delete transaction");
+      console.error("Delete error:", error);
     }
   };
 
-  const handleDetailSheetAddClick = (type: 'income' | 'expense') => {
+  const handleDetailSheetAddClick = (type: "income" | "expense") => {
     setDetailSheetOpen(false);
     setTransactionType(type);
     setShowAddDialog(true);
@@ -489,12 +488,7 @@ const Index = () => {
       <header className="bg-background border-b border-border">
         <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-center relative">
           <div className="absolute left-4">
-            <img 
-              src={piggyTransparent} 
-              alt="Piggly" 
-              className="h-10 w-10 object-contain"
-              loading="lazy"
-            />
+            <img src={piggyTransparent} alt="Piggly" className="h-10 w-10 object-contain" loading="lazy" />
           </div>
           <PeriodSelector
             currentDate={currentDate}
@@ -504,34 +498,28 @@ const Index = () => {
             onDateSelect={handleDateSelect}
           />
           <div className="absolute right-4">
-            <SettingsSheet 
-              onSettingsChange={handleSettingsChange}
-              open={settingsOpen}
-              onOpenChange={setSettingsOpen}
-            />
+            <SettingsSheet onSettingsChange={handleSettingsChange} open={settingsOpen} onOpenChange={setSettingsOpen} />
           </div>
         </div>
       </header>
 
       {/* Main Content */}
       <main className="max-w-2xl mx-auto px-4 py-6 space-y-6">
-        <BalanceSummary 
+        <BalanceSummary
           transactions={filteredTransactions}
           onExpenseClick={handleExpenseClick}
           onIncomeClick={handleIncomeClick}
           currency={currency}
         />
-        <Suspense fallback={
-          <div className="bg-card rounded-2xl shadow-notion p-6 animate-pulse">
-            <div className="h-5 bg-muted/50 rounded w-40 mb-6" />
-            <div className="h-48 bg-muted/30 rounded" />
-          </div>
-        }>
-          <ExpenseChart 
-            transactions={filteredTransactions}
-            onCategoryClick={handleCategoryClick}
-            currency={currency}
-          />
+        <Suspense
+          fallback={
+            <div className="bg-card rounded-2xl shadow-notion p-6 animate-pulse">
+              <div className="h-5 bg-muted/50 rounded w-40 mb-6" />
+              <div className="h-48 bg-muted/30 rounded" />
+            </div>
+          }
+        >
+          <ExpenseChart transactions={filteredTransactions} onCategoryClick={handleCategoryClick} currency={currency} />
         </Suspense>
       </main>
 
@@ -544,7 +532,7 @@ const Index = () => {
           disabled={subscriptionLoading}
         >
           <Plus className="w-5 h-5" />
-          <span className="font-medium">+Add</span>
+          <span className="font-medium">Add</span>
         </Button>
       </div>
 
