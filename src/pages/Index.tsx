@@ -10,6 +10,7 @@ import { loadTransactions, saveTransactions, deleteTransaction, loadHistoricalTr
 import { loadSettings } from '@/lib/settings';
 import { getFilteredTransactions, getPreviousPeriod, getNextPeriod, ViewType } from '@/lib/dateUtils';
 import { useAuth } from '@/contexts/AuthContext';
+import { useSubscription } from '@/contexts/SubscriptionContext';
 import { useRealtimeSync } from '@/hooks/useRealtimeSync';
 import { useHistoryState } from '@/hooks/useHistoryState';
 import { usePageRestore } from '@/hooks/usePageRestore';
@@ -22,14 +23,17 @@ import piggyTransparent from '@/assets/piggly_header_icon.png';
 const AddTransactionDialog = lazy(() => import('@/components/AddTransactionDialog'));
 const TransactionDetailSheet = lazy(() => import('@/components/TransactionDetailSheet'));
 const ExpenseChart = lazy(() => import('@/components/ExpenseChart').then(module => ({ default: module.ExpenseChart })));
+const SubscriptionPaywall = lazy(() => import('@/components/SubscriptionPaywall').then(module => ({ default: module.SubscriptionPaywall })));
 
 const Index = () => {
   const { user, loading, isInitialized } = useAuth();
+  const { hasActiveSubscription, loading: subscriptionLoading } = useSubscription();
   const navigate = useNavigate();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [dataLoading, setDataLoading] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
   const [showAddDialog, setShowAddDialog] = useHistoryState(false, 'add-transaction');
+  const [showPaywall, setShowPaywall] = useState(false);
   const [transactionType, setTransactionType] = useState<'income' | 'expense'>('expense');
   const [currentDate, setCurrentDate] = useState(new Date());
   const [viewType, setViewType] = useState<ViewType>('monthly');
@@ -454,6 +458,19 @@ const Index = () => {
     }
   };
 
+  const handleAddClick = () => {
+    if (!hasActiveSubscription) {
+      setShowPaywall(true);
+    } else {
+      setShowAddDialog(true);
+    }
+  };
+
+  const handlePaywallSubscribed = () => {
+    // After successful subscription, open the add dialog
+    setShowAddDialog(true);
+  };
+
   const handleDeleteTransaction = async (id: string) => {
     try {
       await deleteTransaction(id);
@@ -534,12 +551,22 @@ const Index = () => {
         <Button
           size="lg"
           className="rounded-full px-6 h-14 shadow-notion-hover pointer-events-auto transition-transform hover:scale-105 active:scale-95 flex items-center gap-2"
-          onClick={() => setShowAddDialog(true)}
+          onClick={handleAddClick}
+          disabled={subscriptionLoading}
         >
           <Plus className="w-5 h-5" />
-          <span className="font-medium">Add</span>
+          <span className="font-medium">Add Transaction</span>
         </Button>
       </div>
+
+      {/* Subscription Paywall */}
+      <Suspense fallback={null}>
+        <SubscriptionPaywall
+          open={showPaywall}
+          onOpenChange={setShowPaywall}
+          onSubscribed={handlePaywallSubscribed}
+        />
+      </Suspense>
 
       {/* Add Transaction Dialog - Lazy loaded */}
       <Suspense fallback={null}>

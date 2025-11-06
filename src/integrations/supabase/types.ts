@@ -74,6 +74,45 @@ export type Database = {
         }
         Relationships: []
       }
+      subscriptions: {
+        Row: {
+          auto_renewing: boolean | null
+          created_at: string | null
+          expiry_time: string
+          id: string
+          is_active: boolean | null
+          product_id: string
+          purchase_time: string
+          purchase_token: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          auto_renewing?: boolean | null
+          created_at?: string | null
+          expiry_time: string
+          id?: string
+          is_active?: boolean | null
+          product_id: string
+          purchase_time: string
+          purchase_token: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          auto_renewing?: boolean | null
+          created_at?: string | null
+          expiry_time?: string
+          id?: string
+          is_active?: boolean | null
+          product_id?: string
+          purchase_time?: string
+          purchase_token?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       transactions: {
         Row: {
           amount: number
