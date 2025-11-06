@@ -1,5 +1,6 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
+import { create, getNumericDate } from 'https://deno.land/x/djwt@v3.0.0/mod.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -8,6 +9,57 @@ const corsHeaders = {
 
 interface PurchaseVerificationRequest {
   purchaseToken: string;
+}
+
+interface ServiceAccount {
+  client_email: string;
+  private_key: string;
+}
+
+// Generate JWT for Google API authentication
+async function generateGoogleApiJwt(serviceAccount: ServiceAccount): Promise<string> {
+  const key = await crypto.subtle.importKey(
+    'pkcs8',
+    new TextEncoder().encode(serviceAccount.private_key),
+    { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' },
+    false,
+    ['sign']
+  );
+
+  const jwt = await create(
+    { alg: 'RS256', typ: 'JWT' },
+    {
+      iss: serviceAccount.client_email,
+      scope: 'https://www.googleapis.com/auth/androidpublisher',
+      aud: 'https://oauth2.googleapis.com/token',
+      exp: getNumericDate(60 * 60), // 1 hour
+      iat: getNumericDate(0),
+    },
+    key
+  );
+
+  return jwt;
+}
+
+// Exchange JWT for access token
+async function getGoogleAccessToken(jwt: string): Promise<string> {
+  const response = await fetch('https://oauth2.googleapis.com/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
+      assertion: jwt,
+    }),
+  });
+
+  if (!response.ok) {
+    const error = await response.text();
+    console.error('Failed to get access token:', error);
+    throw new Error('Failed to authenticate with Google API');
+  }
+
+  const data = await response.json();
+  return data.access_token;
 }
 
 serve(async (req) => {
@@ -35,36 +87,81 @@ serve(async (req) => {
       throw new Error('Purchase token is required');
     }
 
-    // TODO: Verify with Google Play Developer API
-    // For now, we'll create a mock verification
-    // You need to implement actual Google Play API verification here
-    // using GOOGLE_PLAY_SERVICE_ACCOUNT secret
-    
     console.log(`Verifying purchase for user ${user.id}, token: ${purchaseToken}`);
 
-    // Mock verification - replace with actual Google Play API call
-    const isValid = true; // This should come from Google Play API verification
-    
-    if (!isValid) {
-      throw new Error('Invalid purchase token');
+    // Get service account credentials
+    const serviceAccountJson = Deno.env.get('GOOGLE_PLAY_SERVICE_ACCOUNT');
+    if (!serviceAccountJson) {
+      throw new Error('Service account credentials not configured');
     }
 
-    // Calculate expiry (30 days from now for monthly subscription)
-    const purchaseTime = new Date();
-    const expiryTime = new Date();
-    expiryTime.setDate(expiryTime.getDate() + 30);
+    const serviceAccount: ServiceAccount = JSON.parse(serviceAccountJson);
 
-    // Store subscription in database
+    // Generate JWT and get access token
+    const jwt = await generateGoogleApiJwt(serviceAccount);
+    const accessToken = await getGoogleAccessToken(jwt);
+
+    // Verify purchase with Google Play Developer API
+    const packageName = 'in.recessclub.piggly';
+    const apiUrl = `https://androidpublisher.googleapis.com/androidpublisher/v3/applications/${packageName}/purchases/subscriptionsv2/tokens/${encodeURIComponent(purchaseToken)}`;
+    
+    console.log(`Calling Google Play API: ${apiUrl}`);
+    
+    const verificationResponse = await fetch(apiUrl, {
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!verificationResponse.ok) {
+      const errorText = await verificationResponse.text();
+      console.error('Google Play API error:', errorText);
+      throw new Error(`Purchase verification failed: ${verificationResponse.status}`);
+    }
+
+    const purchaseData = await verificationResponse.json();
+    console.log('Purchase data received:', JSON.stringify(purchaseData, null, 2));
+
+    // Validate subscription state
+    if (purchaseData.subscriptionState !== 'SUBSCRIPTION_STATE_ACTIVE') {
+      throw new Error(`Subscription not active. State: ${purchaseData.subscriptionState}`);
+    }
+
+    // Extract subscription details
+    const lineItem = purchaseData.lineItems?.[0];
+    if (!lineItem) {
+      throw new Error('No line items found in purchase data');
+    }
+
+    const productId = lineItem.productId;
+    const expiryTime = new Date(lineItem.expiryTime);
+    const autoRenewing = lineItem.autoRenewingPlan?.autoRenewEnabled ?? false;
+    const purchaseTime = new Date(purchaseData.startTime || Date.now());
+
+    // Validate product ID
+    if (productId !== 'premium_monthly') {
+      throw new Error(`Invalid product ID: ${productId}`);
+    }
+
+    // Validate expiry time is in the future
+    if (expiryTime <= new Date()) {
+      throw new Error('Subscription has already expired');
+    }
+
+    console.log(`Verified subscription: product=${productId}, expiry=${expiryTime.toISOString()}, autoRenew=${autoRenewing}`);
+
+    // Store verified subscription in database
     const { data: subscription, error: dbError } = await supabase
       .from('subscriptions')
       .upsert({
         user_id: user.id,
         purchase_token: purchaseToken,
-        product_id: 'premium_monthly',
+        product_id: productId,
         purchase_time: purchaseTime.toISOString(),
         expiry_time: expiryTime.toISOString(),
         is_active: true,
-        auto_renewing: true,
+        auto_renewing: autoRenewing,
         updated_at: new Date().toISOString(),
       }, {
         onConflict: 'purchase_token',
