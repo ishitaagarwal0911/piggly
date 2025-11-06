@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { Transaction } from '@/types/transaction';
 import { getCategoryInfo } from '@/lib/categories';
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
-import { formatAmount } from '@/lib/utils';
+import { formatIndianNumber } from '@/lib/utils';
 
 interface ExpenseChartProps {
   transactions: Transaction[];
@@ -106,7 +106,7 @@ export const ExpenseChart = ({ transactions, onCategoryClick, currency = '₹' }
         </ResponsiveContainer>
         <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
           <p className="text-xs text-muted-foreground mb-1">Total</p>
-          <p className="text-2xl font-semibold tracking-tight">{currency}{Math.round(totalExpenses)}</p>
+          <p className="text-2xl font-semibold tracking-tight">{currency}{formatIndianNumber(Math.round(totalExpenses))}</p>
         </div>
       </div>
 
@@ -128,7 +128,7 @@ export const ExpenseChart = ({ transactions, onCategoryClick, currency = '₹' }
                 <div className="flex items-center justify-between gap-2 mb-1.5">
                   <span className="text-sm font-medium truncate">{name}</span>
                   <span className="text-sm font-semibold whitespace-nowrap tracking-tight">
-                    {currency}{formatAmount(amount)}
+                    {currency}{formatIndianNumber(amount)}
                   </span>
                 </div>
                 <div className="flex items-center gap-2">

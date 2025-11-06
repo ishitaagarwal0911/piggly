@@ -3,7 +3,7 @@ import { Transaction } from '@/types/transaction';
 import { getCategoryInfo } from '@/lib/categories';
 import { loadSettings } from '@/lib/settings';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
-import { formatAmount } from '@/lib/utils';
+import { formatIndianNumber } from '@/lib/utils';
 
 interface ExpensePieChartProps {
   transactions: Transaction[];
@@ -55,7 +55,7 @@ export const ExpensePieChart = ({ transactions }: ExpensePieChartProps) => {
         <div className="bg-popover border rounded-lg p-3 shadow-lg">
           <p className="font-medium text-sm">{payload[0].payload.icon} {payload[0].name}</p>
           <p className="text-sm text-muted-foreground">
-            {currency}{formatAmount(payload[0].value)}
+            {currency}{formatIndianNumber(payload[0].value)}
           </p>
         </div>
       );

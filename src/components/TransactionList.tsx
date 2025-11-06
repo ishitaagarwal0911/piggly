@@ -1,7 +1,7 @@
 import { Transaction } from '@/types/transaction';
 import { getCategoryInfo } from '@/lib/categories';
 import { format } from 'date-fns';
-import { formatAmount } from '@/lib/utils';
+import { formatIndianNumber } from '@/lib/utils';
 
 interface TransactionListProps {
   transactions: Transaction[];
@@ -54,7 +54,7 @@ export const TransactionList = ({ transactions }: TransactionListProps) => {
                     : 'text-foreground'
                 }`}
               >
-                {transaction.type === 'income' ? '+' : '-'}${formatAmount(transaction.amount)}
+                {transaction.type === 'income' ? '+' : '-'}${formatIndianNumber(transaction.amount)}
               </p>
             </div>
           );

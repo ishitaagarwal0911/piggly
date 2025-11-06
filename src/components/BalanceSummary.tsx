@@ -1,6 +1,6 @@
 import { Transaction } from '@/types/transaction';
 import { TrendingUp, TrendingDown } from 'lucide-react';
-import { formatAmount } from '@/lib/utils';
+import { formatIndianNumber } from '@/lib/utils';
 
 interface BalanceSummaryProps {
   transactions: Transaction[];
@@ -26,8 +26,8 @@ export const BalanceSummary = ({ transactions, onExpenseClick, onIncomeClick, cu
         <p className="text-sm text-muted-foreground mb-2">Current Balance</p>
         <h2 className="text-4xl font-semibold tracking-tight">
           {balance < 0 
-            ? `-${currency}${formatAmount(Math.abs(balance))}`
-            : `${currency}${formatAmount(balance)}`
+            ? `-${currency}${formatIndianNumber(Math.abs(balance))}`
+            : `${currency}${formatIndianNumber(balance)}`
           }
         </h2>
       </div>
@@ -42,7 +42,7 @@ export const BalanceSummary = ({ transactions, onExpenseClick, onIncomeClick, cu
             <p className="text-xs text-muted-foreground">Income</p>
           </div>
           <p className="text-lg font-semibold text-success tracking-tight break-words leading-tight">
-            +{currency}{income.toFixed(0)}
+            +{currency}{formatIndianNumber(income)}
           </p>
         </button>
         
@@ -55,7 +55,7 @@ export const BalanceSummary = ({ transactions, onExpenseClick, onIncomeClick, cu
             <p className="text-xs text-muted-foreground">Expenses</p>
           </div>
           <p className="text-lg font-semibold text-destructive tracking-tight break-words leading-tight">
-            -{currency}{expenses.toFixed(0)}
+            -{currency}{formatIndianNumber(expenses)}
           </p>
         </button>
       </div>

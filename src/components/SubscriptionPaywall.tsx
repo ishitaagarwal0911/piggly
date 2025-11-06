@@ -52,19 +52,16 @@ export const SubscriptionPaywall = ({
   return (
     <Drawer open={open} onOpenChange={onOpenChange}>
       <DrawerContent className="max-h-[85vh]">
-        <DrawerHeader className="text-center pb-2">
+        <DrawerHeader className="text-center pb-2 px-4 sm:px-6">
           <div className="mx-auto w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-4">
             <Sparkles className="w-6 h-6 text-primary" />
           </div>
           <DrawerTitle className="text-2xl">Unlock Full Access</DrawerTitle>
-          <DrawerDescription className="text-base">
-            Get unlimited transactions and premium features
-          </DrawerDescription>
         </DrawerHeader>
 
-        <div className="px-6 pb-8 space-y-6">
+        <div className="px-4 sm:px-6 pb-8 space-y-6">
           {/* Pricing */}
-          <div className="bg-gradient-to-br from-primary/10 to-primary/5 rounded-2xl p-6 text-center border border-primary/20">
+          <div className="bg-gradient-to-br from-primary/10 to-primary/5 rounded-2xl p-6 text-center border border-primary/20 shadow-notion">
             <div className="text-4xl font-bold text-foreground mb-1">
               ₹50
               <span className="text-lg font-normal text-muted-foreground">/month</span>

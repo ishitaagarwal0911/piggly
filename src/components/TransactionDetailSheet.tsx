@@ -8,7 +8,7 @@ import { format, isSameDay } from 'date-fns';
 import { Plus, X } from 'lucide-react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Button } from '@/components/ui/button';
-import { formatAmount } from '@/lib/utils';
+import { formatIndianNumber } from '@/lib/utils';
 
 interface TransactionDetailSheetProps {
   open: boolean;
@@ -121,7 +121,7 @@ export const TransactionDetailSheet = ({
         <span className={`text-sm font-semibold whitespace-nowrap ${
           transaction.type === 'income' ? 'text-success' : 'text-destructive'
         }`}>
-          {transaction.type === 'income' ? '+' : '-'}{currency}{formatAmount(transaction.amount)}
+          {transaction.type === 'income' ? '+' : '-'}{currency}{formatIndianNumber(transaction.amount)}
         </span>
       </button>
     );
@@ -152,7 +152,7 @@ export const TransactionDetailSheet = ({
           <div className="mb-4">
             <p className="text-sm text-muted-foreground">Total</p>
             <p className="text-2xl font-semibold">
-              {currency}{formatAmount(total)}
+              {currency}{formatIndianNumber(total)}
             </p>
           </div>
 
@@ -186,7 +186,7 @@ export const TransactionDetailSheet = ({
                             {isSameDay(date, new Date()) ? 'Today' : format(date, 'MMM d, yyyy')}
                           </h3>
                           <span className="text-sm text-muted-foreground">
-                            {currency}{formatAmount(dayTotal)}
+                            {currency}{formatIndianNumber(dayTotal)}
                           </span>
                         </div>
                       </AccordionTrigger>
@@ -227,7 +227,7 @@ export const TransactionDetailSheet = ({
                           </p>
                         </div>
                         <span className="text-sm font-semibold">
-                          {currency}{formatAmount(total)}
+                          {currency}{formatIndianNumber(total)}
                         </span>
                       </div>
                     </AccordionTrigger>

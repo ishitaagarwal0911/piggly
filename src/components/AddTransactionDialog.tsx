@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import { Transaction, TransactionType } from '@/types/transaction';
 import { categories, getCategoryInfo } from '@/lib/categories';
 import { addCategory, loadSettings } from '@/lib/settings';
@@ -13,6 +13,9 @@ import { format } from 'date-fns';
 import { toast } from 'sonner';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
+import { useSubscription } from '@/contexts/SubscriptionContext';
+
+const SubscriptionPaywall = lazy(() => import('@/components/SubscriptionPaywall').then(module => ({ default: module.SubscriptionPaywall })));
 
 interface AddTransactionDialogProps {
   open: boolean;
@@ -31,6 +34,7 @@ export const AddTransactionDialog = ({
   editingTransaction,
   initialType = 'expense',
 }: AddTransactionDialogProps) => {
+  const { hasActiveSubscription } = useSubscription();
   const allCategories = categories();
   const [type, setType] = useState<TransactionType>(editingTransaction?.type || initialType);
   const [amount, setAmount] = useState(editingTransaction?.amount.toString() || '');
@@ -46,6 +50,7 @@ export const AddTransactionDialog = ({
   const [newCategoryIcon, setNewCategoryIcon] = useState('');
   const [isAddingCategory, setIsAddingCategory] = useState(false);
   const [isInputFocused, setIsInputFocused] = useState(false);
+  const [showPaywall, setShowPaywall] = useState(false);
   const isProcessing = useRef(false);
   const quickAddRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
@@ -199,6 +204,12 @@ export const AddTransactionDialog = ({
 
   const handleSubmit = () => {
     if (!amount || parseFloat(amount) === 0 || !category) return;
+
+    // Check subscription before adding transaction (only for new transactions)
+    if (!hasActiveSubscription && !editingTransaction) {
+      setShowPaywall(true);
+      return;
+    }
 
     onAdd({
       type,
@@ -473,6 +484,20 @@ export const AddTransactionDialog = ({
           )}
         </div>
       </DrawerContent>
+      
+      {/* Subscription Paywall */}
+      <Suspense fallback={null}>
+        {showPaywall && (
+          <SubscriptionPaywall
+            open={showPaywall}
+            onOpenChange={setShowPaywall}
+            onSubscribed={() => {
+              setShowPaywall(false);
+              handleSubmit();
+            }}
+          />
+        )}
+      </Suspense>
     </Drawer>
   );
 };

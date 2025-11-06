@@ -23,7 +23,6 @@ import piggyTransparent from '@/assets/piggly_header_icon.png';
 const AddTransactionDialog = lazy(() => import('@/components/AddTransactionDialog'));
 const TransactionDetailSheet = lazy(() => import('@/components/TransactionDetailSheet'));
 const ExpenseChart = lazy(() => import('@/components/ExpenseChart').then(module => ({ default: module.ExpenseChart })));
-const SubscriptionPaywall = lazy(() => import('@/components/SubscriptionPaywall').then(module => ({ default: module.SubscriptionPaywall })));
 
 const Index = () => {
   const { user, loading, isInitialized } = useAuth();
@@ -33,7 +32,6 @@ const Index = () => {
   const [dataLoading, setDataLoading] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
   const [showAddDialog, setShowAddDialog] = useHistoryState(false, 'add-transaction');
-  const [showPaywall, setShowPaywall] = useState(false);
   const [transactionType, setTransactionType] = useState<'income' | 'expense'>('expense');
   const [currentDate, setCurrentDate] = useState(new Date());
   const [viewType, setViewType] = useState<ViewType>('monthly');
@@ -459,15 +457,6 @@ const Index = () => {
   };
 
   const handleAddClick = () => {
-    if (!hasActiveSubscription) {
-      setShowPaywall(true);
-    } else {
-      setShowAddDialog(true);
-    }
-  };
-
-  const handlePaywallSubscribed = () => {
-    // After successful subscription, open the add dialog
     setShowAddDialog(true);
   };
 
@@ -555,18 +544,9 @@ const Index = () => {
           disabled={subscriptionLoading}
         >
           <Plus className="w-5 h-5" />
-          <span className="font-medium">Add Transaction</span>
+          <span className="font-medium">+Add</span>
         </Button>
       </div>
-
-      {/* Subscription Paywall */}
-      <Suspense fallback={null}>
-        <SubscriptionPaywall
-          open={showPaywall}
-          onOpenChange={setShowPaywall}
-          onSubscribed={handlePaywallSubscribed}
-        />
-      </Suspense>
 
       {/* Add Transaction Dialog - Lazy loaded */}
       <Suspense fallback={null}>
