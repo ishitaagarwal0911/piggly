@@ -11,7 +11,9 @@ import { loadSettings, saveSettings } from '@/lib/settings';
 import { CURRENCY_OPTIONS, AppSettings } from '@/types/settings';
 import { exportData, importData, importCSV } from '@/lib/storage';
 import { useAuth } from '@/contexts/AuthContext';
-import { Menu, Download, Upload, X } from 'lucide-react';
+import { useSubscription } from '@/contexts/SubscriptionContext';
+import { format } from 'date-fns';
+import { Menu, Download, Upload, X, Crown } from 'lucide-react';
 import { toast } from 'sonner';
 import { ViewType } from '@/lib/dateUtils';
 import { useLocation } from 'react-router-dom';
@@ -37,6 +39,7 @@ export const SettingsSheet = ({ onSettingsChange, open: externalOpen, onOpenChan
   });
   const [isImporting, setIsImporting] = useState(false);
   const { user, signOut } = useAuth();
+  const { hasActiveSubscription, expiryDate } = useSubscription();
 
   useEffect(() => {
     const loadData = async () => {
@@ -138,8 +141,11 @@ export const SettingsSheet = ({ onSettingsChange, open: externalOpen, onOpenChan
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
-        <Button variant="ghost" size="sm" className="transition-smooth">
+        <Button variant="ghost" size="sm" className="transition-smooth relative">
           <Menu className="w-5 h-5" />
+          {hasActiveSubscription && (
+            <Crown className="absolute -top-1 -right-1 h-4 w-4 text-yellow-500 fill-yellow-500" />
+          )}
         </Button>
       </SheetTrigger>
       <SheetContent side="right" hideClose className="h-screen w-full overflow-y-auto p-6 !border-none">
@@ -152,6 +158,18 @@ export const SettingsSheet = ({ onSettingsChange, open: externalOpen, onOpenChan
             </Button>
           </SheetClose>
         </div>
+
+        {hasActiveSubscription && expiryDate && (
+          <div className="mb-6 p-4 rounded-lg bg-gradient-to-r from-yellow-500/10 to-amber-500/10 border border-yellow-500/20">
+            <div className="flex items-center gap-2 mb-1">
+              <Crown className="h-5 w-5 text-yellow-500 fill-yellow-500" />
+              <span className="font-semibold text-foreground">Premium Member</span>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Renews: {format(new Date(expiryDate), 'MMM d, yyyy')}
+            </p>
+          </div>
+        )}
         
         <h2 className="text-xl font-semibold mb-4">Settings</h2>
 
