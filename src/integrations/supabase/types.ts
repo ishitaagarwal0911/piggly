@@ -76,36 +76,42 @@ export type Database = {
       }
       subscriptions: {
         Row: {
+          acknowledged_at: string | null
           auto_renewing: boolean | null
           created_at: string | null
           expiry_time: string
           id: string
           is_active: boolean | null
           product_id: string
+          purchase_state: string | null
           purchase_time: string
           purchase_token: string
           updated_at: string | null
           user_id: string
         }
         Insert: {
+          acknowledged_at?: string | null
           auto_renewing?: boolean | null
           created_at?: string | null
           expiry_time: string
           id?: string
           is_active?: boolean | null
           product_id: string
+          purchase_state?: string | null
           purchase_time: string
           purchase_token: string
           updated_at?: string | null
           user_id: string
         }
         Update: {
+          acknowledged_at?: string | null
           auto_renewing?: boolean | null
           created_at?: string | null
           expiry_time?: string
           id?: string
           is_active?: boolean | null
           product_id?: string
+          purchase_state?: string | null
           purchase_time?: string
           purchase_token?: string
           updated_at?: string | null

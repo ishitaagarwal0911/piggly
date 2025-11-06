@@ -79,6 +79,13 @@ export const SubscriptionProvider = ({ children }: { children: ReactNode }) => {
       });
 
       if (error) throw error;
+      
+      // Handle pending state
+      if (data?.pending) {
+        console.log('Purchase is pending:', data.message);
+        return data;
+      }
+      
       return data;
     } catch (error) {
       console.error('Error verifying purchase:', error);
@@ -100,12 +107,31 @@ export const SubscriptionProvider = ({ children }: { children: ReactNode }) => {
       }
 
       // Verify purchase with backend
-      await verifyPurchase(purchaseToken);
+      const result = await verifyPurchase(purchaseToken);
+      
+      // Handle pending state
+      if (result?.pending) {
+        // Set up a timer to recheck in 30 seconds
+        setTimeout(() => {
+          console.log('Rechecking pending purchase...');
+          checkSubscription();
+        }, 30000);
+        throw new Error('Payment is being processed. This may take a few minutes.');
+      }
       
       // Refresh subscription status
       await checkSubscription();
     } catch (error) {
       console.error('Purchase error:', error);
+      const errorMessage = error instanceof Error ? error.message : '';
+      
+      // Provide specific error messages
+      if (errorMessage.includes('pending') || errorMessage.includes('being processed')) {
+        throw new Error('Payment is being processed. Please wait a moment and try again.');
+      } else if (errorMessage.includes('Digital Goods service not available')) {
+        throw new Error('Please open the app installed from Google Play to complete the purchase.');
+      }
+      
       throw error;
     } finally {
       setLoading(false);

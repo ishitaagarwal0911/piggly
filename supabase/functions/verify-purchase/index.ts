@@ -18,9 +18,19 @@ interface ServiceAccount {
 
 // Generate JWT for Google API authentication
 async function generateGoogleApiJwt(serviceAccount: ServiceAccount): Promise<string> {
+  // Parse PEM-formatted private key
+  const pemKey = serviceAccount.private_key;
+  const pemContent = pemKey
+    .replace(/-----BEGIN PRIVATE KEY-----/, '')
+    .replace(/-----END PRIVATE KEY-----/, '')
+    .replace(/\s/g, ''); // Remove all whitespace and newlines
+  
+  // Convert from base64 to binary
+  const binaryKey = Uint8Array.from(atob(pemContent), c => c.charCodeAt(0));
+  
   const key = await crypto.subtle.importKey(
     'pkcs8',
-    new TextEncoder().encode(serviceAccount.private_key),
+    binaryKey.buffer, // Use binary buffer instead of text
     { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' },
     false,
     ['sign']
@@ -60,6 +70,34 @@ async function getGoogleAccessToken(jwt: string): Promise<string> {
 
   const data = await response.json();
   return data.access_token;
+}
+
+// Acknowledge purchase with Google Play
+async function acknowledgePurchase(
+  accessToken: string,
+  packageName: string,
+  subscriptionId: string,
+  purchaseToken: string
+): Promise<void> {
+  const acknowledgeUrl = `https://androidpublisher.googleapis.com/androidpublisher/v3/applications/${packageName}/purchases/subscriptions/${subscriptionId}/tokens/${encodeURIComponent(purchaseToken)}:acknowledge`;
+  
+  console.log(`Acknowledging purchase: ${acknowledgeUrl}`);
+  
+  const response = await fetch(acknowledgeUrl, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+  });
+  
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error('Failed to acknowledge purchase:', errorText);
+    throw new Error(`Purchase acknowledgment failed: ${response.status}`);
+  }
+  
+  console.log('Purchase acknowledged successfully');
 }
 
 serve(async (req) => {
@@ -123,18 +161,54 @@ serve(async (req) => {
     const purchaseData = await verificationResponse.json();
     console.log('Purchase data received:', JSON.stringify(purchaseData, null, 2));
 
-    // Validate subscription state
-    if (purchaseData.subscriptionState !== 'SUBSCRIPTION_STATE_ACTIVE') {
-      throw new Error(`Subscription not active. State: ${purchaseData.subscriptionState}`);
+    // Extract subscription details first
+    const lineItem = purchaseData.lineItems?.[0];
+    const productId = lineItem?.productId || 'premium_monthly';
+
+    // Check subscription state
+    const subscriptionState = purchaseData.subscriptionState;
+
+    if (subscriptionState === 'SUBSCRIPTION_STATE_PENDING') {
+      // Store as pending in database - don't unlock premium yet
+      const { error: pendingError } = await supabase
+        .from('subscriptions')
+        .upsert({
+          user_id: user.id,
+          purchase_token: purchaseToken,
+          product_id: productId,
+          purchase_time: new Date().toISOString(),
+          expiry_time: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // Placeholder
+          is_active: false, // Not active yet!
+          auto_renewing: false,
+          purchase_state: 'pending',
+          updated_at: new Date().toISOString(),
+        }, {
+          onConflict: 'purchase_token',
+        });
+        
+      if (pendingError) {
+        console.error('Failed to store pending purchase:', pendingError);
+      }
+      
+      return new Response(
+        JSON.stringify({
+          success: false,
+          pending: true,
+          message: 'Payment is pending approval. Please check back in a few minutes.',
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
     }
 
-    // Extract subscription details
-    const lineItem = purchaseData.lineItems?.[0];
+    // Validate subscription state
+    if (subscriptionState !== 'SUBSCRIPTION_STATE_ACTIVE') {
+      throw new Error(`Subscription not active. State: ${subscriptionState}`);
+    }
     if (!lineItem) {
       throw new Error('No line items found in purchase data');
     }
-
-    const productId = lineItem.productId;
     const expiryTime = new Date(lineItem.expiryTime);
     const autoRenewing = lineItem.autoRenewingPlan?.autoRenewEnabled ?? false;
     const purchaseTime = new Date(purchaseData.startTime || Date.now());
@@ -151,6 +225,10 @@ serve(async (req) => {
 
     console.log(`Verified subscription: product=${productId}, expiry=${expiryTime.toISOString()}, autoRenew=${autoRenewing}`);
 
+    // CRITICAL: Acknowledge the purchase with Google Play
+    // If we don't do this within 3 days, Google will refund the user
+    await acknowledgePurchase(accessToken, packageName, productId, purchaseToken);
+
     // Store verified subscription in database
     const { data: subscription, error: dbError } = await supabase
       .from('subscriptions')
@@ -162,6 +240,8 @@ serve(async (req) => {
         expiry_time: expiryTime.toISOString(),
         is_active: true,
         auto_renewing: autoRenewing,
+        acknowledged_at: new Date().toISOString(),
+        purchase_state: 'active',
         updated_at: new Date().toISOString(),
       }, {
         onConflict: 'purchase_token',
