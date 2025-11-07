@@ -37,7 +37,13 @@ export const SubscriptionPaywall = ({
   // Check for unlinked purchases when drawer opens
   useEffect(() => {
     const checkForUnlinkedPurchases = async () => {
-      if (!open || !user || !isAvailable || hasActiveSubscription) return;
+      if (!open || !user || hasActiveSubscription) return;
+      
+      // Skip unlinked purchase check if Digital Goods unavailable
+      if (!isAvailable) {
+        setHasUnlinkedPurchase(false);
+        return;
+      }
       
       setCheckingPurchases(true);
       try {
@@ -110,6 +116,7 @@ export const SubscriptionPaywall = ({
 
   const getHelperText = () => {
     if (!user) return 'Please sign in to subscribe.';
+    if (!isAvailable) return 'Subscriptions are available on Android devices via Google Play. Please open the app from Google Play Store on an Android device to subscribe.';
     return null;
   };
 
@@ -194,7 +201,7 @@ export const SubscriptionPaywall = ({
                   size="lg"
                   className="w-full"
                 >
-                  {purchasing ? 'Processing...' : 'Subscribe Now'}
+                  {purchasing ? 'Processing...' : (isAvailable ? 'Subscribe Now' : 'Available on Android')}
                 </Button>
 
                 {hasUnlinkedPurchase && (

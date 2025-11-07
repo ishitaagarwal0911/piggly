@@ -15,40 +15,64 @@ const Auth = () => {
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [linkSent, setLinkSent] = useState(false);
+  const [sessionReady, setSessionReady] = useState(false);
 
   useEffect(() => {
-    if (user && isInitialized) {
-      navigate('/', { replace: true });
+    if (user && isInitialized && sessionReady) {
+      const timer = setTimeout(() => {
+        navigate('/', { replace: true });
+      }, 100);
+      return () => clearTimeout(timer);
     }
-  }, [user, isInitialized, navigate]);
+  }, [user, isInitialized, sessionReady, navigate]);
 
   // Handle code exchange for session
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const code = params.get('code');
-    
-    if (code) {
-      supabase.auth.exchangeCodeForSession(code).catch(() => {
-        // Silently fail, user can retry with OTP
-      });
-    }
-    
-    // Handle hash-based tokens as fallback
-    const hash = window.location.hash;
-    if (hash) {
-      const hashParams = new URLSearchParams(hash.substring(1));
-      const accessToken = hashParams.get('access_token');
-      const refreshToken = hashParams.get('refresh_token');
+    const handleSessionExchange = async () => {
+      const params = new URLSearchParams(window.location.search);
+      const code = params.get('code');
       
-      if (accessToken && refreshToken) {
-        supabase.auth.setSession({
-          access_token: accessToken,
-          refresh_token: refreshToken,
-        }).catch(() => {
-          // Silently fail, user can retry with OTP
-        });
+      if (code) {
+        try {
+          await supabase.auth.exchangeCodeForSession(code);
+          await new Promise(resolve => setTimeout(resolve, 200));
+          setSessionReady(true);
+        } catch (error) {
+          console.error('Session exchange failed:', error);
+          setSessionReady(true);
+        }
+        return;
       }
-    }
+      
+      // Handle hash-based tokens as fallback
+      const hash = window.location.hash;
+      if (hash) {
+        const hashParams = new URLSearchParams(hash.substring(1));
+        const accessToken = hashParams.get('access_token');
+        const refreshToken = hashParams.get('refresh_token');
+        
+        if (accessToken && refreshToken) {
+          try {
+            await supabase.auth.setSession({
+              access_token: accessToken,
+              refresh_token: refreshToken,
+            });
+            await new Promise(resolve => setTimeout(resolve, 200));
+            setSessionReady(true);
+          } catch (error) {
+            console.error('Hash session failed:', error);
+            setSessionReady(true);
+          }
+          return;
+        }
+      }
+
+      // No code/hash params - check existing session
+      const { data: { session } } = await supabase.auth.getSession();
+      setSessionReady(true);
+    };
+
+    handleSessionExchange();
   }, []);
 
   const handleSendMagicLink = async (e: React.FormEvent) => {

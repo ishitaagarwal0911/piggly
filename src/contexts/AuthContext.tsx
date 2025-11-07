@@ -22,41 +22,43 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
-    // Set loading to false immediately for instant render
-    setLoading(false);
-    setIsInitialized(true);
+    let mounted = true;
     
-    // Set up auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-      }
-    );
-
-    // Check for cached session in background (non-blocking)
-    const cachedSession = localStorage.getItem('sb-bwcbjcboceplmjfieffp-auth-token');
-    if (cachedSession) {
-      try {
-        const parsed = JSON.parse(cachedSession);
-        if (parsed && parsed.access_token && parsed.user) {
-          setSession(parsed as Session);
-          setUser(parsed.user as User);
+    const initAuth = async () => {
+      // Set up auth state listener FIRST
+      const { data: { subscription } } = supabase.auth.onAuthStateChange(
+        (event, session) => {
+          if (mounted) {
+            setSession(session);
+            setUser(session?.user ?? null);
+          }
         }
-      } catch (e) {
-        // Invalid cache, will be handled by auth state change
-      }
-    }
-    
-    // Verify with server in background (non-blocking)
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
-        setSession(session);
-        setUser(session?.user ?? null);
-      }
-    });
+      );
 
-    return () => subscription.unsubscribe();
+      // THEN check for existing session
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (mounted) {
+          setSession(session);
+          setUser(session?.user ?? null);
+          setLoading(false);
+          setIsInitialized(true);
+        }
+      } catch (error) {
+        console.error('[Auth] Init error:', error);
+        if (mounted) {
+          setLoading(false);
+          setIsInitialized(true);
+        }
+      }
+
+      return () => {
+        mounted = false;
+        subscription.unsubscribe();
+      };
+    };
+
+    initAuth();
   }, []);
 
   const sendOTP = async (email: string) => {
