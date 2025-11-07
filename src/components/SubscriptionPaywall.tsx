@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Drawer,
   DrawerContent,
@@ -23,13 +23,37 @@ export const SubscriptionPaywall = ({
   onOpenChange,
   onSubscribed,
 }: SubscriptionPaywallProps) => {
-  const { purchaseSubscription } = useSubscription();
-  const { isAvailable } = useDigitalGoods();
+  const { purchaseSubscription, restorePurchases, hasActiveSubscription } = useSubscription();
+  const { isAvailable, listPurchases } = useDigitalGoods();
   const { user } = useAuth();
   const [purchasing, setPurchasing] = useState(false);
+  const [restoring, setRestoring] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [hasUnlinkedPurchase, setHasUnlinkedPurchase] = useState(false);
+  const [checkingPurchases, setCheckingPurchases] = useState(false);
 
   const canPurchase = !!user && isAvailable && !purchasing;
+
+  // Check for unlinked purchases when drawer opens
+  useEffect(() => {
+    const checkForUnlinkedPurchases = async () => {
+      if (!open || !user || !isAvailable || hasActiveSubscription) return;
+      
+      setCheckingPurchases(true);
+      try {
+        const purchases = await listPurchases();
+        // If user has Google Play purchases but no active subscription in our DB
+        setHasUnlinkedPurchase(purchases.length > 0);
+      } catch (error) {
+        console.error('Failed to check purchases:', error);
+        setHasUnlinkedPurchase(false);
+      } finally {
+        setCheckingPurchases(false);
+      }
+    };
+
+    checkForUnlinkedPurchases();
+  }, [open, user, isAvailable, hasActiveSubscription, listPurchases]);
 
   const benefits = [
     'Unlimited transactions',
@@ -55,6 +79,26 @@ export const SubscriptionPaywall = ({
       }
     } finally {
       setPurchasing(false);
+    }
+  };
+
+  const handleRestorePurchases = async () => {
+    try {
+      setRestoring(true);
+      const result = await restorePurchases();
+      
+      if (result.success) {
+        setShowSuccess(true);
+        setHasUnlinkedPurchase(false);
+        toast.success(result.message);
+      } else {
+        toast.error(result.message);
+      }
+    } catch (error) {
+      console.error('Restore error:', error);
+      toast.error('Failed to restore purchases');
+    } finally {
+      setRestoring(false);
     }
   };
 
@@ -152,6 +196,23 @@ export const SubscriptionPaywall = ({
                 >
                   {purchasing ? 'Processing...' : 'Subscribe Now'}
                 </Button>
+
+                {hasUnlinkedPurchase && (
+                  <div className="pt-3 border-t">
+                    <p className="text-xs text-center text-muted-foreground mb-2">
+                      Already paid but don't see premium?
+                    </p>
+                    <Button
+                      onClick={handleRestorePurchases}
+                      disabled={restoring || checkingPurchases}
+                      variant="outline"
+                      size="sm"
+                      className="w-full"
+                    >
+                      {restoring ? 'Restoring...' : 'Restore Purchase'}
+                    </Button>
+                  </div>
+                )}
               </div>
 
               {getHelperText() && (

@@ -10,6 +10,7 @@ interface SubscriptionContextType {
   expiryDate: Date | null;
   checkSubscription: () => Promise<void>;
   purchaseSubscription: () => Promise<void>;
+  restorePurchases: () => Promise<{ success: boolean; message: string }>;
   subscription: Subscription | null;
 }
 
@@ -17,7 +18,7 @@ const SubscriptionContext = createContext<SubscriptionContextType | undefined>(u
 
 export const SubscriptionProvider = ({ children }: { children: ReactNode }) => {
   const { user } = useAuth();
-  const { purchaseProduct, isAvailable } = useDigitalGoods();
+  const { purchaseProduct, listPurchases, isAvailable } = useDigitalGoods();
   const [hasActiveSubscription, setHasActiveSubscription] = useState(false);
   const [loading, setLoading] = useState(true);
   const [subscription, setSubscription] = useState<Subscription | null>(null);
@@ -132,6 +133,67 @@ export const SubscriptionProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const restorePurchases = async (): Promise<{ success: boolean; message: string }> => {
+    if (!user) {
+      return { success: false, message: 'Please sign in first' };
+    }
+
+    if (!isAvailable) {
+      return { success: false, message: 'Digital Goods service not available on this device' };
+    }
+
+    try {
+      setLoading(true);
+      const purchases = await listPurchases();
+      
+      if (purchases.length === 0) {
+        return { success: false, message: 'No purchases found to restore' };
+      }
+
+      console.log('[Subscription] Restoring purchases:', purchases.length);
+      
+      let restored = false;
+      let lastError = '';
+
+      for (const purchase of purchases) {
+        try {
+          const result = await verifyPurchase(purchase.purchaseToken);
+          
+          if (result?.pending) {
+            lastError = 'Purchase is pending approval. Please check back in a few minutes.';
+          } else {
+            restored = true;
+          }
+        } catch (error) {
+          console.error('[Subscription] Failed to verify purchase:', error);
+          const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+          
+          if (errorMessage.includes('already linked')) {
+            lastError = 'This purchase is already linked to another account';
+          } else {
+            lastError = errorMessage;
+          }
+        }
+      }
+
+      // Refresh subscription status
+      await checkSubscription();
+
+      if (restored) {
+        return { success: true, message: 'Purchase restored successfully!' };
+      } else {
+        return { success: false, message: lastError || 'Failed to restore purchases' };
+      }
+    } catch (error) {
+      console.error('[Subscription] Restore error:', error);
+      return { 
+        success: false, 
+        message: error instanceof Error ? error.message : 'Failed to restore purchases' 
+      };
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (user) {
@@ -149,6 +211,7 @@ export const SubscriptionProvider = ({ children }: { children: ReactNode }) => {
         expiryDate,
         checkSubscription,
         purchaseSubscription,
+        restorePurchases,
         subscription,
       }}
     >
