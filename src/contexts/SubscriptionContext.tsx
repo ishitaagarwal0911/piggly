@@ -43,10 +43,17 @@ export const SubscriptionProvider = ({ children }: { children: ReactNode }) => {
       if (error) throw error;
 
       if (data) {
+        console.log('[Subscription] Active subscription found:', {
+          id: data.id,
+          product_id: data.product_id,
+          expiry_time: data.expiry_time,
+          is_active: data.is_active
+        });
         setSubscription(data);
         setHasActiveSubscription(true);
         setExpiryDate(new Date(data.expiry_time));
       } else {
+        console.log('[Subscription] No active subscription found for user:', user?.id);
         // Check Digital Goods API for any unreported purchases
         if (isAvailable) {
           const purchases = await listPurchases();

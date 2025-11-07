@@ -34,7 +34,7 @@ export const AddTransactionDialog = ({
   editingTransaction,
   initialType = 'expense',
 }: AddTransactionDialogProps) => {
-  const { hasActiveSubscription } = useSubscription();
+  const { hasActiveSubscription, loading: subscriptionLoading } = useSubscription();
   const allCategories = categories();
   const [type, setType] = useState<TransactionType>(editingTransaction?.type || initialType);
   const [amount, setAmount] = useState(editingTransaction?.amount.toString() || '');
@@ -201,13 +201,30 @@ export const AddTransactionDialog = ({
   };
 
   const handleSubmit = () => {
+    console.log('[AddTransaction] handleSubmit called', {
+      hasActiveSubscription,
+      subscriptionLoading,
+      editingTransaction: !!editingTransaction,
+      shouldShowPaywall: !hasActiveSubscription && !editingTransaction
+    });
+
     if (!amount || parseFloat(amount) === 0 || !category) return;
+
+    // Wait for subscription check to complete
+    if (subscriptionLoading) {
+      console.log('[AddTransaction] Waiting for subscription check...');
+      toast.info('Checking subscription status...');
+      return;
+    }
 
     // Check subscription before adding transaction (only for new transactions)
     if (!hasActiveSubscription && !editingTransaction) {
+      console.log('[AddTransaction] Showing paywall - no active subscription');
       setShowPaywall(true);
       return;
     }
+
+    console.log('[AddTransaction] Proceeding with transaction');
 
     onAdd({
       type,
@@ -464,9 +481,9 @@ export const AddTransactionDialog = ({
             className="w-full"
             size="lg"
             onClick={handleSubmit}
-            disabled={!amount || parseFloat(amount) === 0 || !category}
+            disabled={!amount || parseFloat(amount) === 0 || !category || subscriptionLoading}
           >
-            {editingTransaction ? 'Save Changes' : 'Add Transaction'}
+            {subscriptionLoading ? 'Checking...' : editingTransaction ? 'Save Changes' : 'Add Transaction'}
           </Button>
           
           {editingTransaction && onDelete && (

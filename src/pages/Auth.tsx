@@ -3,21 +3,18 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
-import { Mail, ArrowLeft, ExternalLink } from 'lucide-react';
+import { Mail, ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
 const authIcon = '/piggly-auth.png';
 import { isPWA } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 
 const Auth = () => {
-  const { user, loading, isInitialized, sendOTP, verifyOtp, signInWithGoogle } = useAuth();
+  const { user, loading, isInitialized, sendOTP, signInWithGoogle } = useAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [linkSent, setLinkSent] = useState(false);
-  const [otp, setOtp] = useState('');
-  const [verifying, setVerifying] = useState(false);
 
   useEffect(() => {
     if (user && isInitialized) {
@@ -91,34 +88,6 @@ const Auth = () => {
   const handleBack = () => {
     setLinkSent(false);
     setEmail('');
-    setOtp('');
-  };
-
-  const handleVerify = async () => {
-    if (otp.length !== 6) {
-      toast.error('Please enter a 6-digit code');
-      return;
-    }
-
-    setVerifying(true);
-    try {
-      await verifyOtp(email, otp);
-      toast.success('Successfully signed in!');
-      // Let onAuthStateChange handle the redirect
-    } catch (error: any) {
-      if (error.message?.includes('expired')) {
-        toast.error('Code expired. Please request a new one.');
-      } else if (error.message?.includes('invalid')) {
-        toast.error('Invalid code. Please check and try again.');
-      } else {
-        toast.error(error.message || 'Failed to verify code');
-      }
-      if (import.meta.env.DEV) {
-        console.error(error);
-      }
-    } finally {
-      setVerifying(false);
-    }
   };
 
   const handleGoogleSignIn = async () => {
@@ -245,53 +214,10 @@ const Auth = () => {
               </div>
             </div>
 
-            {/* OTP Input - Recommended for iOS PWA */}
-            <div className="space-y-4">
-              <div className="text-center space-y-3">
-                <div className="space-y-1">
-                  <p className="text-sm font-medium text-foreground">
-                    {isPWA() ? 'Enter the 6-digit code' : 'Or enter the 6-digit code'}
-                  </p>
-                  {isPWA() && (
-                    <p className="text-xs text-muted-foreground">
-                      Recommended on iPhone
-                    </p>
-                  )}
-                </div>
-                
-                <div className="flex justify-center">
-                  <InputOTP
-                    maxLength={6}
-                    value={otp}
-                    onChange={setOtp}
-                    disabled={verifying}
-                  >
-                    <InputOTPGroup>
-                      <InputOTPSlot index={0} />
-                      <InputOTPSlot index={1} />
-                      <InputOTPSlot index={2} />
-                      <InputOTPSlot index={3} />
-                      <InputOTPSlot index={4} />
-                      <InputOTPSlot index={5} />
-                    </InputOTPGroup>
-                  </InputOTP>
-                </div>
-
-                <Button
-                  onClick={handleVerify}
-                  disabled={verifying || otp.length !== 6}
-                  className="w-full"
-                >
-                  {verifying ? 'Verifying...' : 'Verify Code'}
-                </Button>
-              </div>
-            </div>
-
             <div className="space-y-3">
               <div className="text-xs text-muted-foreground space-y-2 bg-secondary/30 rounded-xl p-4">
                 <p>• Click the link in your email to sign in</p>
-                <p>• Or enter the 6-digit code above</p>
-                <p>• The code expires in 1 hour</p>
+                <p>• The link expires in 1 hour</p>
               </div>
 
               <div className="flex items-center justify-between pt-2">
@@ -300,7 +226,7 @@ const Auth = () => {
                   variant="ghost"
                   size="sm"
                   onClick={handleBack}
-                  disabled={isLoading || verifying}
+                  disabled={isLoading}
                   className="gap-1"
                 >
                   <ArrowLeft className="w-4 h-4" />
@@ -310,8 +236,8 @@ const Auth = () => {
                   type="button"
                   variant="ghost"
                   size="sm"
-                  onClick={() => handleSendMagicLink({ preventDefault: () => {} } as any)}
-                  disabled={isLoading || verifying}
+                  onClick={handleResend}
+                  disabled={isLoading}
                 >
                   Resend Link
                 </Button>
