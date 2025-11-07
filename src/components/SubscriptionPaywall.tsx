@@ -23,10 +23,11 @@ export const SubscriptionPaywall = ({
   onOpenChange,
   onSubscribed,
 }: SubscriptionPaywallProps) => {
-  const { purchaseSubscription } = useSubscription();
+  const { purchaseSubscription, restorePurchases } = useSubscription();
   const { isAvailable } = useDigitalGoods();
   const { user } = useAuth();
   const [purchasing, setPurchasing] = useState(false);
+  const [restoring, setRestoring] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
 
   const canPurchase = !!user && isAvailable && !purchasing;
@@ -55,6 +56,25 @@ export const SubscriptionPaywall = ({
       }
     } finally {
       setPurchasing(false);
+    }
+  };
+
+  const handleRestorePurchases = async () => {
+    try {
+      setRestoring(true);
+      const result = await restorePurchases();
+      
+      if (result.success) {
+        setShowSuccess(true);
+        toast.success(result.message);
+      } else {
+        toast.error(result.message);
+      }
+    } catch (error) {
+      console.error('Restore error:', error);
+      toast.error('Failed to restore purchases');
+    } finally {
+      setRestoring(false);
     }
   };
 
@@ -142,18 +162,32 @@ export const SubscriptionPaywall = ({
                 ))}
               </div>
 
-              {/* CTA Button */}
-              <Button
-                onClick={handleSubscribe}
-                disabled={!canPurchase}
-                size="lg"
-                className="w-full"
-              >
-                {purchasing ? 'Processing...' : 'Subscribe Now'}
-              </Button>
+              {/* CTA Buttons */}
+              <div className="space-y-3">
+                <Button
+                  onClick={handleSubscribe}
+                  disabled={!canPurchase}
+                  size="lg"
+                  className="w-full"
+                >
+                  {purchasing ? 'Processing...' : 'Subscribe Now'}
+                </Button>
+
+                {isAvailable && (
+                  <Button
+                    onClick={handleRestorePurchases}
+                    disabled={!user || restoring}
+                    variant="outline"
+                    size="lg"
+                    className="w-full"
+                  >
+                    {restoring ? 'Restoring...' : 'Restore Purchase'}
+                  </Button>
+                )}
+              </div>
 
               {getHelperText() && (
-                <p className="text-sm text-center text-muted-foreground -mt-3">
+                <p className="text-sm text-center text-muted-foreground">
                   {getHelperText()}
                 </p>
               )}

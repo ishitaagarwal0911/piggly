@@ -225,6 +225,27 @@ serve(async (req) => {
 
     console.log(`Verified subscription: product=${productId}, expiry=${expiryTime.toISOString()}, autoRenew=${autoRenewing}`);
 
+    // CRITICAL: Check if purchase token is already linked to another account
+    const { data: existingSubscription } = await supabase
+      .from('subscriptions')
+      .select('user_id')
+      .eq('purchase_token', purchaseToken)
+      .maybeSingle();
+
+    if (existingSubscription && existingSubscription.user_id !== user.id) {
+      console.error(`Purchase token already linked to user ${existingSubscription.user_id}, requested by ${user.id}`);
+      return new Response(
+        JSON.stringify({ 
+          error: 'This purchase is already linked to another account',
+          code: 'PURCHASE_ALREADY_LINKED'
+        }),
+        {
+          status: 409,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
+    }
+
     // CRITICAL: Acknowledge the purchase with Google Play
     // If we don't do this within 3 days, Google will refund the user
     await acknowledgePurchase(accessToken, packageName, productId, purchaseToken);
