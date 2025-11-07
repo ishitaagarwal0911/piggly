@@ -159,15 +159,12 @@ export const SettingsSheet = ({ onSettingsChange, open: externalOpen, onOpenChan
           </SheetClose>
         </div>
 
-        {hasActiveSubscription && expiryDate && (
+        {hasActiveSubscription && (
           <div className="mb-6 p-4 rounded-lg bg-gradient-to-r from-yellow-500/10 to-amber-500/10 border border-yellow-500/20">
-            <div className="flex items-center gap-2 mb-1">
+            <div className="flex items-center gap-2 justify-center">
               <Crown className="h-5 w-5 text-yellow-500 fill-yellow-500" />
               <span className="font-semibold text-foreground">Premium Member</span>
             </div>
-            <p className="text-sm text-muted-foreground">
-              Renews: {format(new Date(expiryDate), 'MMM d, yyyy')}
-            </p>
           </div>
         )}
         

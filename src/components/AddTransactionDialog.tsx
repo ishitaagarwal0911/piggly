@@ -38,7 +38,7 @@ export const AddTransactionDialog = ({
   const allCategories = categories();
   const [type, setType] = useState<TransactionType>(editingTransaction?.type || initialType);
   const [amount, setAmount] = useState(editingTransaction?.amount.toString() || '');
-  const [category, setCategory] = useState<string>(editingTransaction?.category || allCategories.find(c => c.type === 'expense')?.id || '');
+  const [category, setCategory] = useState<string>(editingTransaction?.category || '');
   const [note, setNote] = useState(editingTransaction?.note || '');
   const [date, setDate] = useState<Date>(editingTransaction?.date || new Date());
   const [isFirstKeystroke, setIsFirstKeystroke] = useState(false);
@@ -76,8 +76,7 @@ export const AddTransactionDialog = ({
       setAmount('');
       setNote('');
       setDate(new Date());
-      const defaultCategory = allCategories.find(c => c.type === initialType);
-      setCategory(defaultCategory?.id || '');
+      setCategory('');
       setType(initialType);
       setIsFirstKeystroke(false);
       setFirstOperand(null);
@@ -89,8 +88,7 @@ export const AddTransactionDialog = ({
     } else if (!editingTransaction) {
       // When opening without editing, use initialType
       setType(initialType);
-      const defaultCategory = allCategories.find(c => c.type === initialType);
-      setCategory(defaultCategory?.id || '');
+      setCategory('');
     }
   }, [open, allCategories, initialType, editingTransaction]);
 
@@ -223,8 +221,7 @@ export const AddTransactionDialog = ({
     setAmount('');
     setNote('');
     setDate(new Date());
-    const defaultCategory = allCategories.find(c => c.type === 'expense');
-    setCategory(defaultCategory?.id || '');
+    setCategory('');
     onOpenChange(false);
   };
 
@@ -467,7 +464,7 @@ export const AddTransactionDialog = ({
             className="w-full"
             size="lg"
             onClick={handleSubmit}
-            disabled={!amount || parseFloat(amount) === 0}
+            disabled={!amount || parseFloat(amount) === 0 || !category}
           >
             {editingTransaction ? 'Save Changes' : 'Add Transaction'}
           </Button>
