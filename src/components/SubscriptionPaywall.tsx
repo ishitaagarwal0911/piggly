@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Drawer,
   DrawerContent,
@@ -28,6 +28,16 @@ export const SubscriptionPaywall = ({
   const { user } = useAuth();
   const [purchasing, setPurchasing] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+
+  // Check for test success parameter in URL
+  useEffect(() => {
+    if (open) {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('test_success') === 'true') {
+        setShowSuccess(true);
+      }
+    }
+  }, [open]);
 
   const canPurchase = !!user && isAvailable && !purchasing;
 
