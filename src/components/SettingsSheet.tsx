@@ -9,11 +9,11 @@ import { CategoryManager } from './CategoryManager';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { loadSettings, saveSettings } from '@/lib/settings';
 import { CURRENCY_OPTIONS, AppSettings } from '@/types/settings';
-import { exportData, importData, importCSV } from '@/lib/storage';
+import { exportData } from '@/lib/storage';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSubscription } from '@/contexts/SubscriptionContext';
 import { format } from 'date-fns';
-import { Menu, Download, Upload, X, Crown } from 'lucide-react';
+import { Menu, Download, X, Crown } from 'lucide-react';
 import { toast } from 'sonner';
 import { ViewType } from '@/lib/dateUtils';
 import { useLocation } from 'react-router-dom';
@@ -37,7 +37,7 @@ export const SettingsSheet = ({ onSettingsChange, open: externalOpen, onOpenChan
     defaultView: 'monthly',
     theme: 'system',
   });
-  const [isImporting, setIsImporting] = useState(false);
+  
   const { user, signOut } = useAuth();
   const { hasActiveSubscription, expiryDate } = useSubscription();
 
@@ -90,44 +90,6 @@ export const SettingsSheet = ({ onSettingsChange, open: externalOpen, onOpenChan
     }
   };
 
-  const handleImport = () => {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = '.json,.csv';
-    input.onchange = async (e) => {
-      const file = (e.target as HTMLInputElement).files?.[0];
-      if (!file) return;
-
-      setIsImporting(true);
-      try {
-        const text = await file.text();
-        let result;
-        
-        if (file.name.endsWith('.csv')) {
-          result = await importCSV(text);
-        } else {
-          result = await importData(text);
-        }
-        
-        if (result.success) {
-          if (result.transactions === 0) {
-            toast.info('No transactions found to import');
-          } else {
-            toast.success(`Successfully imported ${result.transactions} transactions`);
-          }
-          onSettingsChange();
-          setOpen(false);
-        } else {
-          toast.error(result.error || 'Failed to import data');
-        }
-      } catch (error) {
-        toast.error('Failed to read file');
-      } finally {
-        setIsImporting(false);
-      }
-    };
-    input.click();
-  };
 
   const handleSignOut = async () => {
     try {
@@ -235,21 +197,6 @@ export const SettingsSheet = ({ onSettingsChange, open: externalOpen, onOpenChan
                 </Button>
               </div>
 
-              <div>
-                <h3 className="text-sm font-medium mb-2">Import Data</h3>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Restore your data from a JSON or CSV file. CSV format: date,amount,type,category,note
-                </p>
-                <Button 
-                  onClick={handleImport} 
-                  variant="outline" 
-                  className="w-full transition-smooth"
-                  disabled={isImporting}
-                >
-                  <Upload className="w-4 h-4 mr-2" />
-                  {isImporting ? 'Importing...' : 'Import Data'}
-                </Button>
-              </div>
             </AccordionContent>
           </AccordionItem>
         </Accordion>
