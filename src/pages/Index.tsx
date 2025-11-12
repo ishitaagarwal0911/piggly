@@ -5,7 +5,7 @@ import { BalanceSummary } from "@/components/BalanceSummary";
 import { SettingsSheet } from "@/components/SettingsSheet";
 import { PeriodSelector } from "@/components/PeriodSelector";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import Plus from 'lucide-react/dist/esm/icons/plus';
 import { loadTransactions, saveTransactions, deleteTransaction, loadHistoricalTransactions } from "@/lib/storage";
 import { loadSettings } from "@/lib/settings";
 import { getFilteredTransactions, getPreviousPeriod, getNextPeriod, ViewType } from "@/lib/dateUtils";

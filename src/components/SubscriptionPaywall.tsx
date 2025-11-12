@@ -6,7 +6,9 @@ import {
   DrawerTitle,
 } from '@/components/ui/drawer';
 import { Button } from '@/components/ui/button';
-import { Check, Sparkles, CheckCircle2 } from 'lucide-react';
+import Check from 'lucide-react/dist/esm/icons/check';
+import Sparkles from 'lucide-react/dist/esm/icons/sparkles';
+import CheckCircle2 from 'lucide-react/dist/esm/icons/check-circle-2';
 import { useSubscription } from '@/contexts/SubscriptionContext';
 import { useDigitalGoods } from '@/hooks/useDigitalGoods';
 import { useAuth } from '@/contexts/AuthContext';

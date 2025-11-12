@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Download } from 'lucide-react';
+import Download from 'lucide-react/dist/esm/icons/download';
 import { toast } from 'sonner';
 
 export const InstallPWA = () => {

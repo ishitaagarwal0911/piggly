@@ -1,4 +1,4 @@
-import { Wallet } from 'lucide-react';
+import Wallet from 'lucide-react/dist/esm/icons/wallet';
 
 interface EmptyStateProps {
   type: 'expenses' | 'income';

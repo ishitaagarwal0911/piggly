@@ -197,7 +197,11 @@ export const SubscriptionProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     if (user) {
-      checkSubscription();
+      // Defer subscription check by 500ms to avoid blocking initial render
+      const timer = setTimeout(() => {
+        checkSubscription();
+      }, 500);
+      return () => clearTimeout(timer);
     } else {
       setLoading(false);
     }

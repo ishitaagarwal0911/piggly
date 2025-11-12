@@ -1,6 +1,6 @@
 import { Transaction } from '@/types/transaction';
 import { getCategoryInfo } from '@/lib/categories';
-import { format } from 'date-fns';
+import { format } from 'date-fns/format';
 import { formatIndianNumber } from '@/lib/utils';
 
 interface TransactionListProps {

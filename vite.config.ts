@@ -23,9 +23,24 @@ export default defineConfig(({ mode }) => ({
       output: {
         manualChunks: {
           'react-vendor': ['react', 'react-dom', 'react-router-dom'],
-          'charts': ['recharts', 'date-fns'],
+          'charts': ['recharts'],
           'supabase': ['@supabase/supabase-js'],
           'react-query': ['@tanstack/react-query'],
+          'radix-core': [
+            '@radix-ui/react-dialog',
+            '@radix-ui/react-popover',
+            '@radix-ui/react-tabs',
+            '@radix-ui/react-select',
+            '@radix-ui/react-sheet',
+            '@radix-ui/react-switch',
+          ],
+          'form-utils': [
+            'react-hook-form',
+            '@hookform/resolvers',
+            'zod',
+          ],
+          'date-utils': ['date-fns', 'react-day-picker'],
+          'ui-toast': ['sonner'],
         },
         chunkFileNames: 'assets/[name]-[hash].js',
         entryFileNames: 'assets/[name]-[hash].js',

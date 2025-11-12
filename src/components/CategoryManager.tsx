@@ -17,7 +17,9 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Trash2, Plus, GripVertical } from "lucide-react";
+import Trash2 from 'lucide-react/dist/esm/icons/trash-2';
+import Plus from 'lucide-react/dist/esm/icons/plus';
+import GripVertical from 'lucide-react/dist/esm/icons/grip-vertical';
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";

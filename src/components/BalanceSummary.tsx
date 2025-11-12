@@ -1,5 +1,6 @@
 import { Transaction } from '@/types/transaction';
-import { TrendingUp, TrendingDown } from 'lucide-react';
+import TrendingUp from 'lucide-react/dist/esm/icons/trending-up';
+import TrendingDown from 'lucide-react/dist/esm/icons/trending-down';
 import { formatIndianNumber } from '@/lib/utils';
 
 interface BalanceSummaryProps {
