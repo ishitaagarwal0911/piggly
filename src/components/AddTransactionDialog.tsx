@@ -289,16 +289,15 @@ export const AddTransactionDialog = ({
   const displayCategories = allCategories.filter(cat => cat.type === type);
 
   return (
-    <>
-      <Drawer 
-        open={open} 
-        onOpenChange={onOpenChange}
-        dismissible={!isInputFocused}
-        snapPoints={null}
-        modal={true}
-        noBodyStyles={true}
-        shouldScaleBackground={false}
-      >
+    <Drawer 
+      open={open} 
+      onOpenChange={onOpenChange}
+      dismissible={!isInputFocused}
+      snapPoints={null}
+      modal={true}
+      noBodyStyles={true}
+      shouldScaleBackground={false}
+    >
         <DrawerContent className="flex flex-col h-screen" noSlideUp={true}>
         <DrawerHeader className="pt-4 px-4 sm:px-6 flex items-center justify-between">
           <DrawerTitle>
@@ -501,22 +500,21 @@ export const AddTransactionDialog = ({
           )}
         </div>
       </DrawerContent>
+      
+      {/* Subscription Paywall */}
+      <Suspense fallback={null}>
+        {showPaywall && (
+          <SubscriptionPaywall
+            open={showPaywall}
+            onOpenChange={setShowPaywall}
+            onSubscribed={() => {
+              setShowPaywall(false);
+              handleSubmit();
+            }}
+          />
+        )}
+      </Suspense>
     </Drawer>
-    
-    {/* Subscription Paywall */}
-    <Suspense fallback={null}>
-      {showPaywall && (
-        <SubscriptionPaywall
-          open={showPaywall}
-          onOpenChange={setShowPaywall}
-          onSubscribed={() => {
-            setShowPaywall(false);
-            handleSubmit();
-          }}
-        />
-      )}
-    </Suspense>
-    </>
   );
 };
 
