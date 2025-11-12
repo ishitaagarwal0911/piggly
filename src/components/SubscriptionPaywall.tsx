@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import {
   Drawer,
+  DrawerClose,
   DrawerContent,
   DrawerHeader,
   DrawerTitle,
@@ -9,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import Check from 'lucide-react/dist/esm/icons/check';
 import Sparkles from 'lucide-react/dist/esm/icons/sparkles';
 import CheckCircle2 from 'lucide-react/dist/esm/icons/check-circle-2';
+import X from 'lucide-react/dist/esm/icons/x';
 import { useSubscription } from '@/contexts/SubscriptionContext';
 import { useDigitalGoods } from '@/hooks/useDigitalGoods';
 import { useAuth } from '@/contexts/AuthContext';
@@ -124,11 +126,16 @@ export const SubscriptionPaywall = ({
 
   return (
     <Drawer open={open} onOpenChange={onOpenChange}>
-      <DrawerContent className="max-h-[85vh]">
+      <DrawerContent className="max-h-[85vh] relative">
         {showSuccess ? (
           // Success Screen
           <>
             <div className="px-4 sm:px-6 py-8 text-center space-y-6">
+              <DrawerClose className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none">
+                <X className="h-5 w-5" />
+                <span className="sr-only">Close</span>
+              </DrawerClose>
+
               <div className="flex justify-center animate-scale-in">
                 <div className="w-20 h-20 rounded-full bg-green-500/10 flex items-center justify-center">
                   <CheckCircle2 className="w-12 h-12 text-green-500" />
@@ -164,6 +171,11 @@ export const SubscriptionPaywall = ({
           // Paywall Screen
           <>
             <DrawerHeader className="text-center pb-2 px-4 sm:px-6">
+              <DrawerClose className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none">
+                <X className="h-5 w-5" />
+                <span className="sr-only">Close</span>
+              </DrawerClose>
+              
               <div className="mx-auto w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-4">
                 <Sparkles className="w-6 h-6 text-primary" />
               </div>
