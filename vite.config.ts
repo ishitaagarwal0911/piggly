@@ -31,7 +31,6 @@ export default defineConfig(({ mode }) => ({
             '@radix-ui/react-popover',
             '@radix-ui/react-tabs',
             '@radix-ui/react-select',
-            '@radix-ui/react-sheet',
             '@radix-ui/react-switch',
           ],
           'form-utils': [
