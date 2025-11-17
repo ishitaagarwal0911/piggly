@@ -11,7 +11,6 @@ interface BalanceSummaryProps {
   totalBudget?: number;
   totalSpent?: number;
   safeToSpend?: number;
-  onSetBudgetClick?: () => void;
 }
 
 export const BalanceSummary = ({ 
@@ -21,8 +20,7 @@ export const BalanceSummary = ({
   currency = '₹',
   totalBudget,
   totalSpent,
-  safeToSpend,
-  onSetBudgetClick
+  safeToSpend
 }: BalanceSummaryProps) => {
   const income = transactions
     .filter(t => t.type === 'income')
@@ -73,16 +71,6 @@ export const BalanceSummary = ({
           </p>
         </button>
       </div>
-
-      {/* Budget Section */}
-      {onSetBudgetClick && (
-        <button
-          onClick={onSetBudgetClick}
-          className="mt-4 pt-4 border-t border-border/50 w-full text-left text-xs text-muted-foreground hover:text-foreground transition-colors"
-        >
-          Set monthly budget →
-        </button>
-      )}
     </div>
   );
 };

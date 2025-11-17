@@ -132,7 +132,7 @@ export const BudgetSetupSheet = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-full h-full max-w-none flex flex-col p-0 gap-0">
+      <DialogContent className="w-full h-full max-w-none flex flex-col p-0 gap-0" hideClose>
         <DialogHeader className="px-6 py-4 border-b">
           <div className="flex items-center justify-between">
             <DialogTitle className="text-base">Budget planner</DialogTitle>
@@ -187,10 +187,7 @@ export const BudgetSetupSheet = ({
                     id={`category-budget-${category.id}`}
                     className="flex items-center gap-3 p-3 rounded-lg border bg-card"
                   >
-                    <div
-                      className="flex items-center justify-center w-10 h-10 rounded-full text-xl"
-                      style={{ backgroundColor: `${category.color}20` }}
-                    >
+                    <div className="flex items-center justify-center w-10 h-10 text-xl">
                       {category.icon}
                     </div>
                     <div className="flex-1 min-w-0">
@@ -252,10 +249,7 @@ export const BudgetSetupSheet = ({
                             onClick={() => handleAddCategoryBudget(category.id)}
                             className="w-full justify-start gap-3"
                           >
-                            <div
-                              className="flex items-center justify-center w-8 h-8 rounded-full text-lg"
-                              style={{ backgroundColor: `${category.color}20` }}
-                            >
+                            <div className="flex items-center justify-center w-8 h-8 text-lg">
                               {category.icon}
                             </div>
                             <span>{category.name}</span>

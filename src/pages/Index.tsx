@@ -30,6 +30,7 @@ import { AddTransactionDialog } from "@/components/AddTransactionDialog";
 import TransactionDetailSheet from "@/components/TransactionDetailSheet";
 import { TransactionSearch } from "@/components/TransactionSearch";
 import { ExpenseChart } from "@/components/ExpenseChart";
+import { ExpensePieChart } from "@/components/ExpensePieChart";
 
 const Index = () => {
   const { user, loading, isInitialized } = useAuth();
@@ -592,14 +593,12 @@ const Index = () => {
           totalBudget={viewType === 'monthly' ? budgetSummary?.totalBudget : undefined}
           totalSpent={viewType === 'monthly' ? budgetSummary?.totalSpent : undefined}
           safeToSpend={viewType === 'monthly' ? budgetSummary?.safeToSpend : undefined}
-          onSetBudgetClick={viewType === 'monthly' ? () => setBudgetSheetOpen(true) : undefined}
         />
         
-        <ExpenseChart 
+        <ExpensePieChart 
           transactions={filteredTransactions} 
-          onCategoryClick={handleCategoryClick} 
-          currency={currency}
           budgetSummary={viewType === 'monthly' ? budgetSummary : null}
+          onSetBudgetClick={viewType === 'monthly' ? () => setBudgetSheetOpen(true) : undefined}
         />
       </main>
 
