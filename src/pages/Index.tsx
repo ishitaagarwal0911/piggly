@@ -31,8 +31,8 @@ const TransactionSearch = lazy(() => import("@/components/TransactionSearch").th
 const ExpenseChart = lazy(() =>
   import("@/components/ExpenseChart").then((module) => ({ default: module.ExpenseChart })),
 );
-const BudgetSummaryCard = lazy(() => import("@/components/BudgetSummaryCard").then(module => ({ default: module.BudgetSummaryCard })));
-const BudgetSetupSheet = lazy(() => import("@/components/BudgetSetupSheet").then(module => ({ default: module.BudgetSetupSheet })));
+const BudgetSummaryCard = lazy(() => import("@/components/BudgetSummaryCard"));
+const BudgetSetupSheet = lazy(() => import("@/components/BudgetSetupSheet"));
 
 const Index = () => {
   const { user, loading, isInitialized } = useAuth();
