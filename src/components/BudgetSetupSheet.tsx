@@ -205,9 +205,9 @@ export const BudgetSetupSheet = ({
                   <div
                     key={category.id}
                     id={`category-budget-${category.id}`}
-                    className="flex items-center gap-3 p-3 rounded-lg border bg-card"
+                    className="flex items-center gap-2.5 p-2.5 rounded-lg border bg-card"
                   >
-                    <div className="w-10 h-10 flex items-center justify-center text-2xl">
+                    <div className="w-8 h-8 flex items-center justify-center text-xl">
                       {category.icon}
                     </div>
                     <div className="flex-1 min-w-0">
@@ -287,7 +287,12 @@ export const BudgetSetupSheet = ({
         </ScrollArea>
 
         {/* Save Button */}
-        <div className="sticky bottom-0 px-6 py-4 border-t bg-background z-10">
+        <div 
+          className="bg-background border-t pt-3 px-6"
+          style={{ 
+            paddingBottom: 'calc(1rem + env(safe-area-inset-bottom, 0px))'
+          }}
+        >
           <Button
             onClick={handleSave}
             disabled={saving || !overallBudget || parseFloat(overallBudget) <= 0}

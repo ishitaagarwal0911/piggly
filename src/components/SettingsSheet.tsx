@@ -140,7 +140,7 @@ export const SettingsSheet = ({ onSettingsChange, open: externalOpen, onOpenChan
         <Accordion type="multiple" defaultValue={[]} className="mt-2">
           <AccordionItem value="budget">
             <AccordionTrigger className="text-base font-semibold">
-              Budget Settings
+              Budget planner
             </AccordionTrigger>
             <AccordionContent className="space-y-4 pb-4">
               <Button 
@@ -154,7 +154,12 @@ export const SettingsSheet = ({ onSettingsChange, open: externalOpen, onOpenChan
           </AccordionItem>
 
           <AccordionItem value="categories">
-...
+            <AccordionTrigger className="text-base font-medium">Categories</AccordionTrigger>
+            <AccordionContent className="pt-4">
+              <CategoryManager
+                onCategoriesChange={onSettingsChange}
+              />
+            </AccordionContent>
           </AccordionItem>
 
           <AccordionItem value="preferences">
@@ -200,42 +205,13 @@ export const SettingsSheet = ({ onSettingsChange, open: externalOpen, onOpenChan
             </AccordionContent>
           </AccordionItem>
 
-          <AccordionItem value="budget" className="border-b-0">
-            <AccordionTrigger className="py-3 hover:no-underline">
-              <div className="flex items-center gap-3">
-                <span className="text-base font-medium">Budget Settings</span>
-              </div>
-            </AccordionTrigger>
-            <AccordionContent className="pb-4 pt-2">
-              <Button
-                onClick={() => {
-                  setOpen(false);
-                  onBudgetClick?.();
-                }}
-                variant="outline"
-                className="w-full justify-start"
-              >
-                Manage Monthly Budget
-              </Button>
-            </AccordionContent>
-          </AccordionItem>
-
-          <Separator className="my-2" />
-
-          <AccordionItem value="data">
+          <AccordionItem value="data" className="border-b-0">
             <AccordionTrigger className="text-base font-medium">Data</AccordionTrigger>
-            <AccordionContent className="pt-4 space-y-4">
-              <div>
-                <h3 className="text-sm font-medium mb-2">Export Data</h3>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Download all your transactions and settings as a JSON file.
-                </p>
-                <Button onClick={handleExport} className="w-full transition-smooth hover-lift">
-                  <Download className="w-4 h-4 mr-2" />
-                  Export Data
-                </Button>
-              </div>
-
+            <AccordionContent className="pt-4">
+              <Button onClick={handleExport} variant="outline" className="w-full justify-start gap-2">
+                <Download className="h-4 w-4" />
+                Export data
+              </Button>
             </AccordionContent>
           </AccordionItem>
         </Accordion>
