@@ -97,7 +97,7 @@ export const ExpenseChart = ({
           >
             {budgetSummary && budgetSummary.totalBudget > 0
               ? `Budget: ${currency}${formatIndianNumber(budgetSummary.totalBudget)}`
-              : "Set budget →"}
+              : "Set Budget"}
           </button>
         )}
       </div>
