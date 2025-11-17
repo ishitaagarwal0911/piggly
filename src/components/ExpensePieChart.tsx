@@ -86,7 +86,14 @@ export const ExpensePieChart = ({ transactions, budgetSummary }: ExpensePieChart
 
   return (
     <div className="bg-card rounded-2xl p-6 shadow-notion">
-      <h3 className="text-sm font-medium mb-4">Spending by Category</h3>
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-sm font-medium">Spending by Category</h3>
+        {budgetSummary && budgetSummary.totalBudget > 0 && (
+          <span className="text-sm text-muted-foreground">
+            Budget: {currency}{formatIndianNumber(budgetSummary.totalBudget)}
+          </span>
+        )}
+      </div>
       <ResponsiveContainer width="100%" height={300}>
         <PieChart key={`pie-${chartData.length}`}>
           <Pie

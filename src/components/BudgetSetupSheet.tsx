@@ -5,7 +5,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Progress } from '@/components/ui/progress';
-import ArrowLeft from 'lucide-react/dist/esm/icons/arrow-left';
 import Gauge from 'lucide-react/dist/esm/icons/gauge';
 import Ruler from 'lucide-react/dist/esm/icons/ruler';
 import X from 'lucide-react/dist/esm/icons/x';
@@ -74,8 +73,8 @@ export const BudgetSetupSheet = ({
     ? Math.min((totalCategoryBudget / overallBudgetNum) * 100, 100)
     : 0;
 
-  const categoriesWithBudget = categories.filter(c => categoryBudgets[c.id]);
-  const categoriesWithoutBudget = categories.filter(c => !categoryBudgets[c.id]);
+  const categoriesWithBudget = categories.filter(c => c.id in categoryBudgets);
+  const categoriesWithoutBudget = categories.filter(c => !(c.id in categoryBudgets));
 
   const handleSave = async () => {
     if (!overallBudget || parseFloat(overallBudget) <= 0) {
@@ -135,16 +134,16 @@ export const BudgetSetupSheet = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="w-full h-full max-w-none flex flex-col p-0 gap-0">
         <DialogHeader className="px-6 py-4 border-b">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center justify-between">
+            <DialogTitle className="text-base">Budget planner</DialogTitle>
             <Button
               variant="ghost"
               size="icon"
               onClick={() => onOpenChange(false)}
               className="h-10 w-10"
             >
-              <ArrowLeft className="h-5 w-5" />
+              <X className="h-6 w-6" />
             </Button>
-            <DialogTitle className="text-base">Budget planner</DialogTitle>
           </div>
         </DialogHeader>
 
@@ -162,7 +161,6 @@ export const BudgetSetupSheet = ({
                 placeholder="Enter amount"
                 value={overallBudget}
                 onChange={(e) => setOverallBudget(e.target.value)}
-                className="text-lg"
               />
             </div>
 
