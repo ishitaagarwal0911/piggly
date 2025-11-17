@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef, lazy, Suspense } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Transaction } from "@/types/transaction";
 import { BalanceSummary } from "@/components/BalanceSummary";
@@ -26,15 +26,11 @@ import { startOfMonth, endOfMonth } from "date-fns";
 import { BudgetSummaryCard } from "@/components/BudgetSummaryCard";
 import { BudgetSetupSheet } from "@/components/BudgetSetupSheet";
 
-// Lazy load heavy components for faster initial load
-const AddTransactionDialog = lazy(() => 
-  import("@/components/AddTransactionDialog").then(module => ({ default: module.AddTransactionDialog }))
-);
-const TransactionDetailSheet = lazy(() => import("@/components/TransactionDetailSheet"));
-const TransactionSearch = lazy(() => import("@/components/TransactionSearch").then(module => ({ default: module.TransactionSearch })));
-const ExpenseChart = lazy(() =>
-  import("@/components/ExpenseChart").then((module) => ({ default: module.ExpenseChart })),
-);
+// Import components directly for better stability
+import { AddTransactionDialog } from "@/components/AddTransactionDialog";
+import TransactionDetailSheet from "@/components/TransactionDetailSheet";
+import { TransactionSearch } from "@/components/TransactionSearch";
+import { ExpenseChart } from "@/components/ExpenseChart";
 
 const Index = () => {
   const { user, loading, isInitialized } = useAuth();
@@ -165,10 +161,15 @@ const Index = () => {
       setIsSyncing(false);
       setHasLoadedData(true);
 
-      // Load budget in background
-      getCurrentMonthBudget().then(budget => {
-        setCurrentBudget(budget);
-      });
+      // Load budget in background with error handling
+      getCurrentMonthBudget()
+        .then(budget => {
+          setCurrentBudget(budget);
+        })
+        .catch(error => {
+          console.error('Failed to load budget:', error);
+          // Continue without budget - non-critical feature
+        });
     };
     loadData();
   }, [user?.id, hasLoadedData]); // Depend on user.id, not user object
@@ -602,16 +603,7 @@ const Index = () => {
           />
         )}
         
-        <Suspense
-          fallback={
-            <div className="bg-card rounded-2xl shadow-notion p-6 animate-pulse">
-              <div className="h-5 bg-muted/50 rounded w-40 mb-6" />
-              <div className="h-48 bg-muted/30 rounded" />
-            </div>
-          }
-        >
-          <ExpenseChart transactions={filteredTransactions} onCategoryClick={handleCategoryClick} currency={currency} />
-        </Suspense>
+        <ExpenseChart transactions={filteredTransactions} onCategoryClick={handleCategoryClick} currency={currency} />
       </main>
 
       {/* Floating Add Button */}
@@ -627,39 +619,35 @@ const Index = () => {
         </Button>
       </div>
 
-      {/* Add Transaction Dialog - Lazy loaded */}
-      <Suspense fallback={null}>
-        <AddTransactionDialog
-          open={showAddDialog}
-          onOpenChange={handleDialogClose}
-          onAdd={handleAddTransaction}
-          onDelete={handleDeleteTransaction}
-          editingTransaction={editingTransaction}
-          initialType={transactionType}
-        />
-      </Suspense>
+      {/* Add Transaction Dialog */}
+      <AddTransactionDialog
+        open={showAddDialog}
+        onOpenChange={handleDialogClose}
+        onAdd={handleAddTransaction}
+        onDelete={handleDeleteTransaction}
+        editingTransaction={editingTransaction}
+        initialType={transactionType}
+      />
 
-      <Suspense fallback={null}>
-        <TransactionDetailSheet
-          open={detailSheetOpen}
-          onOpenChange={(open) => {
-            setDetailSheetOpen(open);
-            if (!open) setSelectedCategory(undefined);
-          }}
-          transactions={filteredTransactions}
-          filterType={detailFilter.type}
-          filterCategory={detailFilter.category}
-          onEdit={handleEditTransaction}
-          onAddClick={handleDetailSheetAddClick}
-          defaultTab={selectedCategory ? "by-category" : undefined}
-          defaultOpenCategory={selectedCategory}
-          currentBudget={currentBudget}
-          onSetBudgetClick={() => {
-            setDetailSheetOpen(false);
-            setBudgetSheetOpen(true);
-          }}
-        />
-      </Suspense>
+      <TransactionDetailSheet
+        open={detailSheetOpen}
+        onOpenChange={(open) => {
+          setDetailSheetOpen(open);
+          if (!open) setSelectedCategory(undefined);
+        }}
+        transactions={filteredTransactions}
+        filterType={detailFilter.type}
+        filterCategory={detailFilter.category}
+        onEdit={handleEditTransaction}
+        onAddClick={handleDetailSheetAddClick}
+        defaultTab={selectedCategory ? "by-category" : undefined}
+        defaultOpenCategory={selectedCategory}
+        currentBudget={currentBudget}
+        onSetBudgetClick={() => {
+          setDetailSheetOpen(false);
+          setBudgetSheetOpen(true);
+        }}
+      />
 
       {/* Budget Setup Sheet */}
       <BudgetSetupSheet
@@ -669,14 +657,12 @@ const Index = () => {
         onSave={handleBudgetSave}
       />
 
-      <Suspense fallback={null}>
-        <TransactionSearch
-          open={searchOpen}
-          onOpenChange={setSearchOpen}
-          transactions={transactions}
-          onTransactionSelect={handleEditTransaction}
-        />
-      </Suspense>
+      <TransactionSearch
+        open={searchOpen}
+        onOpenChange={setSearchOpen}
+        transactions={transactions}
+        onTransactionSelect={handleEditTransaction}
+      />
     </div>
   );
 };
