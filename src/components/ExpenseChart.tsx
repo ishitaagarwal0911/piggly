@@ -91,7 +91,7 @@ export const ExpenseChart = ({
           >
             {budgetSummary && budgetSummary.totalBudget > 0 
               ? `Budget: ${currency}${formatIndianNumber(budgetSummary.totalBudget)}`
-              : 'Set budget →'
+              : 'Set monthly budget →'
             }
           </button>
         )}
@@ -169,16 +169,14 @@ export const ExpenseChart = ({
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <div className="flex-1 h-1.5 bg-muted/50 rounded-full overflow-hidden">
+                  <div className="flex-1 h-1.5 bg-muted/50 rounded-full overflow-hidden">
                       <div
                         className="h-full rounded-full transition-all duration-700 ease-out"
                         style={{
                           width: `${categoryBudget && categoryBudget.budget > 0 
                             ? Math.min((amount / categoryBudget.budget) * 100, 100)
                             : (amount / maxAmount) * 100}%`,
-                          backgroundColor: categoryBudget && categoryBudget.budget > 0 && amount > categoryBudget.budget 
-                            ? 'hsl(var(--destructive))' 
-                            : color,
+                          backgroundColor: color,
                         }}
                       />
                     </div>
