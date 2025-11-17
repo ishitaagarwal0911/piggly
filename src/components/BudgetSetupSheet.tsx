@@ -166,7 +166,7 @@ export const BudgetSetupSheet = ({
 
   return (
     <Drawer open={open} onOpenChange={onOpenChange}>
-      <DrawerContent className="flex flex-col h-[100vh] pb-0">
+      <DrawerContent className="flex flex-col h-[100dvh] pb-0" noSlideUp>
         <DrawerHeader className="px-6 py-4 border-b">
           <div className="flex items-center justify-between">
             <DrawerTitle className="text-base">Budget planner</DrawerTitle>
@@ -296,20 +296,26 @@ export const BudgetSetupSheet = ({
               )}
 
               {/* Create New Category Button */}
-              {!showQuickAddCategory && (
-                <Button
-                  variant="ghost"
-                  onClick={() => setShowQuickAddCategory(true)}
-                  className="w-full justify-center gap-2 text-xs text-muted-foreground hover:text-foreground mt-2"
-                >
-                  <Plus className="h-3 w-3" />
-                  Create new category
-                </Button>
-              )}
+              <Button
+                variant="ghost"
+                onClick={() => {
+                  setShowQuickAddCategory(true);
+                  setTimeout(() => {
+                    const element = document.getElementById('quick-add-category-form');
+                    if (element) {
+                      element.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    }
+                  }, 100);
+                }}
+                className="w-full justify-center gap-2 text-xs text-muted-foreground hover:text-foreground mt-2"
+              >
+                <Plus className="h-3 w-3" />
+                Create new category
+              </Button>
 
-              {/* Quick Add Category Form */}
-              {showQuickAddCategory && (
-                <div className="space-y-3 p-4 border rounded-lg bg-secondary/50 mt-2">
+          {/* Quick Add Category Form */}
+          {showQuickAddCategory && (
+            <div id="quick-add-category-form" className="space-y-3 p-4 border rounded-lg bg-secondary/50 mt-2">
                   <div className="flex items-center justify-between">
                     <p className="text-sm font-medium">Quick Add Category</p>
                     <Button
@@ -383,7 +389,7 @@ export const BudgetSetupSheet = ({
         >
           <Button
             onClick={handleSave}
-            disabled={saving || (!overallBudget && parseFloat(overallBudget || '0') < 0)}
+            disabled={saving || !overallBudget || parseFloat(overallBudget) <= 0}
             className="w-full"
             size="lg"
           >
