@@ -23,6 +23,8 @@ import { Budget, BudgetSummary } from "@/types/budget";
 import { getCurrentMonthBudget, calculateBudgetSummary } from "@/lib/budget";
 import { categories } from "@/lib/categories";
 import { startOfMonth, endOfMonth } from "date-fns";
+import { BudgetSummaryCard } from "@/components/BudgetSummaryCard";
+import { BudgetSetupSheet } from "@/components/BudgetSetupSheet";
 
 // Lazy load heavy components for faster initial load
 const AddTransactionDialog = lazy(() => import("@/components/AddTransactionDialog"));
@@ -31,8 +33,6 @@ const TransactionSearch = lazy(() => import("@/components/TransactionSearch").th
 const ExpenseChart = lazy(() =>
   import("@/components/ExpenseChart").then((module) => ({ default: module.ExpenseChart })),
 );
-const BudgetSummaryCard = lazy(() => import("@/components/BudgetSummaryCard").then(module => ({ default: module.BudgetSummaryCard })));
-const BudgetSetupSheet = lazy(() => import("@/components/BudgetSetupSheet").then(module => ({ default: module.BudgetSetupSheet })));
 
 const Index = () => {
   const { user, loading, isInitialized } = useAuth();
@@ -568,15 +568,13 @@ const Index = () => {
         
         {/* Budget Summary Card */}
         {viewType === 'monthly' && (
-          <Suspense fallback={null}>
-            <BudgetSummaryCard
-              totalBudget={budgetSummary?.totalBudget}
-              totalSpent={budgetSummary?.totalSpent}
-              safeToSpend={budgetSummary?.safeToSpend}
-              currency={currency}
-              onSetBudgetClick={() => setBudgetSheetOpen(true)}
-            />
-          </Suspense>
+          <BudgetSummaryCard
+            totalBudget={budgetSummary?.totalBudget}
+            totalSpent={budgetSummary?.totalSpent}
+            safeToSpend={budgetSummary?.safeToSpend}
+            currency={currency}
+            onSetBudgetClick={() => setBudgetSheetOpen(true)}
+          />
         )}
         
         <Suspense
@@ -638,15 +636,13 @@ const Index = () => {
         />
       </Suspense>
 
-      {/* Budget Setup Sheet - Lazy loaded */}
-      <Suspense fallback={null}>
-        <BudgetSetupSheet
-          open={budgetSheetOpen}
-          onOpenChange={setBudgetSheetOpen}
-          initialBudget={currentBudget}
-          onSave={handleBudgetSave}
-        />
-      </Suspense>
+      {/* Budget Setup Sheet */}
+      <BudgetSetupSheet
+        open={budgetSheetOpen}
+        onOpenChange={setBudgetSheetOpen}
+        initialBudget={currentBudget}
+        onSave={handleBudgetSave}
+      />
 
       <Suspense fallback={null}>
         <TransactionSearch
