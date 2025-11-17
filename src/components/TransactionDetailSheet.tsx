@@ -261,7 +261,12 @@ export const TransactionDetailSheet = ({
                           </p>
                         </div>
                         <div className="flex items-baseline gap-1">
-                          <span className="text-sm font-semibold">
+                          <span className={`text-sm font-semibold ${
+                            currentBudget?.categoryBudgets?.[category] && 
+                            total > currentBudget.categoryBudgets[category]
+                              ? 'text-destructive'
+                              : ''
+                          }`}>
                             {currency}{formatIndianNumber(total)}
                           </span>
                           {currentBudget?.categoryBudgets?.[category] && (

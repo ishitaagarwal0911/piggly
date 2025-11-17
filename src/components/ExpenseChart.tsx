@@ -154,7 +154,11 @@ export const ExpenseChart = ({
                   <div className="flex items-center justify-between gap-2 mb-1.5">
                     <span className="text-sm font-medium truncate">{name}</span>
                     <div className="flex items-center gap-2 whitespace-nowrap">
-                      <span className="text-sm font-semibold tracking-tight">
+                      <span className={`text-sm font-semibold tracking-tight ${
+                        categoryBudget && categoryBudget.budget > 0 && amount > categoryBudget.budget 
+                          ? 'text-destructive' 
+                          : ''
+                      }`}>
                         {currency}{formatIndianNumber(amount)}
                       </span>
                       {categoryBudget && categoryBudget.budget > 0 && (
@@ -172,7 +176,9 @@ export const ExpenseChart = ({
                           width: `${categoryBudget && categoryBudget.budget > 0 
                             ? Math.min((amount / categoryBudget.budget) * 100, 100)
                             : (amount / maxAmount) * 100}%`,
-                          backgroundColor: color,
+                          backgroundColor: categoryBudget && categoryBudget.budget > 0 && amount > categoryBudget.budget 
+                            ? 'hsl(var(--destructive))' 
+                            : color,
                         }}
                       />
                     </div>
