@@ -600,6 +600,7 @@ const Index = () => {
           currency={currency}
           budgetSummary={viewType === 'monthly' ? budgetSummary : null}
           onSetBudgetClick={viewType === 'monthly' ? () => setBudgetSheetOpen(true) : undefined}
+          hasActiveSubscription={hasActiveSubscription}
         />
       </main>
 
