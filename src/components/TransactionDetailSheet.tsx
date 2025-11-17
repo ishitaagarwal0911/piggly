@@ -24,6 +24,8 @@ interface TransactionDetailSheetProps {
   onAddClick?: (type: 'income' | 'expense') => void;
   defaultTab?: string;
   defaultOpenCategory?: string;
+  currentBudget?: any | null;
+  onSetBudgetClick?: () => void;
 }
 
 export const TransactionDetailSheet = ({
@@ -36,6 +38,8 @@ export const TransactionDetailSheet = ({
   onAddClick,
   defaultTab,
   defaultOpenCategory,
+  currentBudget,
+  onSetBudgetClick,
 }: TransactionDetailSheetProps) => {
   const [currency, setCurrency] = useState('₹');
   const [searchOpen, setSearchOpen] = useState(false);
@@ -164,11 +168,26 @@ export const TransactionDetailSheet = ({
 
         <div className="overflow-y-auto flex-1 pb-20">
           <div className="px-4 sm:px-6">
-          <div className="mb-4">
-            <p className="text-sm text-muted-foreground">Total</p>
-            <p className="text-2xl font-semibold">
-              {currency}{formatIndianNumber(total)}
-            </p>
+          <div className="mb-4 flex items-center justify-between">
+            <div>
+              <p className="text-sm text-muted-foreground">Total</p>
+              <p className="text-2xl font-semibold">
+                {currency}{formatIndianNumber(total)}
+              </p>
+            </div>
+            {filterType === 'expense' && filterCategory && currentBudget && onSetBudgetClick && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onSetBudgetClick}
+                className="text-sm text-muted-foreground hover:text-foreground"
+              >
+                {currentBudget.categoryBudgets?.[filterCategory] 
+                  ? `of ${currency}${formatIndianNumber(currentBudget.categoryBudgets[filterCategory])}`
+                  : 'Set budget >'
+                }
+              </Button>
+            )}
           </div>
 
           <Tabs defaultValue={defaultTab || "by-date"} className="mt-6">

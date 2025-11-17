@@ -19,6 +19,10 @@ import { getCachedTransactions, isCacheFresh } from "@/lib/cache";
 import { toast } from "sonner";
 import { useSwipeGesture } from "@/hooks/useSwipeGesture";
 import piggyTransparent from "@/assets/piggly_header_icon.png";
+import { Budget, BudgetSummary } from "@/types/budget";
+import { getCurrentMonthBudget, calculateBudgetSummary } from "@/lib/budget";
+import { categories } from "@/lib/categories";
+import { startOfMonth, endOfMonth } from "date-fns";
 
 // Lazy load heavy components for faster initial load
 const AddTransactionDialog = lazy(() => import("@/components/AddTransactionDialog"));
@@ -27,6 +31,8 @@ const TransactionSearch = lazy(() => import("@/components/TransactionSearch").th
 const ExpenseChart = lazy(() =>
   import("@/components/ExpenseChart").then((module) => ({ default: module.ExpenseChart })),
 );
+const BudgetSummaryCard = lazy(() => import("@/components/BudgetSummaryCard").then(module => ({ default: module.BudgetSummaryCard })));
+const BudgetSetupSheet = lazy(() => import("@/components/BudgetSetupSheet").then(module => ({ default: module.BudgetSetupSheet })));
 
 const Index = () => {
   const { user, loading, isInitialized } = useAuth();
@@ -46,6 +52,9 @@ const Index = () => {
   const [currency, setCurrency] = useState("₹");
   const [settingsOpen, setSettingsOpen] = useHistoryState(false, "settings");
   const [searchOpen, setSearchOpen] = useHistoryState(false, "search");
+  const [budgetSheetOpen, setBudgetSheetOpen] = useState(false);
+  const [currentBudget, setCurrentBudget] = useState<Budget | null>(null);
+  const [budgetSummary, setBudgetSummary] = useState<BudgetSummary | null>(null);
 
   // Track user ID to prevent unnecessary reloads
   const [hasLoadedData, setHasLoadedData] = useState(false);
@@ -153,6 +162,11 @@ const Index = () => {
       setDataLoading(false);
       setIsSyncing(false);
       setHasLoadedData(true);
+
+      // Load budget in background
+      getCurrentMonthBudget().then(budget => {
+        setCurrentBudget(budget);
+      });
     };
     loadData();
   }, [user?.id, hasLoadedData]); // Depend on user.id, not user object
@@ -429,6 +443,30 @@ const Index = () => {
     setTransactions(loadedTxs);
   };
 
+  // Calculate budget summary when transactions or budget changes
+  useEffect(() => {
+    if (currentBudget && viewType === 'monthly') {
+      const monthStart = startOfMonth(currentDate);
+      const monthEnd = endOfMonth(currentDate);
+      
+      // Filter transactions for current month only
+      const monthTransactions = transactions.filter(t => {
+        const txDate = new Date(t.date);
+        return txDate >= monthStart && txDate <= monthEnd;
+      });
+
+      const summary = calculateBudgetSummary(currentBudget, monthTransactions, categories());
+      setBudgetSummary(summary);
+    } else {
+      setBudgetSummary(null);
+    }
+  }, [currentBudget, transactions, currentDate, viewType]);
+
+  const handleBudgetSave = (budget: Budget) => {
+    setCurrentBudget(budget);
+    setBudgetSheetOpen(false);
+  };
+
   const handleCategoryClick = (category: string) => {
     setSelectedCategory(category);
     setDetailFilter({ type: "expense" });
@@ -509,7 +547,12 @@ const Index = () => {
             >
               <Search className="h-5 w-5" />
             </Button>
-            <SettingsSheet onSettingsChange={handleSettingsChange} open={settingsOpen} onOpenChange={setSettingsOpen} />
+            <SettingsSheet 
+              onSettingsChange={handleSettingsChange} 
+              open={settingsOpen} 
+              onOpenChange={setSettingsOpen}
+              onBudgetClick={() => setBudgetSheetOpen(true)}
+            />
           </div>
         </div>
       </header>
@@ -522,6 +565,20 @@ const Index = () => {
           onIncomeClick={handleIncomeClick}
           currency={currency}
         />
+        
+        {/* Budget Summary Card */}
+        {viewType === 'monthly' && (
+          <Suspense fallback={null}>
+            <BudgetSummaryCard
+              totalBudget={budgetSummary?.totalBudget}
+              totalSpent={budgetSummary?.totalSpent}
+              safeToSpend={budgetSummary?.safeToSpend}
+              currency={currency}
+              onSetBudgetClick={() => setBudgetSheetOpen(true)}
+            />
+          </Suspense>
+        )}
+        
         <Suspense
           fallback={
             <div className="bg-card rounded-2xl shadow-notion p-6 animate-pulse">
@@ -573,6 +630,21 @@ const Index = () => {
           onAddClick={handleDetailSheetAddClick}
           defaultTab={selectedCategory ? "by-category" : undefined}
           defaultOpenCategory={selectedCategory}
+          currentBudget={currentBudget}
+          onSetBudgetClick={() => {
+            setDetailSheetOpen(false);
+            setBudgetSheetOpen(true);
+          }}
+        />
+      </Suspense>
+
+      {/* Budget Setup Sheet - Lazy loaded */}
+      <Suspense fallback={null}>
+        <BudgetSetupSheet
+          open={budgetSheetOpen}
+          onOpenChange={setBudgetSheetOpen}
+          initialBudget={currentBudget}
+          onSave={handleBudgetSave}
         />
       </Suspense>
 

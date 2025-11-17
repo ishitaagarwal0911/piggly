@@ -17,6 +17,7 @@ import Menu from 'lucide-react/dist/esm/icons/menu';
 import Download from 'lucide-react/dist/esm/icons/download';
 import X from 'lucide-react/dist/esm/icons/x';
 import Crown from 'lucide-react/dist/esm/icons/crown';
+import Gauge from 'lucide-react/dist/esm/icons/gauge';
 import { toast } from 'sonner';
 import { ViewType } from '@/lib/dateUtils';
 import { useLocation } from 'react-router-dom';
@@ -25,9 +26,10 @@ interface SettingsSheetProps {
   onSettingsChange: (newView?: ViewType) => void;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
+  onBudgetClick?: () => void;
 }
 
-export const SettingsSheet = ({ onSettingsChange, open: externalOpen, onOpenChange: externalOnOpenChange }: SettingsSheetProps) => {
+export const SettingsSheet = ({ onSettingsChange, open: externalOpen, onOpenChange: externalOnOpenChange, onBudgetClick }: SettingsSheetProps) => {
   const [internalOpen, setInternalOpen] = useState(false);
   const location = useLocation();
   
@@ -183,6 +185,27 @@ export const SettingsSheet = ({ onSettingsChange, open: externalOpen, onOpenChan
                   </div>
                 </RadioGroup>
               </div>
+            </AccordionContent>
+          </AccordionItem>
+
+          <AccordionItem value="budget" className="border-b-0">
+            <AccordionTrigger className="py-3 hover:no-underline">
+              <div className="flex items-center gap-3">
+                <Gauge className="w-5 h-5 text-muted-foreground" />
+                <span className="text-base font-medium">Budget Settings</span>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="pb-4 pt-2">
+              <Button
+                onClick={() => {
+                  setOpen(false);
+                  onBudgetClick?.();
+                }}
+                variant="outline"
+                className="w-full justify-start"
+              >
+                Manage Monthly Budget
+              </Button>
             </AccordionContent>
           </AccordionItem>
 
