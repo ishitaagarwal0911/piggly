@@ -1,0 +1,295 @@
+import { useState, useEffect } from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Progress } from '@/components/ui/progress';
+import ArrowLeft from 'lucide-react/dist/esm/icons/arrow-left';
+import Gauge from 'lucide-react/dist/esm/icons/gauge';
+import Ruler from 'lucide-react/dist/esm/icons/ruler';
+import X from 'lucide-react/dist/esm/icons/x';
+import Plus from 'lucide-react/dist/esm/icons/plus';
+import { Budget } from '@/types/budget';
+import { loadSettings } from '@/lib/settings';
+import { saveBudget } from '@/lib/budget';
+import { toast } from 'sonner';
+import { startOfMonth } from 'date-fns';
+
+interface BudgetSetupSheetProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  initialBudget?: Budget | null;
+  onSave: (budget: Budget) => void;
+}
+
+interface Category {
+  id: string;
+  name: string;
+  icon: string;
+  color: string;
+  type: string;
+}
+
+export const BudgetSetupSheet = ({
+  open,
+  onOpenChange,
+  initialBudget,
+  onSave,
+}: BudgetSetupSheetProps) => {
+  const [overallBudget, setOverallBudget] = useState('');
+  const [categoryBudgets, setCategoryBudgets] = useState<Record<string, string>>({});
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [showAddCategory, setShowAddCategory] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (open) {
+      loadSettings().then(settings => {
+        const expenseCategories = settings.categories.filter(c => c.type === 'expense');
+        setCategories(expenseCategories);
+      });
+
+      if (initialBudget) {
+        setOverallBudget(initialBudget.overallBudget.toString());
+        const budgets: Record<string, string> = {};
+        Object.entries(initialBudget.categoryBudgets).forEach(([id, amount]) => {
+          budgets[id] = amount.toString();
+        });
+        setCategoryBudgets(budgets);
+      } else {
+        setOverallBudget('');
+        setCategoryBudgets({});
+      }
+    }
+  }, [open, initialBudget]);
+
+  const totalCategoryBudget = Object.values(categoryBudgets).reduce(
+    (sum, val) => sum + (parseFloat(val) || 0),
+    0
+  );
+
+  const overallBudgetNum = parseFloat(overallBudget) || 0;
+  const budgetUsagePercent = overallBudgetNum > 0 
+    ? Math.min((totalCategoryBudget / overallBudgetNum) * 100, 100)
+    : 0;
+
+  const categoriesWithBudget = categories.filter(c => categoryBudgets[c.id]);
+  const categoriesWithoutBudget = categories.filter(c => !categoryBudgets[c.id]);
+
+  const handleSave = async () => {
+    if (!overallBudget || parseFloat(overallBudget) <= 0) {
+      toast.error('Please enter a valid overall budget');
+      return;
+    }
+
+    setSaving(true);
+    const budgetData: Omit<Budget, 'id' | 'createdAt' | 'updatedAt'> = {
+      userId: '', // Will be set by saveBudget
+      month: startOfMonth(new Date()),
+      overallBudget: parseFloat(overallBudget),
+      categoryBudgets: Object.entries(categoryBudgets).reduce(
+        (acc, [id, amount]) => {
+          const num = parseFloat(amount);
+          if (num > 0) acc[id] = num;
+          return acc;
+        },
+        {} as Record<string, number>
+      ),
+    };
+
+    const saved = await saveBudget(budgetData);
+    setSaving(false);
+
+    if (saved) {
+      toast.success('Budget saved successfully');
+      onSave(saved);
+      onOpenChange(false);
+    } else {
+      toast.error('Failed to save budget');
+    }
+  };
+
+  const handleRemoveCategoryBudget = (categoryId: string) => {
+    const newBudgets = { ...categoryBudgets };
+    delete newBudgets[categoryId];
+    setCategoryBudgets(newBudgets);
+  };
+
+  const handleAddCategoryBudget = (categoryId: string) => {
+    setCategoryBudgets({ ...categoryBudgets, [categoryId]: '' });
+    setShowAddCategory(false);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[500px] h-[90vh] flex flex-col p-0">
+        <DialogHeader className="px-6 py-4 border-b">
+          <div className="flex items-center gap-3">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => onOpenChange(false)}
+              className="h-10 w-10"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <DialogTitle className="text-xl">Budget planner</DialogTitle>
+          </div>
+        </DialogHeader>
+
+        <ScrollArea className="flex-1 px-6">
+          <div className="py-6 space-y-6">
+            {/* Gauge Visual */}
+            <div className="flex justify-center py-4">
+              <div className="relative">
+                <Gauge className="w-24 h-24 text-primary" strokeWidth={1.5} />
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <span className="text-2xl font-bold">{Math.round(budgetUsagePercent)}%</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Overall Budget */}
+            <div className="space-y-2">
+              <h3 className="text-lg font-semibold">Set monthly budget</h3>
+              <p className="text-sm text-muted-foreground">
+                Plan your expenses for the month
+              </p>
+              
+              <div className="pt-2">
+                <Label htmlFor="overall-budget" className="flex items-center gap-2 mb-2">
+                  <Ruler className="w-4 h-4 text-muted-foreground" />
+                  <span>Overall budget</span>
+                </Label>
+                <Input
+                  id="overall-budget"
+                  type="number"
+                  placeholder="Enter amount"
+                  value={overallBudget}
+                  onChange={(e) => setOverallBudget(e.target.value)}
+                  className="text-lg"
+                />
+              </div>
+            </div>
+
+            {/* Category-wise Budget */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <h3 className="text-base font-semibold">Category wise budget</h3>
+                <div className="text-sm">
+                  <span className="text-muted-foreground">Total: </span>
+                  <span className={totalCategoryBudget > overallBudgetNum ? 'text-destructive font-medium' : ''}>
+                    ₹{totalCategoryBudget.toFixed(0)}
+                  </span>
+                  <span className="text-muted-foreground"> / ₹{overallBudgetNum.toFixed(0)}</span>
+                </div>
+              </div>
+
+              <Progress value={budgetUsagePercent} className="h-2" />
+
+              {/* Categories with Budget */}
+              <div className="space-y-2 pt-2">
+                {categoriesWithBudget.map((category) => (
+                  <div
+                    key={category.id}
+                    className="flex items-center gap-3 p-3 rounded-lg border bg-card"
+                  >
+                    <div
+                      className="flex items-center justify-center w-10 h-10 rounded-full text-xl"
+                      style={{ backgroundColor: `${category.color}20` }}
+                    >
+                      {category.icon}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium truncate">{category.name}</p>
+                    </div>
+                    <Input
+                      type="number"
+                      placeholder="0"
+                      value={categoryBudgets[category.id] || ''}
+                      onChange={(e) =>
+                        setCategoryBudgets({
+                          ...categoryBudgets,
+                          [category.id]: e.target.value,
+                        })
+                      }
+                      className="w-24 text-right"
+                    />
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleRemoveCategoryBudget(category.id)}
+                      className="h-8 w-8"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+
+              {/* Add Category Button */}
+              {categoriesWithoutBudget.length > 0 && (
+                <>
+                  {!showAddCategory ? (
+                    <Button
+                      variant="outline"
+                      onClick={() => setShowAddCategory(true)}
+                      className="w-full justify-start gap-2"
+                    >
+                      <Plus className="h-4 w-4" />
+                      Add category
+                    </Button>
+                  ) : (
+                    <div className="space-y-2 p-3 border rounded-lg">
+                      <div className="flex items-center justify-between mb-2">
+                        <p className="text-sm font-medium">Select category</p>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setShowAddCategory(false)}
+                        >
+                          Cancel
+                        </Button>
+                      </div>
+                      <div className="space-y-1">
+                        {categoriesWithoutBudget.map((category) => (
+                          <Button
+                            key={category.id}
+                            variant="ghost"
+                            onClick={() => handleAddCategoryBudget(category.id)}
+                            className="w-full justify-start gap-3"
+                          >
+                            <div
+                              className="flex items-center justify-center w-8 h-8 rounded-full text-lg"
+                              style={{ backgroundColor: `${category.color}20` }}
+                            >
+                              {category.icon}
+                            </div>
+                            <span>{category.name}</span>
+                          </Button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          </div>
+        </ScrollArea>
+
+        {/* Save Button */}
+        <div className="px-6 py-4 border-t">
+          <Button
+            onClick={handleSave}
+            disabled={saving || !overallBudget || parseFloat(overallBudget) <= 0}
+            className="w-full"
+            size="lg"
+          >
+            {saving ? 'Saving...' : 'Set budget'}
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+};
