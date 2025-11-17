@@ -76,42 +76,12 @@ export const BalanceSummary = ({
 
       {/* Budget Section */}
       {onSetBudgetClick && (
-        <>
-          {totalBudget !== undefined && totalBudget > 0 ? (
-            <button
-              onClick={onSetBudgetClick}
-              className="mt-4 pt-4 border-t border-border/50 w-full text-left transition-colors hover:bg-accent/30 rounded-lg -mx-2 px-2 py-2"
-            >
-              <div className="grid grid-cols-3 gap-2 text-center">
-                <div>
-                  <p className="text-[10px] text-muted-foreground mb-0.5">Spends</p>
-                  <p className="text-sm font-semibold text-destructive">
-                    {currency}{formatIndianNumber(totalSpent || 0)}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-[10px] text-muted-foreground mb-0.5">Budget</p>
-                  <p className="text-sm font-semibold">
-                    {currency}{formatIndianNumber(totalBudget)}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-[10px] text-muted-foreground mb-0.5">Safe to spend</p>
-                  <p className="text-sm font-semibold text-primary">
-                    {currency}{formatIndianNumber(safeToSpend || 0)}
-                  </p>
-                </div>
-              </div>
-            </button>
-          ) : (
-            <button
-              onClick={onSetBudgetClick}
-              className="mt-4 pt-4 border-t border-border/50 w-full text-left text-xs text-muted-foreground hover:text-foreground transition-colors"
-            >
-              Set monthly budget →
-            </button>
-          )}
-        </>
+        <button
+          onClick={onSetBudgetClick}
+          className="mt-4 pt-4 border-t border-border/50 w-full text-left text-xs text-muted-foreground hover:text-foreground transition-colors"
+        >
+          Set monthly budget →
+        </button>
       )}
     </div>
   );

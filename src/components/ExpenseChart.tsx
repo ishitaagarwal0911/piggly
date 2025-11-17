@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { Transaction } from '@/types/transaction';
+import { BudgetSummary } from '@/types/budget';
 import { getCategoryInfo } from '@/lib/categories';
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
 import { formatIndianNumber } from '@/lib/utils';
@@ -8,9 +9,10 @@ interface ExpenseChartProps {
   transactions: Transaction[];
   onCategoryClick?: (category: string) => void;
   currency?: string;
+  budgetSummary?: BudgetSummary | null;
 }
 
-export const ExpenseChart = ({ transactions, onCategoryClick, currency = '₹' }: ExpenseChartProps) => {
+export const ExpenseChart = ({ transactions, onCategoryClick, currency = '₹', budgetSummary }: ExpenseChartProps) => {
   const expensesByCategory = useMemo(() => {
     const expenses = transactions.filter(t => t.type === 'expense');
     const total = expenses.reduce((sum, t) => sum + t.amount, 0);
@@ -112,43 +114,60 @@ export const ExpenseChart = ({ transactions, onCategoryClick, currency = '₹' }
 
       {/* Category List */}
       <div className="space-y-3">
-        {expensesByCategory.map(({ category, name, icon, color, amount, percentage }) => (
-          <button
-            key={category}
-            onClick={() => onCategoryClick?.(category)}
-            className="w-full text-left transition-all duration-200 hover:scale-[1.01] active:scale-[0.99] group"
-          >
-            <div className="flex items-center gap-3 p-2 rounded-lg transition-colors hover:bg-muted/30">
-              <div 
-                className="w-9 h-9 flex items-center justify-center text-xl flex-shrink-0 transition-transform group-hover:scale-105"
-              >
-                {icon}
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center justify-between gap-2 mb-1.5">
-                  <span className="text-sm font-medium truncate">{name}</span>
-                  <span className="text-sm font-semibold whitespace-nowrap tracking-tight">
-                    {currency}{formatIndianNumber(amount)}
-                  </span>
+        {expensesByCategory.map(({ category, name, icon, color, amount, percentage }) => {
+          // Find budget info for this category
+          const categoryBudget = budgetSummary?.categories.find(c => c.categoryId === category);
+          
+          return (
+            <button
+              key={category}
+              onClick={() => onCategoryClick?.(category)}
+              className="w-full text-left transition-all duration-200 hover:scale-[1.01] active:scale-[0.99] group"
+            >
+              <div className="flex items-center gap-3 p-2 rounded-lg transition-colors hover:bg-muted/30">
+                <div 
+                  className="w-9 h-9 flex items-center justify-center text-xl flex-shrink-0 transition-transform group-hover:scale-105"
+                >
+                  {icon}
                 </div>
-                <div className="flex items-center gap-2">
-                  <div className="flex-1 h-1.5 bg-muted/50 rounded-full overflow-hidden">
-                    <div
-                      className="h-full rounded-full transition-all duration-700 ease-out"
-                      style={{
-                        width: `${(amount / maxAmount) * 100}%`,
-                        backgroundColor: color,
-                      }}
-                    />
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between gap-2 mb-1.5">
+                    <span className="text-sm font-medium truncate">{name}</span>
+                    <div className="flex items-center gap-2 whitespace-nowrap">
+                      <span className="text-sm font-semibold tracking-tight">
+                        {currency}{formatIndianNumber(amount)}
+                      </span>
+                      {categoryBudget && categoryBudget.budget > 0 && (
+                        <span className="text-xs text-muted-foreground">
+                          / {currency}{formatIndianNumber(categoryBudget.budget)}
+                        </span>
+                      )}
+                    </div>
                   </div>
-                  <span className="text-xs text-muted-foreground whitespace-nowrap tabular-nums">
-                    {percentage.toFixed(0)}%
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <div className="flex-1 h-1.5 bg-muted/50 rounded-full overflow-hidden">
+                      <div
+                        className="h-full rounded-full transition-all duration-700 ease-out"
+                        style={{
+                          width: `${categoryBudget && categoryBudget.budget > 0 
+                            ? Math.min((amount / categoryBudget.budget) * 100, 100)
+                            : (amount / maxAmount) * 100}%`,
+                          backgroundColor: color,
+                        }}
+                      />
+                    </div>
+                    <span className="text-xs text-muted-foreground whitespace-nowrap tabular-nums">
+                      {categoryBudget && categoryBudget.budget > 0 
+                        ? `${categoryBudget.percentage.toFixed(0)}%`
+                        : `${percentage.toFixed(0)}%`
+                      }
+                    </span>
+                  </div>
                 </div>
               </div>
-            </div>
-          </button>
-        ))}
+            </button>
+          );
+        })}
       </div>
     </div>
   );
