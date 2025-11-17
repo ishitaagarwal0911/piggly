@@ -500,7 +500,7 @@ const Index = () => {
             onNext={handleNext}
             onDateSelect={handleDateSelect}
           />
-          <div className="absolute right-4 flex items-center gap-2">
+          <div className="absolute right-4 flex items-center gap-1">
             <Button
               variant="ghost"
               size="icon"

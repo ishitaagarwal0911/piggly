@@ -59,11 +59,18 @@ export function TransactionSearch({
     setSelectedCategory("all");
   };
 
-  const hasActiveFilters = searchInput.trim() || selectedCategory !== "all";
-
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom" className="h-[90vh] flex flex-col p-0">
+    <Sheet open={open} onOpenChange={onOpenChange} modal={false}>
+      <SheetContent 
+        side="bottom" 
+        className="h-full flex flex-col p-0"
+        onOpenAutoFocus={(e) => {
+          e.preventDefault();
+          setTimeout(() => {
+            document.getElementById('transaction-search-input')?.focus();
+          }, 50);
+        }}
+      >
         <SheetHeader className="px-4 pt-4 pb-3 border-b border-border">
           <SheetTitle className="flex items-center gap-2">
             <Search className="h-5 w-5" />
@@ -78,6 +85,8 @@ export function TransactionSearch({
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 id="transaction-search-input"
+                inputMode="search"
+                autoComplete="off"
                 placeholder="Search by note, amount (e.g. >100)..."
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
@@ -98,36 +107,6 @@ export function TransactionSearch({
                 ))}
               </SelectContent>
             </Select>
-
-            {hasActiveFilters && (
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-xs text-muted-foreground">Active filters:</span>
-                {searchQuery.amountOperator && (
-                  <Badge variant="secondary" className="gap-1">
-                    Amount {searchQuery.amountOperator} {searchQuery.amountValue}
-                  </Badge>
-                )}
-                {searchQuery.textQuery && (
-                  <Badge variant="secondary" className="gap-1">
-                    Text: {searchQuery.textQuery}
-                  </Badge>
-                )}
-                {selectedCategory !== "all" && (
-                  <Badge variant="secondary" className="gap-1">
-                    {getCategoryInfo(selectedCategory)?.name}
-                  </Badge>
-                )}
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleClearFilters}
-                  className="h-6 px-2 text-xs"
-                >
-                  <X className="h-3 w-3 mr-1" />
-                  Clear
-                </Button>
-              </div>
-            )}
           </div>
 
           {/* Results */}
