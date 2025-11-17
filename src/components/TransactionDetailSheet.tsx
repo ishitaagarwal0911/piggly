@@ -8,9 +8,11 @@ import { format } from 'date-fns/format';
 import { isSameDay } from 'date-fns/isSameDay';
 import Plus from 'lucide-react/dist/esm/icons/plus';
 import X from 'lucide-react/dist/esm/icons/x';
+import Search from 'lucide-react/dist/esm/icons/search';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Button } from '@/components/ui/button';
 import { formatIndianNumber } from '@/lib/utils';
+import { TransactionSearch } from './TransactionSearch';
 
 interface TransactionDetailSheetProps {
   open: boolean;
@@ -36,6 +38,7 @@ export const TransactionDetailSheet = ({
   defaultOpenCategory,
 }: TransactionDetailSheetProps) => {
   const [currency, setCurrency] = useState('₹');
+  const [searchOpen, setSearchOpen] = useState(false);
   
   useEffect(() => {
     loadSettings().then(settings => {
@@ -139,14 +142,24 @@ export const TransactionDetailSheet = ({
           <DialogDescription className="sr-only">
             View detailed breakdown of {filterType === 'income' ? 'income' : 'expenses'} by date and category
           </DialogDescription>
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="h-10 w-10 relative z-10"
-            onClick={() => onOpenChange(false)}
-          >
-            <X className="h-6 w-6" />
-          </Button>
+          <div className="flex items-center gap-0">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setSearchOpen(true)}
+              className="h-10 w-10 -mr-1"
+            >
+              <Search className="h-5 w-5" />
+            </Button>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="h-10 w-10 relative z-10"
+              onClick={() => onOpenChange(false)}
+            >
+              <X className="h-6 w-6" />
+            </Button>
+          </div>
         </DialogHeader>
 
         <div className="overflow-y-auto flex-1 pb-20">
@@ -259,6 +272,16 @@ export const TransactionDetailSheet = ({
           </div>
         </div>
       </DialogContent>
+
+      <TransactionSearch
+        open={searchOpen}
+        onOpenChange={setSearchOpen}
+        transactions={transactions}
+        onTransactionSelect={(transaction) => {
+          onEdit?.(transaction);
+          setSearchOpen(false);
+        }}
+      />
     </Dialog>
   );
 };
