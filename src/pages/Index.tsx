@@ -23,7 +23,6 @@ import { Budget, BudgetSummary } from "@/types/budget";
 import { getCurrentMonthBudget, calculateBudgetSummary } from "@/lib/budget";
 import { categories } from "@/lib/categories";
 import { startOfMonth, endOfMonth } from "date-fns";
-import { BudgetSummaryCard } from "@/components/BudgetSummaryCard";
 import { BudgetSetupSheet } from "@/components/BudgetSetupSheet";
 
 // Import components directly for better stability
@@ -590,18 +589,11 @@ const Index = () => {
           onExpenseClick={handleExpenseClick}
           onIncomeClick={handleIncomeClick}
           currency={currency}
+          totalBudget={viewType === 'monthly' ? budgetSummary?.totalBudget : undefined}
+          totalSpent={viewType === 'monthly' ? budgetSummary?.totalSpent : undefined}
+          safeToSpend={viewType === 'monthly' ? budgetSummary?.safeToSpend : undefined}
+          onSetBudgetClick={viewType === 'monthly' ? () => setBudgetSheetOpen(true) : undefined}
         />
-        
-        {/* Budget Summary Card */}
-        {viewType === 'monthly' && (
-          <BudgetSummaryCard
-            totalBudget={budgetSummary?.totalBudget}
-            totalSpent={budgetSummary?.totalSpent}
-            safeToSpend={budgetSummary?.safeToSpend}
-            currency={currency}
-            onSetBudgetClick={() => setBudgetSheetOpen(true)}
-          />
-        )}
         
         <ExpenseChart transactions={filteredTransactions} onCategoryClick={handleCategoryClick} currency={currency} />
       </main>
