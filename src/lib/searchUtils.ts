@@ -25,8 +25,19 @@ export function parseSearchQuery(query: string): SearchQuery {
       result.textQuery = remainingText.toLowerCase();
     }
   } else {
-    // No operator found, treat as text search
-    result.textQuery = query.trim().toLowerCase();
+    const trimmedQuery = query.trim();
+    
+    // Check if it's a pure number (with optional decimal)
+    const isNumber = /^\d+\.?\d*$/.test(trimmedQuery);
+    
+    if (isNumber) {
+      // Search by exact amount
+      result.amountOperator = '=';
+      result.amountValue = parseFloat(trimmedQuery);
+    } else {
+      // Search by text in note
+      result.textQuery = trimmedQuery.toLowerCase();
+    }
   }
   
   return result;
@@ -63,10 +74,12 @@ export function filterTransactionsBySearch(
       }
     }
 
-    // Apply text filter on note field
+    // Apply text filter on note field or amount as string
     if (searchQuery.textQuery) {
       const noteMatch = transaction.note.toLowerCase().includes(searchQuery.textQuery);
-      if (!noteMatch) return false;
+      const amountString = transaction.amount.toString();
+      const amountMatch = amountString.includes(searchQuery.textQuery);
+      if (!noteMatch && !amountMatch) return false;
     }
 
     // Apply category filter
