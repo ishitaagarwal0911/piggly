@@ -210,55 +210,6 @@ export const SettingsSheet = ({ onSettingsChange, open: externalOpen, onOpenChan
 
           <Separator className="my-2" />
 
-          <AccordionItem value="categories" className="border-b-0">
-            <AccordionTrigger className="py-3 hover:no-underline">
-              <div className="flex items-center gap-3">
-                <span className="text-xl">🏷️</span>
-                <span className="text-base font-medium">Categories</span>
-              </div>
-            </AccordionTrigger>
-            <AccordionContent className="pb-3">
-              <CategoryManager onCategoriesChange={() => {}} />
-            </AccordionContent>
-          </AccordionItem>
-
-          <AccordionItem value="preferences">
-            <AccordionTrigger className="text-base font-medium">Preferences</AccordionTrigger>
-            <AccordionContent>
-              <div className="space-y-4 py-2">
-                <div className="space-y-2">
-                  <Label htmlFor="currency">Currency</Label>
-                  <Select value={settings.currency.code} onValueChange={(value) => handleCurrencyChange(value as "INR" | "USD" | "EUR" | "GBP")}>
-                    <SelectTrigger id="currency">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="INR">INR (₹)</SelectItem>
-                      <SelectItem value="USD">USD ($)</SelectItem>
-                      <SelectItem value="EUR">EUR (€)</SelectItem>
-                      <SelectItem value="GBP">GBP (£)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="defaultView">Default View</Label>
-                  <Select value={settings.defaultView} onValueChange={handleViewChange}>
-                    <SelectTrigger id="defaultView">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="daily">Daily</SelectItem>
-                      <SelectItem value="weekly">Weekly</SelectItem>
-                      <SelectItem value="monthly">Monthly</SelectItem>
-                      <SelectItem value="yearly">Yearly</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            </AccordionContent>
-          </AccordionItem>
-
           <AccordionItem value="data">
             <AccordionTrigger className="text-base font-medium">Data</AccordionTrigger>
             <AccordionContent className="pt-4 space-y-4">
@@ -278,7 +229,7 @@ export const SettingsSheet = ({ onSettingsChange, open: externalOpen, onOpenChan
         </Accordion>
 
         {user && (
-          <div className="mt-6 space-y-4">
+          <div className="mt-6 pt-6 border-t space-y-4">
             <div className="text-sm text-muted-foreground">
               Signed in as: <span className="font-medium text-foreground">{user.email}</span>
             </div>

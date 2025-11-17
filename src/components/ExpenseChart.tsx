@@ -75,14 +75,7 @@ export const ExpenseChart = ({ transactions, onCategoryClick, currency = '₹', 
 
   return (
     <div className="bg-card rounded-2xl p-6 shadow-notion">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-sm font-medium">Spending by Category</h3>
-        {budgetSummary && budgetSummary.totalBudget > 0 && (
-          <span className="text-sm text-muted-foreground">
-            {currency}{formatIndianNumber(Math.round(totalExpenses))} / {currency}{formatIndianNumber(budgetSummary.totalBudget)}
-          </span>
-        )}
-      </div>
+      <h3 className="text-sm font-medium mb-4">Spending by Category</h3>
       
       {/* Ring Chart */}
       <div className="relative mb-6">
@@ -141,11 +134,7 @@ export const ExpenseChart = ({ transactions, onCategoryClick, currency = '₹', 
                   <div className="flex items-center justify-between gap-2 mb-1.5">
                     <span className="text-sm font-medium truncate">{name}</span>
                     <div className="flex items-center gap-2 whitespace-nowrap">
-                      <span className={`text-sm font-semibold tracking-tight ${
-                        categoryBudget && categoryBudget.budget > 0 && amount > categoryBudget.budget 
-                          ? 'text-destructive' 
-                          : ''
-                      }`}>
+                      <span className="text-sm font-semibold tracking-tight">
                         {currency}{formatIndianNumber(amount)}
                       </span>
                       {categoryBudget && categoryBudget.budget > 0 && (

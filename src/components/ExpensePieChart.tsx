@@ -6,16 +6,13 @@ import { loadSettings } from '@/lib/settings';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 import { formatIndianNumber } from '@/lib/utils';
 import { Progress } from '@/components/ui/progress';
-import { Button } from '@/components/ui/button';
-import Plus from 'lucide-react/dist/esm/icons/plus';
 
 interface ExpensePieChartProps {
   transactions: Transaction[];
   budgetSummary?: BudgetSummary | null;
-  onSetBudgetClick?: () => void;
 }
 
-export const ExpensePieChart = ({ transactions, budgetSummary, onSetBudgetClick }: ExpensePieChartProps) => {
+export const ExpensePieChart = ({ transactions, budgetSummary }: ExpensePieChartProps) => {
   const [currency, setCurrency] = useState('₹');
 
   useEffect(() => {
@@ -91,20 +88,10 @@ export const ExpensePieChart = ({ transactions, budgetSummary, onSetBudgetClick 
     <div className="bg-card rounded-2xl p-6 shadow-notion">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-sm font-medium">Spending by Category</h3>
-        {budgetSummary && budgetSummary.totalBudget > 0 ? (
+        {budgetSummary && budgetSummary.totalBudget > 0 && (
           <span className="text-sm text-muted-foreground">
             Budget: {currency}{formatIndianNumber(budgetSummary.totalBudget)}
           </span>
-        ) : onSetBudgetClick && (
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={onSetBudgetClick}
-            className="h-7 text-xs gap-1"
-          >
-            <Plus className="h-3 w-3" />
-            Set budget
-          </Button>
         )}
       </div>
       <ResponsiveContainer width="100%" height={300}>
