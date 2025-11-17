@@ -285,6 +285,25 @@ const Index = () => {
     loadHistorical();
   }, [hasLoadedData, user?.id]);
 
+  // Calculate budget summary when transactions or budget changes
+  useEffect(() => {
+    if (currentBudget && viewType === 'monthly') {
+      const monthStart = startOfMonth(currentDate);
+      const monthEnd = endOfMonth(currentDate);
+      
+      // Filter transactions for current month only
+      const monthTransactions = transactions.filter(t => {
+        const txDate = new Date(t.date);
+        return txDate >= monthStart && txDate <= monthEnd;
+      });
+
+      const summary = calculateBudgetSummary(currentBudget, monthTransactions, categories());
+      setBudgetSummary(summary);
+    } else {
+      setBudgetSummary(null);
+    }
+  }, [currentBudget, transactions, currentDate, viewType]);
+
   // Only show skeleton on initial cold load without cache or when categories aren't loaded
   if (loading || (dataLoading && transactions.length === 0) || !categoriesLoaded) {
     return (
@@ -468,25 +487,6 @@ const Index = () => {
     setCurrency(settings.currency.symbol);
     setTransactions(loadedTxs);
   };
-
-  // Calculate budget summary when transactions or budget changes
-  useEffect(() => {
-    if (currentBudget && viewType === 'monthly') {
-      const monthStart = startOfMonth(currentDate);
-      const monthEnd = endOfMonth(currentDate);
-      
-      // Filter transactions for current month only
-      const monthTransactions = transactions.filter(t => {
-        const txDate = new Date(t.date);
-        return txDate >= monthStart && txDate <= monthEnd;
-      });
-
-      const summary = calculateBudgetSummary(currentBudget, monthTransactions, categories());
-      setBudgetSummary(summary);
-    } else {
-      setBudgetSummary(null);
-    }
-  }, [currentBudget, transactions, currentDate, viewType]);
 
   const handleBudgetSave = (budget: Budget) => {
     setCurrentBudget(budget);
