@@ -64,12 +64,6 @@ export function TransactionSearch({
         className="h-full flex flex-col p-0"
         onOpenAutoFocus={(e) => {
           e.preventDefault();
-          requestAnimationFrame(() => {
-            const input = document.getElementById('transaction-search-input');
-            if (input) {
-              input.focus({ preventScroll: true });
-            }
-          });
         }}
         onCloseAutoFocus={(e) => {
           e.preventDefault();
