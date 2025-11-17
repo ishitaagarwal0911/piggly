@@ -260,9 +260,16 @@ export const TransactionDetailSheet = ({
                             {transactions.length} {transactions.length === 1 ? 'transaction' : 'transactions'}
                           </p>
                         </div>
-                        <span className="text-sm font-semibold">
-                          {currency}{formatIndianNumber(total)}
-                        </span>
+                        <div className="flex items-baseline gap-1">
+                          <span className="text-sm font-semibold">
+                            {currency}{formatIndianNumber(total)}
+                          </span>
+                          {currentBudget?.categoryBudgets?.[category] && (
+                            <span className="text-xs text-muted-foreground">
+                              / {currency}{formatIndianNumber(currentBudget.categoryBudgets[category])}
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </AccordionTrigger>
                     <AccordionContent className="pt-2 pb-3 space-y-1">

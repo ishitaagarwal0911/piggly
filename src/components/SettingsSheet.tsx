@@ -138,11 +138,23 @@ export const SettingsSheet = ({ onSettingsChange, open: externalOpen, onOpenChan
         <h2 className="text-xl font-semibold mb-4">Settings</h2>
 
         <Accordion type="multiple" defaultValue={[]} className="mt-2">
-          <AccordionItem value="categories">
-            <AccordionTrigger className="text-base font-medium">Categories</AccordionTrigger>
-            <AccordionContent className="pt-4">
-              <CategoryManager onCategoriesChange={onSettingsChange} />
+          <AccordionItem value="budget">
+            <AccordionTrigger className="text-base font-semibold">
+              Budget Settings
+            </AccordionTrigger>
+            <AccordionContent className="space-y-4 pb-4">
+              <Button 
+                variant="outline" 
+                className="w-full justify-start"
+                onClick={onBudgetClick}
+              >
+                Set monthly budget
+              </Button>
             </AccordionContent>
+          </AccordionItem>
+
+          <AccordionItem value="categories">
+...
           </AccordionItem>
 
           <AccordionItem value="preferences">
@@ -229,7 +241,7 @@ export const SettingsSheet = ({ onSettingsChange, open: externalOpen, onOpenChan
         </Accordion>
 
         {user && (
-          <div className="mt-6 pt-6 border-t space-y-4">
+          <div className="mt-6 space-y-4">
             <div className="text-sm text-muted-foreground">
               Signed in as: <span className="font-medium text-foreground">{user.email}</span>
             </div>

@@ -592,7 +592,6 @@ const Index = () => {
           totalBudget={viewType === 'monthly' ? budgetSummary?.totalBudget : undefined}
           totalSpent={viewType === 'monthly' ? budgetSummary?.totalSpent : undefined}
           safeToSpend={viewType === 'monthly' ? budgetSummary?.safeToSpend : undefined}
-          onSetBudgetClick={viewType === 'monthly' ? () => setBudgetSheetOpen(true) : undefined}
         />
         
         <ExpenseChart 
@@ -600,6 +599,7 @@ const Index = () => {
           onCategoryClick={handleCategoryClick} 
           currency={currency}
           budgetSummary={viewType === 'monthly' ? budgetSummary : null}
+          onSetBudgetClick={viewType === 'monthly' ? () => setBudgetSheetOpen(true) : undefined}
         />
       </main>
 

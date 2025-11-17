@@ -10,9 +10,16 @@ interface ExpenseChartProps {
   onCategoryClick?: (category: string) => void;
   currency?: string;
   budgetSummary?: BudgetSummary | null;
+  onSetBudgetClick?: () => void;
 }
 
-export const ExpenseChart = ({ transactions, onCategoryClick, currency = '₹', budgetSummary }: ExpenseChartProps) => {
+export const ExpenseChart = ({ 
+  transactions, 
+  onCategoryClick, 
+  currency = '₹',
+  budgetSummary,
+  onSetBudgetClick
+}: ExpenseChartProps) => {
   const expensesByCategory = useMemo(() => {
     const expenses = transactions.filter(t => t.type === 'expense');
     const total = expenses.reduce((sum, t) => sum + t.amount, 0);
@@ -75,7 +82,20 @@ export const ExpenseChart = ({ transactions, onCategoryClick, currency = '₹', 
 
   return (
     <div className="bg-card rounded-2xl p-6 shadow-notion">
-      <h3 className="text-sm font-medium mb-4">Spending by Category</h3>
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-sm font-medium">Spending by Category</h3>
+        {onSetBudgetClick && (
+          <button
+            onClick={onSetBudgetClick}
+            className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+          >
+            {budgetSummary && budgetSummary.totalBudget > 0 
+              ? `Budget: ${currency}${formatIndianNumber(budgetSummary.totalBudget)}`
+              : 'Set budget →'
+            }
+          </button>
+        )}
+      </div>
       
       {/* Ring Chart */}
       <div className="relative mb-6">
