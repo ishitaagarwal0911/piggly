@@ -31,7 +31,7 @@ interface Category {
   type: string;
 }
 
-const BudgetSetupSheet = ({
+export const BudgetSetupSheet = ({
   open,
   onOpenChange,
   initialBudget,
@@ -293,5 +293,3 @@ const BudgetSetupSheet = ({
     </Dialog>
   );
 };
-
-export default BudgetSetupSheet;
