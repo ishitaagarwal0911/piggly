@@ -505,7 +505,7 @@ const Index = () => {
               variant="ghost"
               size="icon"
               onClick={() => setSearchOpen(true)}
-              className="h-10 w-10"
+              className="h-10 w-10 -mr-1"
             >
               <Search className="h-5 w-5" />
             </Button>
