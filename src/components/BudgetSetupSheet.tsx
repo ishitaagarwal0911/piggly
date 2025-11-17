@@ -132,7 +132,7 @@ export const BudgetSetupSheet = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-full h-full max-w-none flex flex-col p-0 gap-0">
+      <DialogContent className="w-full h-full max-w-none flex flex-col p-0 gap-0" hideClose>
         <DialogHeader className="px-6 py-4 border-b">
           <div className="flex items-center justify-between">
             <DialogTitle className="text-base">Budget planner</DialogTitle>
@@ -155,13 +155,15 @@ export const BudgetSetupSheet = ({
                 <Ruler className="w-4 h-4 text-muted-foreground" />
                 <span>Overall budget</span>
               </Label>
-              <Input
-                id="overall-budget"
-                type="number"
-                placeholder="Enter amount"
-                value={overallBudget}
-                onChange={(e) => setOverallBudget(e.target.value)}
-              />
+              <div className="px-1">
+                <Input
+                  id="overall-budget"
+                  type="number"
+                  placeholder="Enter amount"
+                  value={overallBudget}
+                  onChange={(e) => setOverallBudget(e.target.value)}
+                />
+              </div>
             </div>
 
             {/* Category-wise Budget */}
@@ -177,7 +179,25 @@ export const BudgetSetupSheet = ({
                 </div>
               </div>
 
-              <Progress value={budgetUsagePercent} className="h-2" />
+              <div className="h-2 w-full bg-muted/50 rounded-full overflow-hidden flex">
+                {categoriesWithBudget
+                  .filter(c => parseFloat(categoryBudgets[c.id] || '0') > 0)
+                  .map((category) => {
+                    const budget = parseFloat(categoryBudgets[category.id] || '0');
+                    const widthPercent = overallBudgetNum > 0 ? (budget / overallBudgetNum) * 100 : 0;
+                    return (
+                      <div
+                        key={category.id}
+                        style={{
+                          width: `${widthPercent}%`,
+                          backgroundColor: category.color,
+                        }}
+                        className="h-full transition-all duration-300"
+                        title={`${category.name}: ₹${budget}`}
+                      />
+                    );
+                  })}
+              </div>
 
               {/* Categories with Budget */}
               <div className="space-y-2 pt-2">
@@ -187,27 +207,26 @@ export const BudgetSetupSheet = ({
                     id={`category-budget-${category.id}`}
                     className="flex items-center gap-3 p-3 rounded-lg border bg-card"
                   >
-                    <div
-                      className="flex items-center justify-center w-10 h-10 rounded-full text-xl"
-                      style={{ backgroundColor: `${category.color}20` }}
-                    >
+                    <div className="w-10 h-10 flex items-center justify-center text-2xl">
                       {category.icon}
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="font-medium truncate">{category.name}</p>
                     </div>
-                    <Input
-                      type="number"
-                      placeholder="0"
-                      value={categoryBudgets[category.id] || ''}
-                      onChange={(e) =>
-                        setCategoryBudgets({
-                          ...categoryBudgets,
-                          [category.id]: e.target.value,
-                        })
-                      }
-                      className="w-24 text-right"
-                    />
+                    <div className="px-1">
+                      <Input
+                        type="number"
+                        placeholder="0"
+                        value={categoryBudgets[category.id] || ''}
+                        onChange={(e) =>
+                          setCategoryBudgets({
+                            ...categoryBudgets,
+                            [category.id]: e.target.value,
+                          })
+                        }
+                        className="w-24 text-right"
+                      />
+                    </div>
                     <Button
                       variant="ghost"
                       size="icon"
@@ -252,10 +271,7 @@ export const BudgetSetupSheet = ({
                             onClick={() => handleAddCategoryBudget(category.id)}
                             className="w-full justify-start gap-3"
                           >
-                            <div
-                              className="flex items-center justify-center w-8 h-8 rounded-full text-lg"
-                              style={{ backgroundColor: `${category.color}20` }}
-                            >
+                            <div className="w-8 h-8 flex items-center justify-center text-lg">
                               {category.icon}
                             </div>
                             <span>{category.name}</span>
@@ -271,7 +287,7 @@ export const BudgetSetupSheet = ({
         </ScrollArea>
 
         {/* Save Button */}
-        <div className="px-6 py-4 border-t">
+        <div className="sticky bottom-0 px-6 py-4 border-t bg-background z-10">
           <Button
             onClick={handleSave}
             disabled={saving || !overallBudget || parseFloat(overallBudget) <= 0}
