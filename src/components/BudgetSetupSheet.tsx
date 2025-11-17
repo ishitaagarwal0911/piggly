@@ -3,8 +3,17 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Progress } from '@/components/ui/progress';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import Gauge from 'lucide-react/dist/esm/icons/gauge';
 import Ruler from 'lucide-react/dist/esm/icons/ruler';
 import X from 'lucide-react/dist/esm/icons/x';
@@ -41,6 +50,7 @@ export const BudgetSetupSheet = ({
   const [categories, setCategories] = useState<Category[]>([]);
   const [showAddCategory, setShowAddCategory] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   useEffect(() => {
     if (open) {
@@ -79,19 +89,9 @@ export const BudgetSetupSheet = ({
   const handleSave = async () => {
     const budgetValue = parseFloat(overallBudget || '0');
     
-    // Handle budget deletion when set to 0
+    // Show confirmation dialog when setting budget to 0
     if (budgetValue === 0) {
-      setSaving(true);
-      const deleted = await deleteBudget(startOfMonth(new Date()));
-      setSaving(false);
-      
-      if (deleted) {
-        toast.success('Budget deleted successfully');
-        onSave(null as any);
-        onOpenChange(false);
-      } else {
-        toast.error('Failed to delete budget');
-      }
+      setShowDeleteConfirm(true);
       return;
     }
     
@@ -125,6 +125,21 @@ export const BudgetSetupSheet = ({
       onOpenChange(false);
     } else {
       toast.error('Failed to save budget');
+    }
+  };
+
+  const handleConfirmDelete = async () => {
+    setSaving(true);
+    const deleted = await deleteBudget(startOfMonth(new Date()));
+    setSaving(false);
+    setShowDeleteConfirm(false);
+    
+    if (deleted) {
+      toast.success('Budget deleted successfully');
+      onSave(null as any);
+      onOpenChange(false);
+    } else {
+      toast.error('Failed to delete budget');
     }
   };
 
@@ -166,8 +181,8 @@ export const BudgetSetupSheet = ({
           </div>
         </DialogHeader>
 
-        <ScrollArea className="flex-1 px-6">
-          <div className="py-6 space-y-6">
+        <div className="flex-1 overflow-y-auto">
+          <div className="px-6 py-6 space-y-6">
             {/* Overall Budget */}
             <div className="space-y-3">
               <Label htmlFor="overall-budget" className="flex items-center gap-2 mb-2">
@@ -303,7 +318,7 @@ export const BudgetSetupSheet = ({
               )}
             </div>
           </div>
-        </ScrollArea>
+        </div>
 
         {/* Save Button */}
         <div 
@@ -322,6 +337,27 @@ export const BudgetSetupSheet = ({
           </Button>
         </div>
       </DialogContent>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete budget?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete your budget? This will remove all budget tracking for this month.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete Budget
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Dialog>
   );
 };
