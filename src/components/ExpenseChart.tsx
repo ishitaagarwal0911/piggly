@@ -1,9 +1,11 @@
-import { useMemo } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { Transaction } from "@/types/transaction";
 import { BudgetSummary } from "@/types/budget";
 import { getCategoryInfo } from "@/lib/categories";
 import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
 import { formatIndianNumber } from "@/lib/utils";
+import { Progress } from "@/components/ui/progress";
+import X from 'lucide-react/dist/esm/icons/x';
 
 interface ExpenseChartProps {
   transactions: Transaction[];
@@ -20,6 +22,17 @@ export const ExpenseChart = ({
   budgetSummary,
   onSetBudgetClick,
 }: ExpenseChartProps) => {
+  const [showTooltip, setShowTooltip] = useState(false);
+
+  // Show tooltip for users without budget
+  useEffect(() => {
+    const dismissed = localStorage.getItem('budget-tooltip-dismissed');
+    if (!dismissed && (!budgetSummary || budgetSummary.totalBudget === 0)) {
+      setShowTooltip(true);
+    } else {
+      setShowTooltip(false);
+    }
+  }, [budgetSummary]);
   const expensesByCategory = useMemo(() => {
     const expenses = transactions.filter((t) => t.type === "expense");
     const total = expenses.reduce((sum, t) => sum + t.amount, 0);
@@ -60,14 +73,31 @@ export const ExpenseChart = ({
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-sm font-medium">Spending by Category</h3>
         {onSetBudgetClick && (
-          <button
-            onClick={onSetBudgetClick}
-            className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-          >
-            {budgetSummary && budgetSummary.totalBudget > 0
-              ? `${currency}${formatIndianNumber(budgetSummary.totalBudget)}`
-              : "Set Budget →"}
-          </button>
+          <div className="relative">
+            <button
+              onClick={onSetBudgetClick}
+              className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+            >
+              {budgetSummary && budgetSummary.totalBudget > 0
+                ? `${currency}${formatIndianNumber(budgetSummary.totalBudget)}`
+                : "Set Budget →"}
+            </button>
+            {showTooltip && (
+              <div className="absolute top-[-60px] right-0 bg-popover border shadow-lg rounded-lg p-3 flex items-center gap-2 text-xs animate-fade-in max-w-[180px] z-50">
+                <span className="text-muted-foreground">💡 Track your spending</span>
+                <button 
+                  onClick={() => {
+                    localStorage.setItem('budget-tooltip-dismissed', 'true');
+                    setShowTooltip(false);
+                  }}
+                  className="text-muted-foreground hover:text-foreground flex-shrink-0"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+                <div className="absolute bottom-[-6px] right-8 w-3 h-3 bg-popover border-r border-b transform rotate-45" />
+              </div>
+            )}
+          </div>
         )}
         </div>
         <div className="relative mb-6">
