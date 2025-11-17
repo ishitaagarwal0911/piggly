@@ -389,7 +389,7 @@ export const BudgetSetupSheet = ({
         >
           <Button
             onClick={handleSave}
-            disabled={saving || !overallBudget || parseFloat(overallBudget) <= 0}
+            disabled={saving || overallBudget === ''}
             className="w-full"
             size="lg"
           >

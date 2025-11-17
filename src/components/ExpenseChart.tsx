@@ -13,6 +13,7 @@ interface ExpenseChartProps {
   currency?: string;
   budgetSummary?: BudgetSummary | null;
   onSetBudgetClick?: () => void;
+  hasActiveSubscription?: boolean;
 }
 
 export const ExpenseChart = ({
@@ -21,18 +22,15 @@ export const ExpenseChart = ({
   currency = "₹",
   budgetSummary,
   onSetBudgetClick,
+  hasActiveSubscription = false,
 }: ExpenseChartProps) => {
   const [showTooltip, setShowTooltip] = useState(false);
 
-  // Show tooltip for users without budget
+  // Show tooltip if no budget is set AND user is not a paid member
   useEffect(() => {
-    const dismissed = localStorage.getItem('budget-tooltip-dismissed');
-    if (!dismissed && (!budgetSummary || budgetSummary.totalBudget === 0)) {
-      setShowTooltip(true);
-    } else {
-      setShowTooltip(false);
-    }
-  }, [budgetSummary]);
+    const shouldShow = (!budgetSummary || budgetSummary.totalBudget === 0) && !hasActiveSubscription;
+    setShowTooltip(shouldShow);
+  }, [budgetSummary, hasActiveSubscription]);
   const expensesByCategory = useMemo(() => {
     const expenses = transactions.filter((t) => t.type === "expense");
     const total = expenses.reduce((sum, t) => sum + t.amount, 0);
@@ -83,18 +81,18 @@ export const ExpenseChart = ({
                 : "Set Budget →"}
             </button>
             {showTooltip && (
-              <div className="absolute top-[-60px] right-0 bg-popover border shadow-lg rounded-lg p-3 flex items-center gap-2 text-xs animate-fade-in max-w-[180px] z-50">
-                <span className="text-muted-foreground">💡 Track your spending</span>
+              <div className="absolute top-[-70px] right-0 bg-popover border shadow-lg rounded-lg p-3 flex items-center gap-2 text-xs animate-fade-in max-w-[220px] z-50">
+                <span className="text-foreground leading-relaxed">Start with setting your monthly budget</span>
                 <button 
-                  onClick={() => {
-                    localStorage.setItem('budget-tooltip-dismissed', 'true');
+                  onClick={(e) => {
+                    e.stopPropagation();
                     setShowTooltip(false);
                   }}
                   className="text-muted-foreground hover:text-foreground flex-shrink-0"
                 >
                   <X className="h-3 w-3" />
                 </button>
-                <div className="absolute bottom-[-6px] right-8 w-3 h-3 bg-popover border-r border-b transform rotate-45" />
+                <div className="absolute bottom-[-6px] right-6 w-3 h-3 bg-popover border-r border-b transform rotate-45" />
               </div>
             )}
           </div>
