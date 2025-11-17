@@ -188,8 +188,6 @@ export const SettingsSheet = ({ onSettingsChange, open: externalOpen, onOpenChan
             </AccordionContent>
           </AccordionItem>
 
-          <Separator className="my-2" />
-
           <AccordionItem value="budget" className="border-b-0">
             <AccordionTrigger className="py-3 hover:no-underline">
               <div className="flex items-center gap-3">
@@ -209,6 +207,8 @@ export const SettingsSheet = ({ onSettingsChange, open: externalOpen, onOpenChan
               </Button>
             </AccordionContent>
           </AccordionItem>
+
+          <Separator className="my-2" />
 
           <AccordionItem value="data">
             <AccordionTrigger className="text-base font-medium">Data</AccordionTrigger>
