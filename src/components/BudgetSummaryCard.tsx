@@ -11,7 +11,7 @@ interface BudgetSummaryCardProps {
   onSetBudgetClick: () => void;
 }
 
-export const BudgetSummaryCard = ({
+const BudgetSummaryCard = ({
   totalBudget,
   totalSpent,
   safeToSpend,
@@ -62,3 +62,5 @@ export const BudgetSummaryCard = ({
     </Card>
   );
 };
+
+export default BudgetSummaryCard;
