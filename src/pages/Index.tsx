@@ -27,7 +27,9 @@ import { BudgetSummaryCard } from "@/components/BudgetSummaryCard";
 import { BudgetSetupSheet } from "@/components/BudgetSetupSheet";
 
 // Lazy load heavy components for faster initial load
-const AddTransactionDialog = lazy(() => import("@/components/AddTransactionDialog"));
+const AddTransactionDialog = lazy(() => 
+  import("@/components/AddTransactionDialog").then(module => ({ default: module.AddTransactionDialog }))
+);
 const TransactionDetailSheet = lazy(() => import("@/components/TransactionDetailSheet"));
 const TransactionSearch = lazy(() => import("@/components/TransactionSearch").then(module => ({ default: module.TransactionSearch })));
 const ExpenseChart = lazy(() =>
