@@ -166,7 +166,7 @@ export const BudgetSetupSheet = ({
 
   return (
     <Drawer open={open} onOpenChange={onOpenChange}>
-      <DrawerContent className="flex flex-col max-h-[calc(100vh-env(safe-area-inset-bottom))] pb-0">
+      <DrawerContent className="flex flex-col h-[100vh] pb-0">
         <DrawerHeader className="px-6 py-4 border-b">
           <div className="flex items-center justify-between">
             <DrawerTitle className="text-base">Budget planner</DrawerTitle>

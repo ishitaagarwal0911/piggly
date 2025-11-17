@@ -53,6 +53,8 @@ export const ExpenseChart = ({
   }, [transactions]);
 
   if (expensesByCategory.length === 0) {
+    const hasCategoryBudgets = budgetSummary?.categories && budgetSummary.categories.length > 0;
+    
     return (
       <div className="bg-card rounded-2xl p-6 shadow-notion">
         <div className="flex items-center justify-between mb-4">
@@ -62,7 +64,7 @@ export const ExpenseChart = ({
               onClick={onSetBudgetClick}
               className="text-xs text-muted-foreground hover:text-foreground transition-colors"
             >
-              Set Budget
+              Set Budget →
             </button>
           )}
         </div>
@@ -89,6 +91,51 @@ export const ExpenseChart = ({
             <p className="text-2xl font-semibold tracking-tight">{currency}0</p>
           </div>
         </div>
+        
+        {hasCategoryBudgets && (
+          <div className="space-y-3">
+            {budgetSummary.categories.map((categoryBudget) => (
+              <button
+                key={categoryBudget.categoryId}
+                onClick={() => onCategoryClick?.(categoryBudget.categoryId)}
+                className="w-full text-left transition-all duration-200 hover:scale-[1.01] active:scale-[0.99] group"
+              >
+                <div className="flex items-center gap-3 p-2 rounded-lg transition-colors hover:bg-muted/30">
+                  <div className="w-9 h-9 flex items-center justify-center text-xl flex-shrink-0 transition-transform group-hover:scale-105">
+                    {categoryBudget.icon}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between gap-2 mb-1.5">
+                      <span className="text-sm font-medium truncate">{categoryBudget.name}</span>
+                      <div className="flex items-center gap-2 whitespace-nowrap">
+                        <span className="text-sm font-semibold tracking-tight">
+                          {currency}0
+                        </span>
+                        <span className="text-xs text-muted-foreground">
+                          / {currency}{formatIndianNumber(categoryBudget.budget)}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="flex-1 h-1.5 bg-muted/50 rounded-full overflow-hidden">
+                        <div
+                          className="h-full rounded-full transition-all duration-700 ease-out"
+                          style={{
+                            width: '0%',
+                            backgroundColor: categoryBudget.color,
+                          }}
+                        />
+                      </div>
+                      <span className="text-xs text-muted-foreground whitespace-nowrap tabular-nums">
+                        0%
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </button>
+            ))}
+          </div>
+        )}
       </div>
     );
   }
@@ -107,7 +154,7 @@ export const ExpenseChart = ({
           >
             {budgetSummary && budgetSummary.totalBudget > 0
               ? `Budget: ${currency}${formatIndianNumber(budgetSummary.totalBudget)}`
-              : "Set Budget"}
+              : "Set Budget →"}
           </button>
         )}
       </div>
