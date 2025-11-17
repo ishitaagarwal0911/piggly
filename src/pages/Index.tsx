@@ -6,6 +6,7 @@ import { SettingsSheet } from "@/components/SettingsSheet";
 import { PeriodSelector } from "@/components/PeriodSelector";
 import { Button } from "@/components/ui/button";
 import Plus from 'lucide-react/dist/esm/icons/plus';
+import Search from 'lucide-react/dist/esm/icons/search';
 import { loadTransactions, saveTransactions, deleteTransaction, loadHistoricalTransactions } from "@/lib/storage";
 import { loadSettings } from "@/lib/settings";
 import { getFilteredTransactions, getPreviousPeriod, getNextPeriod, ViewType } from "@/lib/dateUtils";
@@ -22,6 +23,7 @@ import piggyTransparent from "@/assets/piggly_header_icon.png";
 // Lazy load heavy components for faster initial load
 const AddTransactionDialog = lazy(() => import("@/components/AddTransactionDialog"));
 const TransactionDetailSheet = lazy(() => import("@/components/TransactionDetailSheet"));
+const TransactionSearch = lazy(() => import("@/components/TransactionSearch").then(module => ({ default: module.TransactionSearch })));
 const ExpenseChart = lazy(() =>
   import("@/components/ExpenseChart").then((module) => ({ default: module.ExpenseChart })),
 );
@@ -43,6 +45,7 @@ const Index = () => {
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const [currency, setCurrency] = useState("₹");
   const [settingsOpen, setSettingsOpen] = useHistoryState(false, "settings");
+  const [searchOpen, setSearchOpen] = useHistoryState(false, "search");
 
   // Track user ID to prevent unnecessary reloads
   const [hasLoadedData, setHasLoadedData] = useState(false);
@@ -497,7 +500,15 @@ const Index = () => {
             onNext={handleNext}
             onDateSelect={handleDateSelect}
           />
-          <div className="absolute right-4">
+          <div className="absolute right-4 flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setSearchOpen(true)}
+              className="h-10 w-10"
+            >
+              <Search className="h-5 w-5" />
+            </Button>
             <SettingsSheet onSettingsChange={handleSettingsChange} open={settingsOpen} onOpenChange={setSettingsOpen} />
           </div>
         </div>
@@ -562,6 +573,15 @@ const Index = () => {
           onAddClick={handleDetailSheetAddClick}
           defaultTab={selectedCategory ? "by-category" : undefined}
           defaultOpenCategory={selectedCategory}
+        />
+      </Suspense>
+
+      <Suspense fallback={null}>
+        <TransactionSearch
+          open={searchOpen}
+          onOpenChange={setSearchOpen}
+          transactions={transactions}
+          onTransactionSelect={handleEditTransaction}
         />
       </Suspense>
     </div>
