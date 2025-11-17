@@ -44,13 +44,11 @@ export function TransactionSearch({
   const allCategories = categories();
   const expenseCategories = allCategories.filter(c => c.type === 'expense');
 
+  // Reset search state when sheet closes
   useEffect(() => {
-    if (open) {
-      // Auto-focus search input when opened
-      const timer = setTimeout(() => {
-        document.getElementById('transaction-search-input')?.focus();
-      }, 100);
-      return () => clearTimeout(timer);
+    if (!open) {
+      setSearchInput("");
+      setSelectedCategory("all");
     }
   }, [open]);
 
@@ -66,9 +64,15 @@ export function TransactionSearch({
         className="h-full flex flex-col p-0"
         onOpenAutoFocus={(e) => {
           e.preventDefault();
-          setTimeout(() => {
-            document.getElementById('transaction-search-input')?.focus();
-          }, 50);
+          requestAnimationFrame(() => {
+            const input = document.getElementById('transaction-search-input');
+            if (input) {
+              input.focus({ preventScroll: true });
+            }
+          });
+        }}
+        onCloseAutoFocus={(e) => {
+          e.preventDefault();
         }}
       >
         <SheetHeader className="px-4 pt-4 pb-3 border-b border-border">
