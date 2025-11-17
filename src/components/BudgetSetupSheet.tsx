@@ -119,6 +119,16 @@ export const BudgetSetupSheet = ({
   const handleAddCategoryBudget = (categoryId: string) => {
     setCategoryBudgets({ ...categoryBudgets, [categoryId]: '' });
     setShowAddCategory(false);
+    
+    // Scroll to the newly added category after a brief delay for DOM update
+    setTimeout(() => {
+      const element = document.getElementById(`category-budget-${categoryId}`);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        const input = element.querySelector('input');
+        if (input) input.focus();
+      }
+    }, 100);
   };
 
   return (
@@ -134,7 +144,7 @@ export const BudgetSetupSheet = ({
             >
               <ArrowLeft className="h-5 w-5" />
             </Button>
-            <DialogTitle className="text-xl">Budget planner</DialogTitle>
+            <DialogTitle className="text-base">Budget planner</DialogTitle>
           </div>
         </DialogHeader>
 
@@ -176,6 +186,7 @@ export const BudgetSetupSheet = ({
                 {categoriesWithBudget.map((category) => (
                   <div
                     key={category.id}
+                    id={`category-budget-${category.id}`}
                     className="flex items-center gap-3 p-3 rounded-lg border bg-card"
                   >
                     <div

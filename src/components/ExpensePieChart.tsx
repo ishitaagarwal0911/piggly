@@ -1,15 +1,18 @@
 import { useMemo, useState, useEffect } from 'react';
 import { Transaction } from '@/types/transaction';
+import { BudgetSummary } from '@/types/budget';
 import { getCategoryInfo } from '@/lib/categories';
 import { loadSettings } from '@/lib/settings';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 import { formatIndianNumber } from '@/lib/utils';
+import { Progress } from '@/components/ui/progress';
 
 interface ExpensePieChartProps {
   transactions: Transaction[];
+  budgetSummary?: BudgetSummary | null;
 }
 
-export const ExpensePieChart = ({ transactions }: ExpensePieChartProps) => {
+export const ExpensePieChart = ({ transactions, budgetSummary }: ExpensePieChartProps) => {
   const [currency, setCurrency] = useState('₹');
 
   useEffect(() => {
@@ -108,6 +111,45 @@ export const ExpensePieChart = ({ transactions }: ExpensePieChartProps) => {
           <Legend content={<CustomLegend />} />
         </PieChart>
       </ResponsiveContainer>
+
+      {/* Budget vs Spending Section */}
+      {budgetSummary && budgetSummary.categories.length > 0 && (
+        <div className="mt-6 pt-6 border-t border-border/50">
+          <h4 className="text-sm font-medium mb-4">Budget vs Spending</h4>
+          <div className="space-y-4">
+            {budgetSummary.categories.map((cat) => (
+              <div key={cat.categoryId} className="space-y-2">
+                <div className="flex items-center justify-between text-sm">
+                  <div className="flex items-center gap-2">
+                    <span>{cat.icon}</span>
+                    <span className="font-medium">{cat.name}</span>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-muted-foreground">
+                      {currency}{formatIndianNumber(cat.spent)}
+                    </span>
+                    <span className="text-muted-foreground mx-1">/</span>
+                    <span className="font-medium">
+                      {currency}{formatIndianNumber(cat.budget)}
+                    </span>
+                    <span className="text-muted-foreground ml-2">
+                      {cat.percentage.toFixed(0)}%
+                    </span>
+                  </div>
+                </div>
+                <Progress 
+                  value={Math.min(cat.percentage, 100)} 
+                  className="h-2"
+                  style={{
+                    // @ts-ignore
+                    '--progress-background': cat.color
+                  }}
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

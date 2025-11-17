@@ -595,7 +595,12 @@ const Index = () => {
           onSetBudgetClick={viewType === 'monthly' ? () => setBudgetSheetOpen(true) : undefined}
         />
         
-        <ExpenseChart transactions={filteredTransactions} onCategoryClick={handleCategoryClick} currency={currency} />
+        <ExpenseChart 
+          transactions={filteredTransactions} 
+          onCategoryClick={handleCategoryClick} 
+          currency={currency}
+          budgetSummary={viewType === 'monthly' ? budgetSummary : null}
+        />
       </main>
 
       {/* Floating Add Button */}

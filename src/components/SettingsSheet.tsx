@@ -5,6 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { Separator } from '@/components/ui/separator';
 import { CategoryManager } from './CategoryManager';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { loadSettings, saveSettings } from '@/lib/settings';
@@ -17,7 +18,6 @@ import Menu from 'lucide-react/dist/esm/icons/menu';
 import Download from 'lucide-react/dist/esm/icons/download';
 import X from 'lucide-react/dist/esm/icons/x';
 import Crown from 'lucide-react/dist/esm/icons/crown';
-import Gauge from 'lucide-react/dist/esm/icons/gauge';
 import { toast } from 'sonner';
 import { ViewType } from '@/lib/dateUtils';
 import { useLocation } from 'react-router-dom';
@@ -188,10 +188,11 @@ export const SettingsSheet = ({ onSettingsChange, open: externalOpen, onOpenChan
             </AccordionContent>
           </AccordionItem>
 
+          <Separator className="my-2" />
+
           <AccordionItem value="budget" className="border-b-0">
             <AccordionTrigger className="py-3 hover:no-underline">
               <div className="flex items-center gap-3">
-                <Gauge className="w-5 h-5 text-muted-foreground" />
                 <span className="text-base font-medium">Budget Settings</span>
               </div>
             </AccordionTrigger>
