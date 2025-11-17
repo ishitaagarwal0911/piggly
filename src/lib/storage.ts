@@ -3,6 +3,44 @@ import { supabase } from '@/integrations/supabase/client';
 import { loadSettings } from './settings';
 import { cacheTransactions, getCachedTransactions } from './cache';
 
+export const saveTransaction = async (transaction: Transaction, userId?: string): Promise<void> => {
+  try {
+    const uid = userId || (await supabase.auth.getUser()).data.user?.id;
+    if (!uid) throw new Error('Not authenticated');
+
+    const { error } = await supabase
+      .from('transactions')
+      .upsert({
+        id: transaction.id,
+        user_id: uid,
+        amount: transaction.amount,
+        type: transaction.type,
+        category: transaction.category,
+        note: transaction.note,
+        date: transaction.date.toISOString(),
+        created_at: transaction.createdAt.toISOString(),
+        updated_at: transaction.updatedAt?.toISOString() || new Date().toISOString(),
+      });
+    
+    if (error) throw error;
+    
+    // Update cache after successful save
+    const cachedTransactions = getCachedTransactions(uid);
+    if (cachedTransactions) {
+      const existingIndex = cachedTransactions.findIndex(t => t.id === transaction.id);
+      if (existingIndex >= 0) {
+        cachedTransactions[existingIndex] = transaction;
+      } else {
+        cachedTransactions.unshift(transaction);
+      }
+      cacheTransactions(cachedTransactions, uid);
+    }
+  } catch (error) {
+    console.error('Failed to save transaction:', error);
+    throw error;
+  }
+};
+
 export const saveTransactions = async (transactions: Transaction[], userId?: string): Promise<void> => {
   try {
     const uid = userId || (await supabase.auth.getUser()).data.user?.id;

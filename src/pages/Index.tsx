@@ -7,7 +7,7 @@ import { PeriodSelector } from "@/components/PeriodSelector";
 import { Button } from "@/components/ui/button";
 import Plus from 'lucide-react/dist/esm/icons/plus';
 import Search from 'lucide-react/dist/esm/icons/search';
-import { loadTransactions, saveTransactions, deleteTransaction, loadHistoricalTransactions } from "@/lib/storage";
+import { loadTransactions, saveTransaction, deleteTransaction, loadHistoricalTransactions } from "@/lib/storage";
 import { loadSettings } from "@/lib/settings";
 import { getFilteredTransactions, getPreviousPeriod, getNextPeriod, ViewType } from "@/lib/dateUtils";
 import { useAuth } from "@/contexts/AuthContext";
@@ -395,30 +395,53 @@ const Index = () => {
   if (!user) return null;
 
   const handleAddTransaction = async (newTransaction: Omit<Transaction, "id" | "createdAt">) => {
-    if (editingTransaction) {
-      // Update existing transaction
-      const updated = transactions.map((t) =>
-        t.id === editingTransaction.id ? { ...editingTransaction, ...newTransaction } : t,
-      );
-      setTransactions(updated);
-      await saveTransactions(updated);
-      toast.success("Transaction updated");
-      setEditingTransaction(null);
-    } else {
-      // Add new transaction
-      const transaction: Transaction = {
-        ...newTransaction,
-        id: crypto.randomUUID(),
-        createdAt: new Date(),
-      };
+    try {
+      if (editingTransaction) {
+        // Update existing transaction
+        const updatedTransaction: Transaction = {
+          ...editingTransaction,
+          ...newTransaction,
+          updatedAt: new Date(),
+        };
+        
+        // Optimistic update
+        const updated = transactions.map((t) =>
+          t.id === editingTransaction.id ? updatedTransaction : t,
+        );
+        setTransactions(updated);
+        
+        // Save single transaction
+        await saveTransaction(updatedTransaction);
+        
+        toast.success("Transaction updated");
+        setEditingTransaction(null);
+      } else {
+        // Add new transaction
+        const transaction: Transaction = {
+          ...newTransaction,
+          id: crypto.randomUUID(),
+          createdAt: new Date(),
+        };
 
-      const updated = [transaction, ...transactions];
-      setTransactions(updated);
-      await saveTransactions(updated);
+        // Optimistic update
+        const updated = [transaction, ...transactions];
+        setTransactions(updated);
+        
+        // Save single transaction
+        await saveTransaction(transaction);
 
-      toast.success("Transaction added", {
-        description: `${newTransaction.type === "income" ? "+" : "-"}${currency}${newTransaction.amount.toFixed(2)} ${newTransaction.note}`,
-      });
+        toast.success("Transaction added", {
+          description: `${newTransaction.type === "income" ? "+" : "-"}${currency}${newTransaction.amount.toFixed(2)} ${newTransaction.note}`,
+        });
+      }
+    } catch (error) {
+      // Revert optimistic update on error
+      console.error('Failed to save transaction:', error);
+      toast.error('Failed to save transaction. Please try again.');
+      
+      // Reload transactions from database to revert optimistic update
+      const freshTransactions = await loadTransactions();
+      setTransactions(freshTransactions);
     }
   };
 
