@@ -15,11 +15,10 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import Gauge from 'lucide-react/dist/esm/icons/gauge';
-import Ruler from 'lucide-react/dist/esm/icons/ruler';
 import X from 'lucide-react/dist/esm/icons/x';
 import Plus from 'lucide-react/dist/esm/icons/plus';
 import { Budget } from '@/types/budget';
-import { loadSettings } from '@/lib/settings';
+import { loadSettings, addCategory } from '@/lib/settings';
 import { saveBudget, deleteBudget } from '@/lib/budget';
 import { toast } from 'sonner';
 import { startOfMonth } from 'date-fns';
@@ -48,9 +47,11 @@ export const BudgetSetupSheet = ({
   const [overallBudget, setOverallBudget] = useState('');
   const [categoryBudgets, setCategoryBudgets] = useState<Record<string, string>>({});
   const [categories, setCategories] = useState<Category[]>([]);
-  const [showAddCategory, setShowAddCategory] = useState(false);
   const [saving, setSaving] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showQuickAddCategory, setShowQuickAddCategory] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState('');
+  const [newCategoryIcon, setNewCategoryIcon] = useState('📦');
 
   useEffect(() => {
     if (open) {
@@ -151,7 +152,6 @@ export const BudgetSetupSheet = ({
 
   const handleAddCategoryBudget = (categoryId: string) => {
     setCategoryBudgets({ ...categoryBudgets, [categoryId]: '' });
-    setShowAddCategory(false);
     
     // Scroll to the newly added category after a brief delay for DOM update
     setTimeout(() => {
@@ -186,10 +186,9 @@ export const BudgetSetupSheet = ({
           <div className="py-6 space-y-6">
             {/* Overall Budget */}
             <div className="space-y-3">
-              <Label htmlFor="overall-budget" className="flex items-center gap-2 mb-2">
-                <Ruler className="w-4 h-4 text-muted-foreground" />
-                <span>Overall budget</span>
-              </Label>
+          <Label htmlFor="overall-budget" className="mb-2">
+            Monthly overall budget
+          </Label>
               <div className="px-1">
                 <Input
                   id="overall-budget"
@@ -274,48 +273,102 @@ export const BudgetSetupSheet = ({
                 ))}
               </div>
 
-              {/* Add Category Button */}
+              {/* Add Category Section - Always visible */}
               {categoriesWithoutBudget.length > 0 && (
-                <>
-                  {!showAddCategory ? (
+                <div className="space-y-2 p-3 border rounded-lg bg-muted/30">
+                  <p className="text-xs font-medium text-muted-foreground mb-2">Available categories</p>
+                  <div className="space-y-1">
+                    {categoriesWithoutBudget.map((category) => (
+                      <Button
+                        key={category.id}
+                        variant="ghost"
+                        onClick={() => handleAddCategoryBudget(category.id)}
+                        className="w-full justify-start gap-3 h-auto py-2"
+                      >
+                        <div className="w-8 h-8 flex items-center justify-center text-lg">
+                          {category.icon}
+                        </div>
+                        <span className="text-sm">{category.name}</span>
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Create New Category Button */}
+              {!showQuickAddCategory && (
+                <Button
+                  variant="ghost"
+                  onClick={() => setShowQuickAddCategory(true)}
+                  className="w-full justify-center gap-2 text-xs text-muted-foreground hover:text-foreground mt-2"
+                >
+                  <Plus className="h-3 w-3" />
+                  Create new category
+                </Button>
+              )}
+
+              {/* Quick Add Category Form */}
+              {showQuickAddCategory && (
+                <div className="space-y-3 p-4 border rounded-lg bg-secondary/50 mt-2">
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm font-medium">Quick Add Category</p>
                     <Button
-                      variant="outline"
-                      onClick={() => setShowAddCategory(true)}
-                      className="w-full justify-start gap-2"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setShowQuickAddCategory(false);
+                        setNewCategoryName('');
+                        setNewCategoryIcon('📦');
+                      }}
+                      className="h-8 px-2"
                     >
-                      <Plus className="h-4 w-4" />
-                      Add category
+                      Cancel
                     </Button>
-                  ) : (
-                    <div className="space-y-2 p-3 border rounded-lg">
-                      <div className="flex items-center justify-between mb-2">
-                        <p className="text-sm font-medium">Select category</p>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setShowAddCategory(false)}
-                        >
-                          Cancel
-                        </Button>
-                      </div>
-                      <div className="space-y-1">
-                        {categoriesWithoutBudget.map((category) => (
-                          <Button
-                            key={category.id}
-                            variant="ghost"
-                            onClick={() => handleAddCategoryBudget(category.id)}
-                            className="w-full justify-start gap-3"
-                          >
-                            <div className="w-8 h-8 flex items-center justify-center text-lg">
-                              {category.icon}
-                            </div>
-                            <span>{category.name}</span>
-                          </Button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </>
+                  </div>
+                  <div className="space-y-2">
+                    <Input
+                      placeholder="Category name"
+                      value={newCategoryName}
+                      onChange={(e) => setNewCategoryName(e.target.value)}
+                      maxLength={30}
+                    />
+                    <Input
+                      placeholder="Icon (emoji)"
+                      value={newCategoryIcon}
+                      onChange={(e) => setNewCategoryIcon(e.target.value)}
+                      maxLength={2}
+                    />
+                  </div>
+                  <Button
+                    onClick={async () => {
+                      if (!newCategoryName.trim()) {
+                        toast.error('Please enter a category name');
+                        return;
+                      }
+                      try {
+                        await addCategory(
+                          {
+                            name: newCategoryName.trim(),
+                            icon: newCategoryIcon || '📦',
+                            type: 'expense',
+                          }
+                        );
+                        toast.success('Category created');
+                        const settings = await loadSettings();
+                        const expenseCategories = settings.categories.filter(c => c.type === 'expense');
+                        setCategories(expenseCategories);
+                        setShowQuickAddCategory(false);
+                        setNewCategoryName('');
+                        setNewCategoryIcon('📦');
+                      } catch (error) {
+                        toast.error('Failed to create category');
+                      }
+                    }}
+                    className="w-full"
+                  >
+                    Add Category
+                  </Button>
+                </div>
               )}
             </div>
           </div>

@@ -6,6 +6,7 @@ import { SettingsSheet } from "@/components/SettingsSheet";
 import { PeriodSelector } from "@/components/PeriodSelector";
 import { Button } from "@/components/ui/button";
 import Plus from 'lucide-react/dist/esm/icons/plus';
+import Gauge from 'lucide-react/dist/esm/icons/gauge';
 import Search from 'lucide-react/dist/esm/icons/search';
 import { loadTransactions, saveTransaction, deleteTransaction, loadHistoricalTransactions } from "@/lib/storage";
 import { loadSettings } from "@/lib/settings";
@@ -52,6 +53,7 @@ const Index = () => {
   const [budgetSheetOpen, setBudgetSheetOpen] = useHistoryState(false, "budget-sheet");
   const [currentBudget, setCurrentBudget] = useState<Budget | null>(null);
   const [budgetSummary, setBudgetSummary] = useState<BudgetSummary | null>(null);
+  const [showBudgetTooltip, setShowBudgetTooltip] = useState(false);
 
   // Track user ID to prevent unnecessary reloads
   const [hasLoadedData, setHasLoadedData] = useState(false);
@@ -302,6 +304,17 @@ const Index = () => {
       setBudgetSummary(null);
     }
   }, [currentBudget, transactions, currentDate, viewType]);
+
+  // Show budget tooltip for new users who haven't set a budget
+  useEffect(() => {
+    const dismissed = localStorage.getItem('budget-tooltip-dismissed');
+    const shouldShow = 
+      !dismissed && 
+      (!budgetSummary || budgetSummary.totalBudget === 0) && 
+      !hasActiveSubscription &&
+      !subscriptionLoading;
+    setShowBudgetTooltip(shouldShow);
+  }, [budgetSummary, hasActiveSubscription, subscriptionLoading]);
 
   // Only show skeleton on initial cold load without cache or when categories aren't loaded
   if (loading || (dataLoading && transactions.length === 0) || !categoriesLoaded) {
@@ -581,6 +594,46 @@ const Index = () => {
           </div>
         </div>
       </header>
+
+      {/* Budget Setup Tooltip */}
+      {showBudgetTooltip && (
+        <div className="max-w-2xl mx-auto px-4 pt-4">
+          <div className="bg-primary/10 border border-primary/20 rounded-lg p-4 flex items-center justify-between gap-3 animate-fade-in">
+            <div className="flex items-center gap-3 flex-1">
+              <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/20 flex-shrink-0">
+                <Gauge className="w-4 h-4 text-primary" />
+              </div>
+              <p className="text-sm text-foreground">
+                💡 Set a monthly budget to track your spending
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                size="sm"
+                onClick={() => {
+                  setBudgetSheetOpen(true);
+                  setShowBudgetTooltip(false);
+                  localStorage.setItem('budget-tooltip-dismissed', 'true');
+                }}
+                className="h-8"
+              >
+                Set Budget
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setShowBudgetTooltip(false);
+                  localStorage.setItem('budget-tooltip-dismissed', 'true');
+                }}
+                className="h-8"
+              >
+                Dismiss
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Main Content */}
       <main className="max-w-2xl mx-auto px-4 py-6 space-y-6">

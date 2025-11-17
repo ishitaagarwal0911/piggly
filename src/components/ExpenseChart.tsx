@@ -59,14 +59,16 @@ export const ExpenseChart = ({
       <div className="bg-card rounded-2xl p-6 shadow-notion">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-sm font-medium">Spending by Category</h3>
-          {onSetBudgetClick && (
-            <button
-              onClick={onSetBudgetClick}
-              className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-            >
-              Set Budget →
-            </button>
-          )}
+        {onSetBudgetClick && (
+          <button
+            onClick={onSetBudgetClick}
+            className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+          >
+            {budgetSummary && budgetSummary.totalBudget > 0
+              ? `${currency}${formatIndianNumber(budgetSummary.totalBudget)}`
+              : "Set Budget →"}
+          </button>
+        )}
         </div>
         <div className="relative mb-6">
           <ResponsiveContainer width="100%" height={220}>
