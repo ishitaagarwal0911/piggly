@@ -55,7 +55,17 @@ export const ExpenseChart = ({
   if (expensesByCategory.length === 0) {
     return (
       <div className="bg-card rounded-2xl p-6 shadow-notion">
-        <h3 className="text-sm font-medium mb-4">Spending by Category</h3>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-sm font-medium">Spending by Category</h3>
+          {onSetBudgetClick && (
+            <button
+              onClick={onSetBudgetClick}
+              className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Set Budget
+            </button>
+          )}
+        </div>
         <div className="relative mb-6">
           <ResponsiveContainer width="100%" height={220}>
             <PieChart>
