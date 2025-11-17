@@ -123,7 +123,7 @@ export const BudgetSetupSheet = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px] h-[90vh] flex flex-col p-0">
+      <DialogContent className="w-full h-full max-w-none flex flex-col p-0 gap-0">
         <DialogHeader className="px-6 py-4 border-b">
           <div className="flex items-center gap-3">
             <Button
@@ -140,43 +140,26 @@ export const BudgetSetupSheet = ({
 
         <ScrollArea className="flex-1 px-6">
           <div className="py-6 space-y-6">
-            {/* Gauge Visual */}
-            <div className="flex justify-center py-4">
-              <div className="relative">
-                <Gauge className="w-24 h-24 text-primary" strokeWidth={1.5} />
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="text-2xl font-bold">{Math.round(budgetUsagePercent)}%</span>
-                </div>
-              </div>
-            </div>
-
             {/* Overall Budget */}
-            <div className="space-y-2">
-              <h3 className="text-lg font-semibold">Set monthly budget</h3>
-              <p className="text-sm text-muted-foreground">
-                Plan your expenses for the month
-              </p>
-              
-              <div className="pt-2">
-                <Label htmlFor="overall-budget" className="flex items-center gap-2 mb-2">
-                  <Ruler className="w-4 h-4 text-muted-foreground" />
-                  <span>Overall budget</span>
-                </Label>
-                <Input
-                  id="overall-budget"
-                  type="number"
-                  placeholder="Enter amount"
-                  value={overallBudget}
-                  onChange={(e) => setOverallBudget(e.target.value)}
-                  className="text-lg"
-                />
-              </div>
+            <div className="space-y-3">
+              <Label htmlFor="overall-budget" className="flex items-center gap-2 mb-2">
+                <Ruler className="w-4 h-4 text-muted-foreground" />
+                <span>Overall budget</span>
+              </Label>
+              <Input
+                id="overall-budget"
+                type="number"
+                placeholder="Enter amount"
+                value={overallBudget}
+                onChange={(e) => setOverallBudget(e.target.value)}
+                className="text-lg"
+              />
             </div>
 
             {/* Category-wise Budget */}
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <h3 className="text-base font-semibold">Category wise budget</h3>
+                <h3 className="text-sm font-semibold">Category wise budget</h3>
                 <div className="text-sm">
                   <span className="text-muted-foreground">Total: </span>
                   <span className={totalCategoryBudget > overallBudgetNum ? 'text-destructive font-medium' : ''}>
