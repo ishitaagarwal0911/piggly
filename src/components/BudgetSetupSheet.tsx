@@ -11,7 +11,7 @@ import X from 'lucide-react/dist/esm/icons/x';
 import Plus from 'lucide-react/dist/esm/icons/plus';
 import { Budget } from '@/types/budget';
 import { loadSettings } from '@/lib/settings';
-import { saveBudget } from '@/lib/budget';
+import { saveBudget, deleteBudget } from '@/lib/budget';
 import { toast } from 'sonner';
 import { startOfMonth } from 'date-fns';
 
@@ -77,8 +77,27 @@ export const BudgetSetupSheet = ({
   const categoriesWithoutBudget = categories.filter(c => !(c.id in categoryBudgets));
 
   const handleSave = async () => {
-    if (!overallBudget || parseFloat(overallBudget) <= 0) {
-      toast.error('Please enter a valid overall budget');
+    const budgetValue = parseFloat(overallBudget || '0');
+    
+    // Handle budget deletion when set to 0
+    if (budgetValue === 0) {
+      setSaving(true);
+      const deleted = await deleteBudget(startOfMonth(new Date()));
+      setSaving(false);
+      
+      if (deleted) {
+        toast.success('Budget deleted successfully');
+        onSave(null as any);
+        onOpenChange(false);
+      } else {
+        toast.error('Failed to delete budget');
+      }
+      return;
+    }
+    
+    // Validate budget is positive
+    if (!overallBudget || budgetValue < 0) {
+      toast.error('Please enter a valid budget amount');
       return;
     }
 
@@ -86,7 +105,7 @@ export const BudgetSetupSheet = ({
     const budgetData: Omit<Budget, 'id' | 'createdAt' | 'updatedAt'> = {
       userId: '', // Will be set by saveBudget
       month: startOfMonth(new Date()),
-      overallBudget: parseFloat(overallBudget),
+      overallBudget: budgetValue,
       categoryBudgets: Object.entries(categoryBudgets).reduce(
         (acc, [id, amount]) => {
           const num = parseFloat(amount);
@@ -132,7 +151,7 @@ export const BudgetSetupSheet = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-full h-full max-w-none flex flex-col p-0 gap-0" hideClose>
+      <DialogContent className="w-full h-full max-w-none flex flex-col p-0 gap-0 max-h-[calc(100vh-env(safe-area-inset-bottom))] pb-0" hideClose>
         <DialogHeader className="px-6 py-4 border-b">
           <div className="flex items-center justify-between">
             <DialogTitle className="text-base">Budget planner</DialogTitle>
@@ -211,7 +230,7 @@ export const BudgetSetupSheet = ({
                       {category.icon}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium truncate">{category.name}</p>
+                      <p className="text-sm font-medium truncate">{category.name}</p>
                     </div>
                     <div className="px-1">
                       <Input
@@ -288,14 +307,14 @@ export const BudgetSetupSheet = ({
 
         {/* Save Button */}
         <div 
-          className="bg-background border-t pt-3 px-6"
+          className="bg-background border-t pt-3 px-6 mt-auto"
           style={{ 
             paddingBottom: 'calc(1rem + env(safe-area-inset-bottom, 0px))'
           }}
         >
           <Button
             onClick={handleSave}
-            disabled={saving || !overallBudget || parseFloat(overallBudget) <= 0}
+            disabled={saving || (!overallBudget && parseFloat(overallBudget || '0') < 0)}
             className="w-full"
             size="lg"
           >

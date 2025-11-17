@@ -70,6 +70,21 @@ export const getCurrentMonthBudget = async (): Promise<Budget | null> => {
   return loadBudget(new Date());
 };
 
+export const deleteBudget = async (month: Date): Promise<boolean> => {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return false;
+
+  const monthStart = startOfMonth(month);
+  
+  const { error } = await supabase
+    .from('budgets')
+    .delete()
+    .eq('user_id', user.id)
+    .eq('month', monthStart.toISOString().split('T')[0]);
+
+  return !error;
+};
+
 export const calculateSafeToSpend = (totalBudget: number, totalSpent: number): number => {
   const today = new Date();
   const lastDay = endOfMonth(today);
