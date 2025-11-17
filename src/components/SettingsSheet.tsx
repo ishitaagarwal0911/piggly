@@ -143,7 +143,7 @@ export const SettingsSheet = ({
 
         <Accordion type="multiple" defaultValue={[]} className="mt-2">
           <AccordionItem value="budget">
-            <AccordionTrigger className="text-base font-semibold">Budget planner</AccordionTrigger>
+            <AccordionTrigger className="text-base font-medium">Budget planner</AccordionTrigger>
             <AccordionContent className="space-y-4 pb-4">
               <Button variant="outline" className="w-full justify-start" onClick={onBudgetClick}>
                 Set budget

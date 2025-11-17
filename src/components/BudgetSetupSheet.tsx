@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerClose } from '@/components/ui/drawer';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -165,24 +165,25 @@ export const BudgetSetupSheet = ({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-full h-full max-w-none flex flex-col p-0 gap-0 max-h-[calc(100vh-env(safe-area-inset-bottom))] pb-0" hideClose>
-        <DialogHeader className="px-6 py-4 border-b">
+    <Drawer open={open} onOpenChange={onOpenChange}>
+      <DrawerContent className="flex flex-col max-h-[calc(100vh-env(safe-area-inset-bottom))] pb-0">
+        <DrawerHeader className="px-6 py-4 border-b">
           <div className="flex items-center justify-between">
-            <DialogTitle className="text-base">Budget planner</DialogTitle>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => onOpenChange(false)}
-              className="h-10 w-10"
-            >
-              <X className="h-6 w-6" />
-            </Button>
+            <DrawerTitle className="text-base">Budget planner</DrawerTitle>
+            <DrawerClose asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-10 w-10"
+              >
+                <X className="h-6 w-6" />
+              </Button>
+            </DrawerClose>
           </div>
-        </DialogHeader>
+        </DrawerHeader>
 
-        <div className="flex-1 overflow-y-auto">
-          <div className="px-6 py-6 space-y-6">
+        <div className="flex-1 overflow-y-auto px-4 sm:px-6">
+          <div className="py-6 space-y-6">
             {/* Overall Budget */}
             <div className="space-y-3">
               <Label htmlFor="overall-budget" className="flex items-center gap-2 mb-2">
@@ -336,7 +337,7 @@ export const BudgetSetupSheet = ({
             {saving ? 'Saving...' : 'Set budget'}
           </Button>
         </div>
-      </DialogContent>
+      </DrawerContent>
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
@@ -358,6 +359,6 @@ export const BudgetSetupSheet = ({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </Dialog>
+    </Drawer>
   );
 };

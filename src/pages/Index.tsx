@@ -49,7 +49,7 @@ const Index = () => {
   const [currency, setCurrency] = useState("₹");
   const [settingsOpen, setSettingsOpen] = useHistoryState(false, "settings");
   const [searchOpen, setSearchOpen] = useHistoryState(false, "search");
-  const [budgetSheetOpen, setBudgetSheetOpen] = useState(false);
+  const [budgetSheetOpen, setBudgetSheetOpen] = useHistoryState(false, "budget-sheet");
   const [currentBudget, setCurrentBudget] = useState<Budget | null>(null);
   const [budgetSummary, setBudgetSummary] = useState<BudgetSummary | null>(null);
 
