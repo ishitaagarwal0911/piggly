@@ -166,12 +166,15 @@ const Index = () => {
       getCurrentMonthBudget()
         .then(budget => {
           setCurrentBudget(budget);
-          // Don't set budgetLoading to false here - wait for summary calculation
+          if (!budget) {
+            // No budget set - can stop loading now
+            setBudgetLoading(false);
+          }
+          // If budget exists, let the summary calculation useEffect handle loading state
         })
         .catch(error => {
           console.error('Failed to load budget:', error);
           setBudgetLoading(false);
-          // Continue without budget - non-critical feature
         });
     };
     loadData();
@@ -307,10 +310,7 @@ const Index = () => {
       setBudgetLoading(false); // Loading complete after summary is ready
     } else {
       setBudgetSummary(null);
-      // Only set loading to false after initial data load completes
-      if (hasLoadedData) {
-        setBudgetLoading(false);
-      }
+      // Don't set budgetLoading to false here - let the budget fetch handle it
     }
   }, [currentBudget, transactions, currentDate, viewType]);
 
