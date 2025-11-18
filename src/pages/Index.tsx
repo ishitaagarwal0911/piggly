@@ -52,7 +52,7 @@ const Index = () => {
   const [budgetSheetOpen, setBudgetSheetOpen] = useHistoryState(false, "budget-sheet");
   const [currentBudget, setCurrentBudget] = useState<Budget | null>(null);
   const [budgetSummary, setBudgetSummary] = useState<BudgetSummary | null>(null);
-  const [budgetLoading, setBudgetLoading] = useState(true);
+  const [budgetLoading, setBudgetLoading] = useState(false);
 
   // Track user ID to prevent unnecessary reloads
   const [hasLoadedData, setHasLoadedData] = useState(false);
