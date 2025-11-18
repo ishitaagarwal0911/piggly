@@ -1,5 +1,6 @@
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 import Gauge from 'lucide-react/dist/esm/icons/gauge';
 import { formatIndianNumber } from '@/lib/utils';
 
@@ -9,6 +10,7 @@ interface BudgetSummaryCardProps {
   safeToSpend?: number;
   currency: string;
   onSetBudgetClick: () => void;
+  budgetLoading?: boolean;
 }
 
 export const BudgetSummaryCard = ({
@@ -17,7 +19,30 @@ export const BudgetSummaryCard = ({
   safeToSpend,
   currency,
   onSetBudgetClick,
+  budgetLoading = false,
 }: BudgetSummaryCardProps) => {
+  // Show skeleton during initial load
+  if (budgetLoading) {
+    return (
+      <Card className="p-6 mb-6">
+        <div className="grid grid-cols-3 gap-4 text-center">
+          <div>
+            <Skeleton className="h-3 w-12 mx-auto mb-2" />
+            <Skeleton className="h-6 w-20 mx-auto" />
+          </div>
+          <div>
+            <Skeleton className="h-3 w-12 mx-auto mb-2" />
+            <Skeleton className="h-6 w-20 mx-auto" />
+          </div>
+          <div>
+            <Skeleton className="h-3 w-16 mx-auto mb-2" />
+            <Skeleton className="h-6 w-20 mx-auto" />
+          </div>
+        </div>
+      </Card>
+    );
+  }
+
   const hasBudget = totalBudget !== undefined && totalBudget > 0;
 
   if (!hasBudget) {
