@@ -14,6 +14,7 @@ interface ExpenseChartProps {
   budgetSummary?: BudgetSummary | null;
   onSetBudgetClick?: () => void;
   hasActiveSubscription?: boolean;
+  budgetLoading?: boolean;
 }
 
 export const ExpenseChart = ({
@@ -23,16 +24,24 @@ export const ExpenseChart = ({
   budgetSummary,
   onSetBudgetClick,
   hasActiveSubscription = false,
+  budgetLoading = false,
 }: ExpenseChartProps) => {
   const [showTooltip, setShowTooltip] = useState(() => {
+    // Don't show tooltip while budget is loading
+    if (budgetLoading) return false;
     return (!budgetSummary || budgetSummary.totalBudget === 0) && !hasActiveSubscription;
   });
 
   // Show tooltip if no budget is set AND user is not a paid member
   useEffect(() => {
+    // Don't show tooltip while budget is loading
+    if (budgetLoading) {
+      setShowTooltip(false);
+      return;
+    }
     const shouldShow = (!budgetSummary || budgetSummary.totalBudget === 0) && !hasActiveSubscription;
     setShowTooltip(shouldShow);
-  }, [budgetSummary, hasActiveSubscription]);
+  }, [budgetSummary, hasActiveSubscription, budgetLoading]);
   const expensesByCategory = useMemo(() => {
     const expenses = transactions.filter((t) => t.type === "expense");
     const total = expenses.reduce((sum, t) => sum + t.amount, 0);

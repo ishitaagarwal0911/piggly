@@ -52,24 +52,34 @@ export const BudgetSetupSheet = ({
   const [showQuickAddCategory, setShowQuickAddCategory] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState('');
   const [newCategoryIcon, setNewCategoryIcon] = useState('📦');
+  const [categoriesLoading, setCategoriesLoading] = useState(true);
+  const [initialOverallBudget, setInitialOverallBudget] = useState('');
+  const [initialCategoryBudgets, setInitialCategoryBudgets] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (open) {
+      setCategoriesLoading(true);
       loadSettings().then(settings => {
         const expenseCategories = settings.categories.filter(c => c.type === 'expense');
         setCategories(expenseCategories);
+        setCategoriesLoading(false);
       });
 
       if (initialBudget) {
-        setOverallBudget(initialBudget.overallBudget.toString());
+        const budgetStr = initialBudget.overallBudget.toString();
         const budgets: Record<string, string> = {};
         Object.entries(initialBudget.categoryBudgets).forEach(([id, amount]) => {
           budgets[id] = amount.toString();
         });
+        setOverallBudget(budgetStr);
         setCategoryBudgets(budgets);
+        setInitialOverallBudget(budgetStr);
+        setInitialCategoryBudgets(budgets);
       } else {
         setOverallBudget('');
         setCategoryBudgets({});
+        setInitialOverallBudget('');
+        setInitialCategoryBudgets({});
       }
     }
   }, [open, initialBudget]);
@@ -86,6 +96,28 @@ export const BudgetSetupSheet = ({
 
   const categoriesWithBudget = categories.filter(c => c.id in categoryBudgets);
   const categoriesWithoutBudget = categories.filter(c => !(c.id in categoryBudgets));
+
+  const hasChanges = () => {
+    // Allow save when budget is 0 (for deletion)
+    if (overallBudget === '0') return true;
+    
+    // Check if overall budget changed
+    if (overallBudget !== initialOverallBudget) return true;
+    
+    // Check if category budgets changed
+    const currentKeys = Object.keys(categoryBudgets).sort();
+    const initialKeys = Object.keys(initialCategoryBudgets).sort();
+    
+    if (currentKeys.length !== initialKeys.length) return true;
+    if (JSON.stringify(currentKeys) !== JSON.stringify(initialKeys)) return true;
+    
+    // Check if any values changed
+    for (const key of currentKeys) {
+      if (categoryBudgets[key] !== initialCategoryBudgets[key]) return true;
+    }
+    
+    return false;
+  };
 
   const handleSave = async () => {
     const budgetValue = parseFloat(overallBudget || '0');
@@ -165,7 +197,13 @@ export const BudgetSetupSheet = ({
   };
 
   return (
-    <Drawer open={open} onOpenChange={onOpenChange}>
+      <Drawer 
+        open={open} 
+        onOpenChange={onOpenChange}
+        snapPoints={null}
+        modal={true}
+        shouldScaleBackground={false}
+      >
       <DrawerContent className="flex flex-col h-[100dvh] pb-0" noSlideUp>
         <DrawerHeader className="px-6 py-4 border-b">
           <div className="flex items-center justify-between">
@@ -274,7 +312,7 @@ export const BudgetSetupSheet = ({
               </div>
 
               {/* Add Category Section - Always visible */}
-              {categoriesWithoutBudget.length > 0 && (
+              {!categoriesLoading && categoriesWithoutBudget.length > 0 && (
                 <div className="space-y-2 p-3 border rounded-lg bg-muted/30">
                   <p className="text-xs font-medium text-muted-foreground mb-2">Available categories</p>
                   <div className="space-y-1">
@@ -389,7 +427,7 @@ export const BudgetSetupSheet = ({
         >
           <Button
             onClick={handleSave}
-            disabled={saving || overallBudget === ''}
+            disabled={saving || overallBudget === '' || !hasChanges()}
             className="w-full"
             size="lg"
           >
