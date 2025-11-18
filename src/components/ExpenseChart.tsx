@@ -24,7 +24,9 @@ export const ExpenseChart = ({
   onSetBudgetClick,
   hasActiveSubscription = false,
 }: ExpenseChartProps) => {
-  const [showTooltip, setShowTooltip] = useState(false);
+  const [showTooltip, setShowTooltip] = useState(() => {
+    return (!budgetSummary || budgetSummary.totalBudget === 0) && !hasActiveSubscription;
+  });
 
   // Show tooltip if no budget is set AND user is not a paid member
   useEffect(() => {
@@ -81,14 +83,16 @@ export const ExpenseChart = ({
                 : "Set Budget →"}
             </button>
             {showTooltip && (
-              <div className="absolute top-[-70px] right-0 bg-popover border shadow-lg rounded-lg p-3 flex items-center gap-2 text-xs animate-fade-in max-w-[220px] z-50">
-                <span className="text-foreground leading-relaxed">Start with setting your monthly budget</span>
+              <div className="absolute top-[-85px] right-0 bg-popover border shadow-lg rounded-lg p-3 pr-8 text-xs animate-fade-in w-[150px] z-50">
+                <span className="text-foreground leading-relaxed block">
+                  Start with setting your monthly budget
+                </span>
                 <button 
                   onClick={(e) => {
                     e.stopPropagation();
                     setShowTooltip(false);
                   }}
-                  className="text-muted-foreground hover:text-foreground flex-shrink-0"
+                  className="absolute top-2 right-2 text-muted-foreground hover:text-foreground flex-shrink-0"
                 >
                   <X className="h-3 w-3" />
                 </button>
