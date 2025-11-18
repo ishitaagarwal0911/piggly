@@ -166,7 +166,7 @@ const Index = () => {
       getCurrentMonthBudget()
         .then(budget => {
           setCurrentBudget(budget);
-          setBudgetLoading(false);
+          // Don't set budgetLoading to false here - wait for summary calculation
         })
         .catch(error => {
           console.error('Failed to load budget:', error);
@@ -291,6 +291,8 @@ const Index = () => {
   // Calculate budget summary when transactions or budget changes
   useEffect(() => {
     if (currentBudget && viewType === 'monthly') {
+      setBudgetLoading(true); // Show loading during calculation
+      
       const monthStart = startOfMonth(currentDate);
       const monthEnd = endOfMonth(currentDate);
       
@@ -302,8 +304,10 @@ const Index = () => {
 
       const summary = calculateBudgetSummary(currentBudget, monthTransactions, categories());
       setBudgetSummary(summary);
+      setBudgetLoading(false); // Loading complete after summary is ready
     } else {
       setBudgetSummary(null);
+      setBudgetLoading(false); // No budget to load
     }
   }, [currentBudget, transactions, currentDate, viewType]);
 
