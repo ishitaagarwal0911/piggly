@@ -1,10 +1,11 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, lazy, Suspense } from "react";
 import { useNavigate } from "react-router-dom";
 import { Transaction } from "@/types/transaction";
 import { BalanceSummary } from "@/components/BalanceSummary";
 import { SettingsSheet } from "@/components/SettingsSheet";
 import { PeriodSelector } from "@/components/PeriodSelector";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import Plus from 'lucide-react/dist/esm/icons/plus';
 import Search from 'lucide-react/dist/esm/icons/search';
 import { loadTransactions, saveTransaction, deleteTransaction, loadHistoricalTransactions } from "@/lib/storage";
@@ -15,7 +16,7 @@ import { useSubscription } from "@/contexts/SubscriptionContext";
 import { useRealtimeSync } from "@/hooks/useRealtimeSync";
 import { useHistoryState } from "@/hooks/useHistoryState";
 import { usePageRestore } from "@/hooks/usePageRestore";
-import { getCachedTransactions, isCacheFresh } from "@/lib/cache";
+import { getCachedTransactions, getCachedSettings, isCacheFresh } from "@/lib/cache";
 import { toast } from "sonner";
 import { useSwipeGesture } from "@/hooks/useSwipeGesture";
 import piggyTransparent from "@/assets/piggly_header_icon.png";
@@ -25,11 +26,13 @@ import { categories } from "@/lib/categories";
 import { startOfMonth, endOfMonth } from "date-fns";
 import { BudgetSetupSheet } from "@/components/BudgetSetupSheet";
 
+// Lazy load heavy components for faster initial load
+const ExpenseChart = lazy(() => import("@/components/ExpenseChart").then(m => ({ default: m.ExpenseChart })));
+const TransactionSearch = lazy(() => import("@/components/TransactionSearch").then(m => ({ default: m.TransactionSearch })));
+
 // Import components directly for better stability
 import { AddTransactionDialog } from "@/components/AddTransactionDialog";
 import TransactionDetailSheet from "@/components/TransactionDetailSheet";
-import { TransactionSearch } from "@/components/TransactionSearch";
-import { ExpenseChart } from "@/components/ExpenseChart";
 
 const Index = () => {
   const { user, loading, isInitialized } = useAuth();
@@ -133,49 +136,51 @@ const Index = () => {
       userIdRef.current = user.id;
       setCategoriesLoaded(false);
 
-      // Try to load from cache first (synchronous, instant)
-      const cached = getCachedTransactions(user.id);
-      if (cached) {
-        setTransactions(cached);
-
+      // INSTANT: Try to load from cache first (synchronous, instant)
+      const cachedTransactions = getCachedTransactions(user.id);
+      const cachedSettings = getCachedSettings(user.id);
+      
+      if (cachedTransactions) {
+        setTransactions(cachedTransactions);
         // If cache is fresh, skip loading state entirely
         if (isCacheFresh(user.id)) {
           setDataLoading(false);
         }
       }
 
-      // Always fetch fresh data in background
+      if (cachedSettings) {
+        setCurrency(cachedSettings.currency_symbol);
+        setViewType(cachedSettings.default_view as ViewType || "monthly");
+      }
+
+      // PARALLEL: Always fetch fresh data in background
       setIsSyncing(true);
 
       // Load only 2 months for ultra-fast initial load
       const twoMonthsAgo = new Date();
       twoMonthsAgo.setMonth(twoMonthsAgo.getMonth() - 2);
 
-      const [loaded, settings] = await Promise.all([loadTransactions({ since: twoMonthsAgo }), loadSettings()]);
+      const [loaded, settings, budget] = await Promise.all([
+        loadTransactions({ since: twoMonthsAgo }),
+        loadSettings(),
+        getCurrentMonthBudget()
+      ]);
 
       setTransactions(loaded);
       setViewType(settings.defaultView);
       setCurrency(settings.currency.symbol);
+      setCurrentBudget(budget);
+      
+      if (!budget) {
+        setBudgetLoading(false);
+      }
+      
       setCategoriesLoaded(true);
       setDataLoading(false);
       setIsSyncing(false);
       setHasLoadedData(true);
 
-      // Load budget in background with error handling
-      setBudgetLoading(true);
-      getCurrentMonthBudget()
-        .then(budget => {
-          setCurrentBudget(budget);
-          if (!budget) {
-            // No budget set - can stop loading now
-            setBudgetLoading(false);
-          }
-          // If budget exists, let the summary calculation useEffect handle loading state
-        })
-        .catch(error => {
-          console.error('Failed to load budget:', error);
-          setBudgetLoading(false);
-        });
+      // Budget is now loaded in parallel above, no need for separate call
     };
     loadData();
   }, [user?.id, hasLoadedData]); // Depend on user.id, not user object
@@ -605,15 +610,17 @@ const Index = () => {
           safeToSpend={viewType === 'monthly' ? budgetSummary?.safeToSpend : undefined}
         />
         
-        <ExpenseChart 
-          transactions={filteredTransactions} 
-          onCategoryClick={handleCategoryClick} 
-          currency={currency}
-          budgetSummary={viewType === 'monthly' ? budgetSummary : null}
-          onSetBudgetClick={viewType === 'monthly' ? () => setBudgetSheetOpen(true) : undefined}
-          hasActiveSubscription={hasActiveSubscription}
-          budgetLoading={budgetLoading}
-        />
+        <Suspense fallback={<Skeleton className="h-64 w-full rounded-lg" />}>
+          <ExpenseChart 
+            transactions={filteredTransactions} 
+            onCategoryClick={handleCategoryClick} 
+            currency={currency}
+            budgetSummary={viewType === 'monthly' ? budgetSummary : null}
+            onSetBudgetClick={viewType === 'monthly' ? () => setBudgetSheetOpen(true) : undefined}
+            hasActiveSubscription={hasActiveSubscription}
+            budgetLoading={budgetLoading}
+          />
+        </Suspense>
       </main>
 
       {/* Floating Add Button */}
@@ -667,12 +674,14 @@ const Index = () => {
         onSave={handleBudgetSave}
       />
 
-      <TransactionSearch
-        open={searchOpen}
-        onOpenChange={setSearchOpen}
-        transactions={transactions}
-        onTransactionSelect={handleEditTransaction}
-      />
+      <Suspense fallback={null}>
+        <TransactionSearch
+          open={searchOpen}
+          onOpenChange={setSearchOpen}
+          transactions={transactions}
+          onTransactionSelect={handleEditTransaction}
+        />
+      </Suspense>
     </div>
   );
 };
