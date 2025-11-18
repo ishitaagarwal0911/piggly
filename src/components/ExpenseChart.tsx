@@ -27,9 +27,10 @@ export const ExpenseChart = ({
   budgetLoading = false,
 }: ExpenseChartProps) => {
   const [showTooltip, setShowTooltip] = useState(() => {
-    // Don't show tooltip while budget is loading
+    // Only show if we're NOT loading AND have confirmed budget is 0
     if (budgetLoading) return false;
-    return (!budgetSummary || budgetSummary.totalBudget === 0) && !hasActiveSubscription;
+    if (!budgetSummary) return false; // Don't show if budget hasn't loaded yet
+    return budgetSummary.totalBudget === 0 && !hasActiveSubscription;
   });
 
   // Show tooltip if no budget is set AND user is not a paid member
@@ -39,7 +40,13 @@ export const ExpenseChart = ({
       setShowTooltip(false);
       return;
     }
-    const shouldShow = (!budgetSummary || budgetSummary.totalBudget === 0) && !hasActiveSubscription;
+    // Don't show tooltip if budget hasn't been fetched yet (avoids flicker)
+    if (!budgetSummary) {
+      setShowTooltip(false);
+      return;
+    }
+    // Only show if budget is explicitly 0 and user is not subscribed
+    const shouldShow = budgetSummary.totalBudget === 0 && !hasActiveSubscription;
     setShowTooltip(shouldShow);
   }, [budgetSummary, hasActiveSubscription, budgetLoading]);
   const expensesByCategory = useMemo(() => {
