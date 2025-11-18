@@ -89,7 +89,9 @@ export const ExpenseChart = ({
             >
               {budgetSummary && budgetSummary.totalBudget > 0
                 ? `${currency}${formatIndianNumber(budgetSummary.totalBudget)}`
-                : "Set Budget →"}
+                : budgetLoading 
+                  ? `${currency}...`
+                  : "Set Budget →"}
             </button>
             {showTooltip && (
               <div className="absolute top-[-85px] right-0 bg-popover border shadow-lg rounded-lg p-3 pr-8 text-xs animate-fade-in w-[150px] z-50">
@@ -135,7 +137,7 @@ export const ExpenseChart = ({
           </div>
         </div>
         
-        {hasCategoryBudgets && (
+        {!budgetLoading && hasCategoryBudgets && (
           <div className="space-y-3">
             {budgetSummary.categories.map((categoryBudget) => (
               <button

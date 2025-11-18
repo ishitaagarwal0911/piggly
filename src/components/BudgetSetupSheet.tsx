@@ -272,44 +272,52 @@ export const BudgetSetupSheet = ({
               </div>
 
               {/* Categories with Budget */}
-              <div className="space-y-2 pt-2">
-                {categoriesWithBudget.map((category) => (
-                  <div
-                    key={category.id}
-                    id={`category-budget-${category.id}`}
-                    className="flex items-center gap-2.5 p-2.5 rounded-lg border bg-card"
-                  >
-                    <div className="w-8 h-8 flex items-center justify-center text-xl">
-                      {category.icon}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">{category.name}</p>
-                    </div>
-                    <div className="px-1">
-                      <Input
-                        type="number"
-                        placeholder="0"
-                        value={categoryBudgets[category.id] || ''}
-                        onChange={(e) =>
-                          setCategoryBudgets({
-                            ...categoryBudgets,
-                            [category.id]: e.target.value,
-                          })
-                        }
-                        className="w-24 text-right"
-                      />
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleRemoveCategoryBudget(category.id)}
-                      className="h-8 w-8"
+              {categoriesLoading ? (
+                <div className="space-y-2 pt-2">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="h-16 bg-muted/30 rounded-lg animate-pulse" />
+                  ))}
+                </div>
+              ) : (
+                <div className="space-y-2 pt-2">
+                  {categoriesWithBudget.map((category) => (
+                    <div
+                      key={category.id}
+                      id={`category-budget-${category.id}`}
+                      className="flex items-center gap-2.5 p-2.5 rounded-lg border bg-card"
                     >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </div>
-                ))}
-              </div>
+                      <div className="w-8 h-8 flex items-center justify-center text-xl">
+                        {category.icon}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">{category.name}</p>
+                      </div>
+                      <div className="px-1">
+                        <Input
+                          type="number"
+                          placeholder="0"
+                          value={categoryBudgets[category.id] || ''}
+                          onChange={(e) =>
+                            setCategoryBudgets({
+                              ...categoryBudgets,
+                              [category.id]: e.target.value,
+                            })
+                          }
+                          className="w-24 text-right"
+                        />
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleRemoveCategoryBudget(category.id)}
+                        className="h-8 w-8"
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
 
               {/* Add Category Section - Always visible */}
               {!categoriesLoading && categoriesWithoutBudget.length > 0 && (
