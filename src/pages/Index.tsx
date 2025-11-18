@@ -52,6 +52,7 @@ const Index = () => {
   const [budgetSheetOpen, setBudgetSheetOpen] = useHistoryState(false, "budget-sheet");
   const [currentBudget, setCurrentBudget] = useState<Budget | null>(null);
   const [budgetSummary, setBudgetSummary] = useState<BudgetSummary | null>(null);
+  const [budgetLoading, setBudgetLoading] = useState(true);
 
   // Track user ID to prevent unnecessary reloads
   const [hasLoadedData, setHasLoadedData] = useState(false);
@@ -161,12 +162,15 @@ const Index = () => {
       setHasLoadedData(true);
 
       // Load budget in background with error handling
+      setBudgetLoading(true);
       getCurrentMonthBudget()
         .then(budget => {
           setCurrentBudget(budget);
+          setBudgetLoading(false);
         })
         .catch(error => {
           console.error('Failed to load budget:', error);
+          setBudgetLoading(false);
           // Continue without budget - non-critical feature
         });
     };
@@ -601,6 +605,7 @@ const Index = () => {
           budgetSummary={viewType === 'monthly' ? budgetSummary : null}
           onSetBudgetClick={viewType === 'monthly' ? () => setBudgetSheetOpen(true) : undefined}
           hasActiveSubscription={hasActiveSubscription}
+          budgetLoading={budgetLoading}
         />
       </main>
 
