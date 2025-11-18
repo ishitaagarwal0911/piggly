@@ -5,6 +5,7 @@ import { getCategoryInfo } from "@/lib/categories";
 import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
 import { formatIndianNumber } from "@/lib/utils";
 import { Progress } from "@/components/ui/progress";
+import { Skeleton } from "@/components/ui/skeleton";
 import X from 'lucide-react/dist/esm/icons/x';
 
 interface ExpenseChartProps {
@@ -80,6 +81,41 @@ export const ExpenseChart = ({
       })
       .sort((a, b) => b.amount - a.amount);
   }, [transactions]);
+
+  // Show skeleton loaders during initial budget load
+  if (budgetLoading) {
+    return (
+      <div className="bg-card rounded-2xl p-6 shadow-notion">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-sm font-medium">Spending by Category</h3>
+          <Skeleton className="h-4 w-24" />
+        </div>
+        
+        {/* Chart skeleton */}
+        <div className="relative mb-6">
+          <div className="flex items-center justify-center h-[220px]">
+            <Skeleton className="w-[180px] h-[180px] rounded-full" />
+          </div>
+        </div>
+        
+        {/* Category list skeleton */}
+        <div className="space-y-3">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="space-y-2">
+              <div className="flex items-center gap-3">
+                <Skeleton className="w-8 h-8 rounded-lg" />
+                <div className="flex-1">
+                  <Skeleton className="h-4 w-24 mb-1" />
+                  <Skeleton className="h-3 w-full" />
+                </div>
+                <Skeleton className="h-4 w-16" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   if (expensesByCategory.length === 0) {
     const hasCategoryBudgets = budgetSummary?.categories && budgetSummary.categories.length > 0;

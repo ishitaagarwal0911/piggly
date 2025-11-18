@@ -52,7 +52,7 @@ const Index = () => {
   const [budgetSheetOpen, setBudgetSheetOpen] = useHistoryState(false, "budget-sheet");
   const [currentBudget, setCurrentBudget] = useState<Budget | null>(null);
   const [budgetSummary, setBudgetSummary] = useState<BudgetSummary | null>(null);
-  const [budgetLoading, setBudgetLoading] = useState(false);
+  const [budgetLoading, setBudgetLoading] = useState(true);
 
   // Track user ID to prevent unnecessary reloads
   const [hasLoadedData, setHasLoadedData] = useState(false);
@@ -307,7 +307,10 @@ const Index = () => {
       setBudgetLoading(false); // Loading complete after summary is ready
     } else {
       setBudgetSummary(null);
-      setBudgetLoading(false); // No budget to load
+      // Only set loading to false after initial data load completes
+      if (hasLoadedData) {
+        setBudgetLoading(false);
+      }
     }
   }, [currentBudget, transactions, currentDate, viewType]);
 
