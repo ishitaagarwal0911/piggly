@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import type { DigitalGoodsService, ItemDetails } from '@/types/subscription';
 
 export const useDigitalGoods = () => {
@@ -6,6 +6,10 @@ export const useDigitalGoods = () => {
   const [isAvailable, setIsAvailable] = useState(false);
   const [loading, setLoading] = useState(true);
   const [initialized, setInitialized] = useState(false);
+  const initPromiseRef = useRef<{
+    resolve: () => void;
+    reject: (error: Error) => void;
+  } | null>(null);
 
   useEffect(() => {
     // Skip initialization on mount - only init when actually needed
@@ -22,9 +26,16 @@ export const useDigitalGoods = () => {
           );
           setService(digitalGoodsService);
           setIsAvailable(true);
+          // Resolve the promise when initialization succeeds
+          initPromiseRef.current?.resolve();
+        } else {
+          // Resolve anyway if service not available (so we don't block forever)
+          initPromiseRef.current?.resolve();
         }
       } catch (error) {
         console.error('Failed to initialize Digital Goods API:', error);
+        // Reject the promise on error
+        initPromiseRef.current?.reject(error instanceof Error ? error : new Error('Initialization failed'));
       } finally {
         setLoading(false);
       }
@@ -95,19 +106,11 @@ export const useDigitalGoods = () => {
   };
 
   const initialize = (): Promise<void> => {
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
+      // Store promise callbacks in ref so useEffect can resolve/reject them
+      initPromiseRef.current = { resolve, reject };
+      // Trigger initialization
       setInitialized(true);
-      
-      // Use a polling mechanism to wait for service availability
-      const checkAvailable = () => {
-        if (isAvailable || !loading) {
-          resolve();
-        } else {
-          setTimeout(checkAvailable, 50);
-        }
-      };
-      
-      checkAvailable();
     });
   };
 

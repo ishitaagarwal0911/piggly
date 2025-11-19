@@ -286,9 +286,28 @@ serve(async (req) => {
     );
   } catch (error) {
     console.error('Error verifying purchase:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+    
+    // Convert technical errors to user-friendly messages
+    let userMessage = 'Unable to verify your purchase. Please try again.';
+    
+    if (error instanceof Error) {
+      const technicalMsg = error.message.toLowerCase();
+      
+      if (technicalMsg.includes('unauthorized')) {
+        userMessage = 'Please sign in again to complete your purchase.';
+      } else if (technicalMsg.includes('expired')) {
+        userMessage = 'This subscription has expired. Please purchase a new one.';
+      } else if (technicalMsg.includes('invalid product')) {
+        userMessage = 'This product is not available. Please contact support.';
+      } else if (technicalMsg.includes('not active')) {
+        userMessage = 'This subscription is not active yet. Please wait a moment and try again.';
+      } else if (technicalMsg.includes('failed to store')) {
+        userMessage = 'Purchase verified but failed to save. Please contact support.';
+      }
+    }
+    
     return new Response(
-      JSON.stringify({ error: errorMessage }),
+      JSON.stringify({ error: userMessage }),
       {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
