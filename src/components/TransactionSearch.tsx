@@ -3,7 +3,7 @@ import { Transaction } from "@/types/transaction";
 import { parseSearchQuery, filterTransactionsBySearch, SearchQuery } from "@/lib/searchUtils";
 import { getCategoryInfo, categories } from "@/lib/categories";
 import { formatIndianNumber } from "@/lib/utils";
-import { format } from "date-fns";
+import { format } from "date-fns/format";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";

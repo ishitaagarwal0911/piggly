@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback, useRef, lazy, Suspense } from "react"
 import { useNavigate } from "react-router-dom";
 import { Transaction } from "@/types/transaction";
 import { BalanceSummary } from "@/components/BalanceSummary";
-import { SettingsSheet } from "@/components/SettingsSheet";
 import { PeriodSelector } from "@/components/PeriodSelector";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -23,16 +22,16 @@ import piggyTransparent from "@/assets/piggly_header_icon.png";
 import { Budget, BudgetSummary } from "@/types/budget";
 import { getCurrentMonthBudget, calculateBudgetSummary } from "@/lib/budget";
 import { categories } from "@/lib/categories";
-import { startOfMonth, endOfMonth } from "date-fns";
-import { BudgetSetupSheet } from "@/components/BudgetSetupSheet";
+import { startOfMonth } from "date-fns/startOfMonth";
+import { endOfMonth } from "date-fns/endOfMonth";
 
 // Lazy load heavy components for faster initial load
 const ExpenseChart = lazy(() => import("@/components/ExpenseChart").then(m => ({ default: m.ExpenseChart })));
 const TransactionSearch = lazy(() => import("@/components/TransactionSearch").then(m => ({ default: m.TransactionSearch })));
-
-// Import components directly for better stability
-import { AddTransactionDialog } from "@/components/AddTransactionDialog";
-import TransactionDetailSheet from "@/components/TransactionDetailSheet";
+const AddTransactionDialog = lazy(() => import("@/components/AddTransactionDialog").then(m => ({ default: m.AddTransactionDialog })));
+const SettingsSheet = lazy(() => import("@/components/SettingsSheet").then(m => ({ default: m.SettingsSheet })));
+const BudgetSetupSheet = lazy(() => import("@/components/BudgetSetupSheet").then(m => ({ default: m.BudgetSetupSheet })));
+const TransactionDetailSheet = lazy(() => import("@/components/TransactionDetailSheet"));
 
 const Index = () => {
   const { user, loading, isInitialized } = useAuth();

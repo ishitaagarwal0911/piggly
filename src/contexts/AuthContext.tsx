@@ -35,21 +35,35 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         }
       );
 
-      // THEN check for existing session
+      // Check for cached session in localStorage for instant restore
+      try {
+        const cachedSession = localStorage.getItem('supabase.auth.token');
+        if (cachedSession && mounted) {
+          const parsed = JSON.parse(cachedSession);
+          if (parsed.currentSession) {
+            setSession(parsed.currentSession);
+            setUser(parsed.currentSession.user);
+          }
+        }
+      } catch (e) {
+        // Ignore cache errors
+      }
+
+      // Set loading false immediately for instant render
+      if (mounted) {
+        setLoading(false);
+        setIsInitialized(true);
+      }
+
+      // THEN verify session in background
       try {
         const { data: { session } } = await supabase.auth.getSession();
-        if (mounted) {
+        if (mounted && session) {
           setSession(session);
           setUser(session?.user ?? null);
-          setLoading(false);
-          setIsInitialized(true);
         }
       } catch (error) {
         console.error('[Auth] Init error:', error);
-        if (mounted) {
-          setLoading(false);
-          setIsInitialized(true);
-        }
       }
 
       return () => {

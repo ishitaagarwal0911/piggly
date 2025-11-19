@@ -5,8 +5,15 @@ export const useDigitalGoods = () => {
   const [service, setService] = useState<DigitalGoodsService | null>(null);
   const [isAvailable, setIsAvailable] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [initialized, setInitialized] = useState(false);
 
   useEffect(() => {
+    // Skip initialization on mount - only init when actually needed
+    if (!initialized) {
+      setLoading(false);
+      return;
+    }
+
     const initializeService = async () => {
       try {
         if ('getDigitalGoodsService' in window) {
@@ -24,7 +31,7 @@ export const useDigitalGoods = () => {
     };
 
     initializeService();
-  }, []);
+  }, [initialized]);
 
   const getProductDetails = async (productId: string): Promise<ItemDetails | null> => {
     if (!service) return null;
