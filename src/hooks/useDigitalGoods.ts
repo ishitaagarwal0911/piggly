@@ -5,19 +5,15 @@ export const useDigitalGoods = () => {
   const [service, setService] = useState<DigitalGoodsService | null>(null);
   const [isAvailable, setIsAvailable] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [initialized, setInitialized] = useState(false);
-  const initPromiseRef = useRef<{
-    resolve: () => void;
-    reject: (error: Error) => void;
-  } | null>(null);
+  
+  // Use refs for synchronous state tracking
+  const isInitializedRef = useRef(false);
+  const initPromiseRef = useRef<Promise<void> | null>(null);
 
+  // Initialize automatically on mount
   useEffect(() => {
-    // Skip initialization on mount - only init when actually needed
-    if (!initialized) {
-      setLoading(false);
-      return;
-    }
-
+    if (isInitializedRef.current) return; // Already initialized
+    
     const initializeService = async () => {
       try {
         if ('getDigitalGoodsService' in window) {
@@ -26,23 +22,21 @@ export const useDigitalGoods = () => {
           );
           setService(digitalGoodsService);
           setIsAvailable(true);
-          // Resolve the promise when initialization succeeds
-          initPromiseRef.current?.resolve();
+          console.log('[DigitalGoods] Successfully initialized');
         } else {
-          // Resolve anyway if service not available (so we don't block forever)
-          initPromiseRef.current?.resolve();
+          console.log('[DigitalGoods] Not available in this environment');
         }
       } catch (error) {
-        console.error('Failed to initialize Digital Goods API:', error);
-        // Reject the promise on error
-        initPromiseRef.current?.reject(error instanceof Error ? error : new Error('Initialization failed'));
+        console.error('[DigitalGoods] Failed to initialize:', error);
       } finally {
         setLoading(false);
+        isInitializedRef.current = true;
       }
     };
 
-    initializeService();
-  }, [initialized]);
+    // Store the initialization promise so it can be awaited
+    initPromiseRef.current = initializeService();
+  }, []);
 
   const getProductDetails = async (productId: string): Promise<ItemDetails | null> => {
     if (!service) return null;
@@ -105,13 +99,22 @@ export const useDigitalGoods = () => {
     }
   };
 
-  const initialize = (): Promise<void> => {
-    return new Promise((resolve, reject) => {
-      // Store promise callbacks in ref so useEffect can resolve/reject them
-      initPromiseRef.current = { resolve, reject };
-      // Trigger initialization
-      setInitialized(true);
-    });
+  // Idempotent initialize function
+  const initialize = async (): Promise<void> => {
+    // If initialization promise exists, wait for it
+    if (initPromiseRef.current) {
+      await initPromiseRef.current;
+      return;
+    }
+    
+    // If already initialized, return immediately
+    if (isInitializedRef.current) {
+      return;
+    }
+    
+    // This shouldn't happen, but handle it gracefully
+    console.warn('[DigitalGoods] Initialize called before mount');
+    return;
   };
 
   return {

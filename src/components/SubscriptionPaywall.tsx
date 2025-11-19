@@ -41,11 +41,12 @@ export const SubscriptionPaywall = ({
     const checkForUnlinkedPurchases = async () => {
       if (!open || !user || hasActiveSubscription) return;
       
-      // Initialize Digital Goods when paywall opens and wait for it
+      // Wait for Digital Goods to be ready
       await initialize();
       
-      // Skip unlinked purchase check if Digital Goods unavailable
+      // Skip if not available
       if (!isAvailable) {
+        console.log('[Paywall] Digital Goods not available, hiding restore button');
         setHasUnlinkedPurchase(false);
         return;
       }
@@ -53,10 +54,10 @@ export const SubscriptionPaywall = ({
       setCheckingPurchases(true);
       try {
         const purchases = await listPurchases();
-        // If user has Google Play purchases but no active subscription in our DB
+        console.log('[Paywall] Found purchases:', purchases.length);
         setHasUnlinkedPurchase(purchases.length > 0);
       } catch (error) {
-        console.error('Failed to check purchases:', error);
+        console.error('[Paywall] Failed to check purchases:', error);
         setHasUnlinkedPurchase(false);
       } finally {
         setCheckingPurchases(false);
@@ -64,7 +65,7 @@ export const SubscriptionPaywall = ({
     };
 
     checkForUnlinkedPurchases();
-  }, [open, user, isAvailable, hasActiveSubscription, listPurchases, initialize]);
+  }, [open, user, hasActiveSubscription, listPurchases, initialize, isAvailable]);
 
   const benefits = [
     'Unlimited transactions',
@@ -208,14 +209,15 @@ export const SubscriptionPaywall = ({
                   {purchasing ? 'Processing...' : 'Subscribe Now'}
                 </Button>
 
-                {hasUnlinkedPurchase && (
+                {/* Show restore button if: user has Google purchases OR Digital Goods is available */}
+                {user && (hasUnlinkedPurchase || (isAvailable && !checkingPurchases)) && (
                   <div className="pt-3 border-t">
                     <p className="text-xs text-center text-muted-foreground mb-2">
                       Already paid but don't see premium?
                     </p>
                     <Button
                       onClick={handleRestorePurchases}
-                      disabled={restoring || checkingPurchases}
+                      disabled={restoring || purchasing}
                       variant="outline"
                       size="sm"
                       className="w-full"
