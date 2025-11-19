@@ -1,7 +1,9 @@
 import { supabase } from '@/integrations/supabase/client';
 import { Budget, BudgetSummary } from '@/types/budget';
 import { Transaction } from '@/types/transaction';
-import { startOfMonth, endOfMonth, differenceInDays } from 'date-fns';
+import { startOfMonth } from 'date-fns/startOfMonth';
+import { endOfMonth } from 'date-fns/endOfMonth';
+import { differenceInDays } from 'date-fns/differenceInDays';
 
 export const saveBudget = async (budget: Omit<Budget, 'id' | 'createdAt' | 'updatedAt'>): Promise<Budget | null> => {
   const { data: { user } } = await supabase.auth.getUser();

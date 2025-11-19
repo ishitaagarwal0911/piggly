@@ -18,11 +18,14 @@ const SubscriptionContext = createContext<SubscriptionContextType | undefined>(u
 
 export const SubscriptionProvider = ({ children }: { children: ReactNode }) => {
   const { user } = useAuth();
-  const { purchaseProduct, listPurchases, isAvailable } = useDigitalGoods();
   const [hasActiveSubscription, setHasActiveSubscription] = useState(false);
   const [loading, setLoading] = useState(true);
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [expiryDate, setExpiryDate] = useState<Date | null>(null);
+  
+  // Lazy load digital goods hook only when needed
+  const [digitalGoodsLoaded, setDigitalGoodsLoaded] = useState(false);
+  const digitalGoods = digitalGoodsLoaded ? useDigitalGoods() : { purchaseProduct: null, listPurchases: null, isAvailable: false };
 
   const checkSubscription = async () => {
     if (!user) {
@@ -93,9 +96,14 @@ export const SubscriptionProvider = ({ children }: { children: ReactNode }) => {
       throw new Error('User must be logged in to purchase');
     }
 
+    // Load digital goods API on demand
+    if (!digitalGoodsLoaded) {
+      setDigitalGoodsLoaded(true);
+    }
+
     try {
       setLoading(true);
-      const purchaseToken = await purchaseProduct('premium_monthly');
+      const purchaseToken = await digitalGoods.purchaseProduct!('premium_monthly');
       
       if (!purchaseToken) {
         throw new Error('Purchase failed - no token received');
@@ -138,13 +146,18 @@ export const SubscriptionProvider = ({ children }: { children: ReactNode }) => {
       return { success: false, message: 'Please sign in first' };
     }
 
-    if (!isAvailable) {
+    // Load digital goods API on demand
+    if (!digitalGoodsLoaded) {
+      setDigitalGoodsLoaded(true);
+    }
+
+    if (!digitalGoods.isAvailable) {
       return { success: false, message: 'Digital Goods service not available on this device' };
     }
 
     try {
       setLoading(true);
-      const purchases = await listPurchases();
+      const purchases = await digitalGoods.listPurchases!();
       
       if (purchases.length === 0) {
         return { success: false, message: 'No purchases found to restore' };
@@ -197,10 +210,10 @@ export const SubscriptionProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     if (user) {
-      // Defer subscription check by 500ms to avoid blocking initial render
+      // Defer subscription check by 2 seconds to avoid blocking initial render
       const timer = setTimeout(() => {
         checkSubscription();
-      }, 500);
+      }, 2000);
       return () => clearTimeout(timer);
     } else {
       setLoading(false);

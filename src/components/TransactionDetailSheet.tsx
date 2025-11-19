@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Transaction } from '@/types/transaction';
@@ -12,7 +12,8 @@ import Search from 'lucide-react/dist/esm/icons/search';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Button } from '@/components/ui/button';
 import { formatIndianNumber } from '@/lib/utils';
-import { TransactionSearch } from './TransactionSearch';
+
+const TransactionSearch = lazy(() => import('./TransactionSearch').then(m => ({ default: m.TransactionSearch })));
 
 interface TransactionDetailSheetProps {
   open: boolean;

@@ -26,24 +26,34 @@ export default defineConfig(({ mode }) => ({
           'charts': ['recharts'],
           'supabase': ['@supabase/supabase-js'],
           'react-query': ['@tanstack/react-query'],
-          'radix-core': [
+          'radix-dialogs': [
             '@radix-ui/react-dialog',
-            '@radix-ui/react-popover',
-            '@radix-ui/react-tabs',
-            '@radix-ui/react-select',
-            '@radix-ui/react-switch',
+            'vaul',
           ],
+          'radix-forms': [
+            '@radix-ui/react-select',
+            '@radix-ui/react-popover',
+            '@radix-ui/react-calendar',
+            'react-day-picker',
+          ],
+          'radix-other': [
+            '@radix-ui/react-tabs',
+            '@radix-ui/react-switch',
+            '@radix-ui/react-accordion',
+          ],
+          'icons': ['lucide-react'],
           'form-utils': [
             'react-hook-form',
             '@hookform/resolvers',
             'zod',
           ],
-          'date-utils': ['date-fns', 'react-day-picker'],
+          'date-utils': ['date-fns'],
           'ui-toast': ['sonner'],
         },
         chunkFileNames: 'assets/[name]-[hash].js',
         entryFileNames: 'assets/[name]-[hash].js',
-        assetFileNames: 'assets/[name]-[hash].[ext]'
+        assetFileNames: 'assets/[name]-[hash].[ext]',
+        experimentalMinChunkSize: 20000,
       }
     },
     chunkSizeWarningLimit: 800,
