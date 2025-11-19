@@ -41,8 +41,8 @@ export const SubscriptionPaywall = ({
     const checkForUnlinkedPurchases = async () => {
       if (!open || !user || hasActiveSubscription) return;
       
-      // Initialize Digital Goods when paywall opens
-      initialize();
+      // Initialize Digital Goods when paywall opens and wait for it
+      await initialize();
       
       // Skip unlinked purchase check if Digital Goods unavailable
       if (!isAvailable) {

@@ -96,9 +96,8 @@ export const SubscriptionProvider = ({ children }: { children: ReactNode }) => {
     try {
       setLoading(true);
       
-      // Initialize Digital Goods API
-      initialize();
-      await new Promise(resolve => setTimeout(resolve, 100));
+      // Initialize Digital Goods API and wait for it to be ready
+      await initialize();
       
       if (!isAvailable) {
         throw new Error('Digital Goods service not available');
@@ -147,9 +146,8 @@ export const SubscriptionProvider = ({ children }: { children: ReactNode }) => {
       return { success: false, message: 'Please sign in first' };
     }
 
-    // Initialize Digital Goods API
-    initialize();
-    await new Promise(resolve => setTimeout(resolve, 100));
+    // Initialize Digital Goods API and wait for it to be ready
+    await initialize();
 
     if (!isAvailable) {
       return { success: false, message: 'Digital Goods service not available on this device' };
