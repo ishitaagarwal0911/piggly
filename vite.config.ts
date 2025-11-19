@@ -33,7 +33,6 @@ export default defineConfig(({ mode }) => ({
           'radix-forms': [
             '@radix-ui/react-select',
             '@radix-ui/react-popover',
-            '@radix-ui/react-calendar',
             'react-day-picker',
           ],
           'radix-other': [
