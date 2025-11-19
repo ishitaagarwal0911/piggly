@@ -96,11 +96,11 @@ export const SubscriptionProvider = ({ children }: { children: ReactNode }) => {
     try {
       setLoading(true);
       
-      // Initialize Digital Goods API and wait for it to be ready
+      // Wait for Digital Goods to be ready
       await initialize();
       
       if (!isAvailable) {
-        throw new Error('Digital Goods service not available');
+        throw new Error('Digital Goods service not available. Please ensure you are using the app from Google Play Store.');
       }
       
       const purchaseToken = await purchaseProduct('premium_monthly');
@@ -146,7 +146,7 @@ export const SubscriptionProvider = ({ children }: { children: ReactNode }) => {
       return { success: false, message: 'Please sign in first' };
     }
 
-    // Initialize Digital Goods API and wait for it to be ready
+    // Wait for Digital Goods to be ready  
     await initialize();
 
     if (!isAvailable) {
