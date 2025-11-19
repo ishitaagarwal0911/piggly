@@ -94,8 +94,21 @@ export const useDigitalGoods = () => {
     }
   };
 
-  const initialize = () => {
-    setInitialized(true);
+  const initialize = (): Promise<void> => {
+    return new Promise((resolve) => {
+      setInitialized(true);
+      
+      // Use a polling mechanism to wait for service availability
+      const checkAvailable = () => {
+        if (isAvailable || !loading) {
+          resolve();
+        } else {
+          setTimeout(checkAvailable, 50);
+        }
+      };
+      
+      checkAvailable();
+    });
   };
 
   return {
