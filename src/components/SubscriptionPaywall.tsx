@@ -26,7 +26,7 @@ export const SubscriptionPaywall = ({
   onSubscribed,
 }: SubscriptionPaywallProps) => {
   const { purchaseSubscription, restorePurchases, hasActiveSubscription } = useSubscription();
-  const { isAvailable, listPurchases } = useDigitalGoods();
+  const { isAvailable, listPurchases, initialize } = useDigitalGoods();
   const { user } = useAuth();
   const [purchasing, setPurchasing] = useState(false);
   const [restoring, setRestoring] = useState(false);
@@ -40,6 +40,9 @@ export const SubscriptionPaywall = ({
   useEffect(() => {
     const checkForUnlinkedPurchases = async () => {
       if (!open || !user || hasActiveSubscription) return;
+      
+      // Initialize Digital Goods when paywall opens
+      initialize();
       
       // Skip unlinked purchase check if Digital Goods unavailable
       if (!isAvailable) {
@@ -61,7 +64,7 @@ export const SubscriptionPaywall = ({
     };
 
     checkForUnlinkedPurchases();
-  }, [open, user, isAvailable, hasActiveSubscription, listPurchases]);
+  }, [open, user, isAvailable, hasActiveSubscription, listPurchases, initialize]);
 
   const benefits = [
     'Unlimited transactions',

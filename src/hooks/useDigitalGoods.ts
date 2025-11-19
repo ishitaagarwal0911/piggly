@@ -94,10 +94,15 @@ export const useDigitalGoods = () => {
     }
   };
 
+  const initialize = () => {
+    setInitialized(true);
+  };
+
   return {
     service,
     isAvailable,
     loading,
+    initialize,
     getProductDetails,
     listPurchases,
     purchaseProduct,
