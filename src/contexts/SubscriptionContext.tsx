@@ -22,10 +22,7 @@ export const SubscriptionProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [expiryDate, setExpiryDate] = useState<Date | null>(null);
-  
-  // Lazy load digital goods hook only when needed
-  const [digitalGoodsLoaded, setDigitalGoodsLoaded] = useState(false);
-  const digitalGoods = digitalGoodsLoaded ? useDigitalGoods() : { purchaseProduct: null, listPurchases: null, isAvailable: false };
+  const { purchaseProduct, listPurchases, isAvailable, initialize } = useDigitalGoods();
 
   const checkSubscription = async () => {
     if (!user) {
@@ -96,14 +93,18 @@ export const SubscriptionProvider = ({ children }: { children: ReactNode }) => {
       throw new Error('User must be logged in to purchase');
     }
 
-    // Load digital goods API on demand
-    if (!digitalGoodsLoaded) {
-      setDigitalGoodsLoaded(true);
-    }
-
     try {
       setLoading(true);
-      const purchaseToken = await digitalGoods.purchaseProduct!('premium_monthly');
+      
+      // Initialize Digital Goods API
+      initialize();
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      if (!isAvailable) {
+        throw new Error('Digital Goods service not available');
+      }
+      
+      const purchaseToken = await purchaseProduct('premium_monthly');
       
       if (!purchaseToken) {
         throw new Error('Purchase failed - no token received');
@@ -146,18 +147,17 @@ export const SubscriptionProvider = ({ children }: { children: ReactNode }) => {
       return { success: false, message: 'Please sign in first' };
     }
 
-    // Load digital goods API on demand
-    if (!digitalGoodsLoaded) {
-      setDigitalGoodsLoaded(true);
-    }
+    // Initialize Digital Goods API
+    initialize();
+    await new Promise(resolve => setTimeout(resolve, 100));
 
-    if (!digitalGoods.isAvailable) {
+    if (!isAvailable) {
       return { success: false, message: 'Digital Goods service not available on this device' };
     }
 
     try {
       setLoading(true);
-      const purchases = await digitalGoods.listPurchases!();
+      const purchases = await listPurchases();
       
       if (purchases.length === 0) {
         return { success: false, message: 'No purchases found to restore' };
