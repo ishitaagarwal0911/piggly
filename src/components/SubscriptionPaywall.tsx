@@ -118,7 +118,6 @@ export const SubscriptionPaywall = ({
 
   const getHelperText = () => {
     if (!user) return 'Please sign in to subscribe.';
-    if (!isAvailable) return 'Subscriptions are available on Android devices via Google Play. Please open the app from Google Play Store on an Android device to subscribe.';
     return null;
   };
 
@@ -203,7 +202,7 @@ export const SubscriptionPaywall = ({
                   size="lg"
                   className="w-full"
                 >
-                  {purchasing ? 'Processing...' : (isAvailable ? 'Subscribe Now' : 'Available on Android')}
+                  {purchasing ? 'Processing...' : 'Subscribe Now'}
                 </Button>
 
                 {hasUnlinkedPurchase && (
@@ -223,12 +222,6 @@ export const SubscriptionPaywall = ({
                   </div>
                 )}
               </div>
-
-              {getHelperText() && (
-                <p className="text-sm text-center text-muted-foreground">
-                  {getHelperText()}
-                </p>
-              )}
 
               <p className="text-xs text-center text-muted-foreground">
                 Charged monthly via Google Play. Cancel anytime from your Google Play subscriptions.
