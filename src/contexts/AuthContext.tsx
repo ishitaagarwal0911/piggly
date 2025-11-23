@@ -49,7 +49,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         // Ignore cache errors
       }
 
-      // Set loading false immediately for instant render
+      // Wait a tick for React to process state updates
+      await new Promise(resolve => setTimeout(resolve, 0));
+
+      // NOW mark as ready
       if (mounted) {
         setLoading(false);
         setIsInitialized(true);
