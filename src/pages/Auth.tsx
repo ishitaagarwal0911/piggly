@@ -16,16 +16,12 @@ const Auth = () => {
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [linkSent, setLinkSent] = useState(false);
-  const [sessionReady, setSessionReady] = useState(false);
 
   useEffect(() => {
-    if (user && isInitialized && sessionReady) {
-      const timer = setTimeout(() => {
-        navigate('/', { replace: true });
-      }, 100);
-      return () => clearTimeout(timer);
+    if (user && isInitialized) {
+      navigate('/', { replace: true });
     }
-  }, [user, isInitialized, sessionReady, navigate]);
+  }, [user, isInitialized, navigate]);
 
   // Handle code exchange for session
   useEffect(() => {
@@ -37,10 +33,8 @@ const Auth = () => {
         try {
           await supabase.auth.exchangeCodeForSession(code);
           await new Promise(resolve => setTimeout(resolve, 200));
-          setSessionReady(true);
         } catch (error) {
           console.error('Session exchange failed:', error);
-          setSessionReady(true);
         }
         return;
       }
@@ -59,18 +53,12 @@ const Auth = () => {
               refresh_token: refreshToken,
             });
             await new Promise(resolve => setTimeout(resolve, 200));
-            setSessionReady(true);
           } catch (error) {
             console.error('Hash session failed:', error);
-            setSessionReady(true);
           }
           return;
         }
       }
-
-      // No code/hash params - check existing session
-      const { data: { session } } = await supabase.auth.getSession();
-      setSessionReady(true);
     };
 
     handleSessionExchange();
