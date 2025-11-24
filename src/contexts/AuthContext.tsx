@@ -49,13 +49,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             userRef.current = cachedUser; // Update ref synchronously
             setSession(parsed.currentSession);
             setUser(cachedUser);
+            
+            // CRITICAL: Wait for React to process the user state update
+            // before marking as initialized
+            await new Promise(resolve => setTimeout(resolve, 0));
           }
         }
       } catch (e) {
         // Ignore cache errors
       }
 
-      // useLayoutEffect runs synchronously before paint, ensuring state is committed
+      // NOW it's safe to mark as initialized - user state has been committed
       if (mounted) {
         setLoading(false);
         setIsInitialized(true);
