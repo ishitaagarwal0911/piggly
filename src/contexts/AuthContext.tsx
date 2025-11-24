@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { createContext, useContext, useLayoutEffect, useState, useRef, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -20,8 +20,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [isInitialized, setIsInitialized] = useState(false);
+  const userRef = useRef<User | null>(null); // Track user synchronously
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     let mounted = true;
     
     const initAuth = async () => {
@@ -29,30 +30,32 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const { data: { subscription } } = supabase.auth.onAuthStateChange(
         (event, session) => {
           if (mounted) {
+            const newUser = session?.user ?? null;
+            userRef.current = newUser; // Update ref synchronously
             setSession(session);
-            setUser(session?.user ?? null);
+            setUser(newUser);
           }
         }
       );
 
       // Check for cached session in localStorage for instant restore
+      let cachedUser: User | null = null;
       try {
         const cachedSession = localStorage.getItem('supabase.auth.token');
         if (cachedSession && mounted) {
           const parsed = JSON.parse(cachedSession);
           if (parsed.currentSession) {
+            cachedUser = parsed.currentSession.user;
+            userRef.current = cachedUser; // Update ref synchronously
             setSession(parsed.currentSession);
-            setUser(parsed.currentSession.user);
+            setUser(cachedUser);
           }
         }
       } catch (e) {
         // Ignore cache errors
       }
 
-      // Wait a tick for React to process state updates
-      await new Promise(resolve => setTimeout(resolve, 0));
-
-      // NOW mark as ready
+      // useLayoutEffect runs synchronously before paint, ensuring state is committed
       if (mounted) {
         setLoading(false);
         setIsInitialized(true);
@@ -62,8 +65,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
         if (mounted && session) {
+          const verifiedUser = session?.user ?? null;
+          userRef.current = verifiedUser;
           setSession(session);
-          setUser(session?.user ?? null);
+          setUser(verifiedUser);
+        } else if (mounted && !session && cachedUser) {
+          // Cache was stale, clear it
+          userRef.current = null;
+          setSession(null);
+          setUser(null);
         }
       } catch (error) {
         console.error('[Auth] Init error:', error);
