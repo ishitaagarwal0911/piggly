@@ -34,7 +34,7 @@ const BudgetSetupSheet = lazy(() => import("@/components/BudgetSetupSheet").then
 const TransactionDetailSheet = lazy(() => import("@/components/TransactionDetailSheet"));
 
 const Index = () => {
-  const { user, loading, isInitialized } = useAuth();
+  const { user, isInitialized } = useAuth();
   const { hasActiveSubscription, loading: subscriptionLoading } = useSubscription();
   const navigate = useNavigate();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -111,10 +111,10 @@ const Index = () => {
 
   // Redirect to auth if not authenticated
   useEffect(() => {
-    if (!loading && !user && isInitialized) {
+    if (!user && isInitialized) {
       navigate("/auth", { replace: true });
     }
-  }, [user, loading, isInitialized, navigate]);
+  }, [user, isInitialized, navigate]);
 
   // Load initial data with instant cache rendering
   useEffect(() => {
@@ -319,7 +319,7 @@ const Index = () => {
   }, [currentBudget, transactions, currentDate, viewType]);
 
   // Only show skeleton on initial cold load without cache or when categories aren't loaded
-  if (loading || (dataLoading && transactions.length === 0) || !categoriesLoaded) {
+  if ((dataLoading && transactions.length === 0) || !categoriesLoaded) {
     return (
       <div className="min-h-screen bg-background">
         <header className="bg-background border-b border-border">
