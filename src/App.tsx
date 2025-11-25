@@ -14,9 +14,10 @@ const NotFound = lazy(() => import("./pages/NotFound"));
 const queryClient = new QueryClient();
 
 const AuthLoadingGate = ({ children }: { children: React.ReactNode }) => {
-  const { isInitialized } = useAuth();
+  const { isInitialized, loading } = useAuth();
   
-  if (!isInitialized) {
+  // CRITICAL: Wait for both initialization AND auth resolution
+  if (!isInitialized || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>

@@ -31,7 +31,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         (event, session) => {
           if (mounted) {
             const newUser = session?.user ?? null;
-            userRef.current = newUser; // Update ref synchronously
+            userRef.current = newUser;
             setSession(session);
             setUser(newUser);
           }
@@ -46,26 +46,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           const parsed = JSON.parse(cachedSession);
           if (parsed.currentSession) {
             cachedUser = parsed.currentSession.user;
-            userRef.current = cachedUser; // Update ref synchronously
+            userRef.current = cachedUser;
             setSession(parsed.currentSession);
             setUser(cachedUser);
-            
-            // CRITICAL: Wait for React to process the user state update
-            // before marking as initialized
-            await new Promise(resolve => setTimeout(resolve, 0));
           }
         }
       } catch (e) {
         // Ignore cache errors
       }
 
-      // NOW it's safe to mark as initialized - user state has been committed
+      // Mark as initialized (auth system is ready)
       if (mounted) {
-        setLoading(false);
         setIsInitialized(true);
       }
 
-      // THEN verify session in background
+      // Verify session in background
       try {
         const { data: { session } } = await supabase.auth.getSession();
         if (mounted && session) {
@@ -79,8 +74,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           setSession(null);
           setUser(null);
         }
+        
+        // NOW mark loading as complete
+        if (mounted) {
+          setLoading(false);
+        }
       } catch (error) {
         console.error('[Auth] Init error:', error);
+        if (mounted) {
+          setLoading(false);
+        }
       }
 
       return () => {
