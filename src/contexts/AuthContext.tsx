@@ -1,11 +1,10 @@
-import { createContext, useContext, useLayoutEffect, useState, useRef, ReactNode } from 'react';
+import { createContext, useContext, useLayoutEffect, useState, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 
 interface AuthContextType {
   user: User | null;
   session: Session | null;
-  loading: boolean;
   isInitialized: boolean;
   sendOTP: (email: string) => Promise<void>;
   verifyOtp: (email: string, token: string) => Promise<void>;
@@ -15,84 +14,62 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// Decode JWT and check if expired (with 60-second buffer)
+const isTokenExpired = (token: string): boolean => {
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    const expiry = payload.exp * 1000; // Convert to milliseconds
+    return Date.now() >= expiry - 60000; // 60 second buffer
+  } catch {
+    return true; // If we can't decode, treat as expired
+  }
+};
+
+// Synchronous cache read at module level - checks refresh_token validity
+const getCachedAuthState = (): { user: User | null; session: Session | null } => {
+  try {
+    const cached = localStorage.getItem('supabase.auth.token');
+    if (cached) {
+      const parsed = JSON.parse(cached);
+      const session = parsed.currentSession;
+      // Check refresh_token instead of access_token for better UX
+      if (session?.refresh_token && !isTokenExpired(session.refresh_token)) {
+        return { user: session.user, session };
+      }
+    }
+  } catch (e) {
+    // Ignore cache errors
+  }
+  return { user: null, session: null };
+};
+
+const initialAuth = getCachedAuthState();
+
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [isInitialized, setIsInitialized] = useState(false);
-  const userRef = useRef<User | null>(null); // Track user synchronously
+  const [user, setUser] = useState<User | null>(initialAuth.user);
+  const [session, setSession] = useState<Session | null>(initialAuth.session);
+  const [isInitialized] = useState(true); // Always true - deterministic initial state
 
   useLayoutEffect(() => {
     let mounted = true;
     
-    const initAuth = async () => {
-      // Set up auth state listener FIRST
-      const { data: { subscription } } = supabase.auth.onAuthStateChange(
-        (event, session) => {
-          if (mounted) {
-            const newUser = session?.user ?? null;
-            userRef.current = newUser;
-            setSession(session);
-            setUser(newUser);
-          }
-        }
-      );
-
-      // Check for cached session in localStorage for instant restore
-      let cachedUser: User | null = null;
-      try {
-        const cachedSession = localStorage.getItem('supabase.auth.token');
-        if (cachedSession && mounted) {
-          const parsed = JSON.parse(cachedSession);
-          if (parsed.currentSession) {
-            cachedUser = parsed.currentSession.user;
-            userRef.current = cachedUser;
-            setSession(parsed.currentSession);
-            setUser(cachedUser);
-          }
-        }
-      } catch (e) {
-        // Ignore cache errors
-      }
-
-      // Mark as initialized (auth system is ready)
-      if (mounted) {
-        setIsInitialized(true);
-      }
-
-      // Verify session in background
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (mounted && session) {
-          const verifiedUser = session?.user ?? null;
-          userRef.current = verifiedUser;
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        if (mounted) {
           setSession(session);
-          setUser(verifiedUser);
-        } else if (mounted && !session && cachedUser) {
-          // Cache was stale, clear it
-          userRef.current = null;
-          setSession(null);
-          setUser(null);
-        }
-        
-        // NOW mark loading as complete
-        if (mounted) {
-          setLoading(false);
-        }
-      } catch (error) {
-        console.error('[Auth] Init error:', error);
-        if (mounted) {
-          setLoading(false);
+          setUser(session?.user ?? null);
         }
       }
+    );
 
-      return () => {
-        mounted = false;
-        subscription.unsubscribe();
-      };
+    // Background session verification/refresh (won't cause redirects)
+    supabase.auth.getSession();
+
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
     };
-
-    initAuth();
   }, []);
 
   const sendOTP = async (email: string) => {
@@ -135,7 +112,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, isInitialized, sendOTP, verifyOtp, signInWithGoogle, signOut }}>
+    <AuthContext.Provider value={{ user, session, isInitialized, sendOTP, verifyOtp, signInWithGoogle, signOut }}>
       {children}
     </AuthContext.Provider>
   );

@@ -13,45 +13,28 @@ const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient();
 
-const AuthLoadingGate = ({ children }: { children: React.ReactNode }) => {
-  const { isInitialized, loading } = useAuth();
-  
-  // CRITICAL: Wait for both initialization AND auth resolution
-  if (!isInitialized || loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
-  
-  return <>{children}</>;
-};
-
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
       <Sonner position="top-right" />
       <AuthProvider>
-        <AuthLoadingGate>
-          <SubscriptionProvider>
-            <BrowserRouter>
-              <Suspense fallback={
-                <div className="min-h-screen flex items-center justify-center bg-background">
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-                </div>
-              }>
-                <Routes>
-                  <Route path="/" element={<Index />} />
-                  <Route path="/auth" element={<Auth />} />
-                  {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-              </Suspense>
-            </BrowserRouter>
-          </SubscriptionProvider>
-        </AuthLoadingGate>
+        <SubscriptionProvider>
+          <BrowserRouter>
+            <Suspense fallback={
+              <div className="min-h-screen flex items-center justify-center bg-background">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+              </div>
+            }>
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/auth" element={<Auth />} />
+                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </Suspense>
+          </BrowserRouter>
+        </SubscriptionProvider>
       </AuthProvider>
     </TooltipProvider>
   </QueryClientProvider>
