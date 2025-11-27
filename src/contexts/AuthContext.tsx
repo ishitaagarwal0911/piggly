@@ -14,30 +14,38 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// Get the correct Supabase localStorage key (sb-<project-ref>-auth-token)
+const getSupabaseStorageKey = (): string => {
+  const url = import.meta.env.VITE_SUPABASE_URL || '';
+  const matches = url.match(/https:\/\/([^.]+)\.supabase\.co/);
+  const projectRef = matches?.[1] || '';
+  return `sb-${projectRef}-auth-token`;
+};
+
+const STORAGE_KEY = getSupabaseStorageKey();
+
 // Decode JWT and check if expired (with 60-second buffer)
 const isTokenExpired = (token: string): boolean => {
   try {
     const payload = JSON.parse(atob(token.split('.')[1]));
-    const expiry = payload.exp * 1000; // Convert to milliseconds
-    return Date.now() >= expiry - 60000; // 60 second buffer
+    const expiry = payload.exp * 1000;
+    return Date.now() >= expiry - 60000;
   } catch {
-    return true; // If we can't decode, treat as expired
+    return true;
   }
 };
 
 // Synchronous cache read at module level - checks refresh_token validity
 const getCachedAuthState = (): { user: User | null; session: Session | null } => {
   try {
-    const cached = localStorage.getItem('supabase.auth.token');
+    const cached = localStorage.getItem(STORAGE_KEY);
     if (cached) {
-      const parsed = JSON.parse(cached);
-      const session = parsed.currentSession;
-      // Check refresh_token instead of access_token for better UX
+      const session = JSON.parse(cached);
       if (session?.refresh_token && !isTokenExpired(session.refresh_token)) {
         return { user: session.user, session };
       }
     }
-  } catch (e) {
+  } catch {
     // Ignore cache errors
   }
   return { user: null, session: null };
