@@ -53,19 +53,44 @@ export const loadBudget = async (month: Date): Promise<Budget | null> => {
     .eq('month', monthStart.toISOString().split('T')[0])
     .maybeSingle();
 
-  if (error || !data) {
-    return null;
+  if (data) {
+    return {
+      id: data.id,
+      userId: data.user_id,
+      month: new Date(data.month),
+      overallBudget: Number(data.overall_budget),
+      categoryBudgets: data.category_budgets as Record<string, number>,
+      createdAt: new Date(data.created_at),
+      updatedAt: data.updated_at ? new Date(data.updated_at) : undefined,
+    };
   }
 
-  return {
-    id: data.id,
-    userId: data.user_id,
-    month: new Date(data.month),
-    overallBudget: Number(data.overall_budget),
-    categoryBudgets: data.category_budgets as Record<string, number>,
-    createdAt: new Date(data.created_at),
-    updatedAt: data.updated_at ? new Date(data.updated_at) : undefined,
-  };
+  // No budget for this month - try to copy from previous month (for current/future months only)
+  const currentMonthStart = startOfMonth(new Date());
+  if (monthStart >= currentMonthStart) {
+    const previousMonth = new Date(monthStart);
+    previousMonth.setMonth(previousMonth.getMonth() - 1);
+    
+    const { data: prevBudget } = await supabase
+      .from('budgets')
+      .select('*')
+      .eq('user_id', user.id)
+      .eq('month', startOfMonth(previousMonth).toISOString().split('T')[0])
+      .maybeSingle();
+
+    if (prevBudget) {
+      // Auto-create new budget based on previous month
+      const newBudget = await saveBudget({
+        userId: user.id,
+        month: monthStart,
+        overallBudget: Number(prevBudget.overall_budget),
+        categoryBudgets: prevBudget.category_budgets as Record<string, number>,
+      });
+      return newBudget;
+    }
+  }
+
+  return null;
 };
 
 export const getCurrentMonthBudget = async (): Promise<Budget | null> => {

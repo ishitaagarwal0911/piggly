@@ -41,7 +41,10 @@ const getCachedAuthState = (): { user: User | null; session: Session | null } =>
     const cached = localStorage.getItem(STORAGE_KEY);
     if (cached) {
       const session = JSON.parse(cached);
-      if (session?.refresh_token && !isTokenExpired(session.refresh_token)) {
+      // Trust the session if it has a refresh_token and user
+      // Supabase will handle refreshing the access_token in the background
+      // Don't try to decode refresh_token - it may not be a JWT
+      if (session?.refresh_token && session?.user) {
         return { user: session.user, session };
       }
     }
