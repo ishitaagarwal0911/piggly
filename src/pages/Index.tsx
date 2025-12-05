@@ -20,7 +20,7 @@ import { toast } from "sonner";
 import { useSwipeGesture } from "@/hooks/useSwipeGesture";
 import piggyTransparent from "@/assets/piggly_header_icon.png";
 import { Budget, BudgetSummary } from "@/types/budget";
-import { getCurrentMonthBudget, calculateBudgetSummary } from "@/lib/budget";
+import { loadBudget, calculateBudgetSummary } from "@/lib/budget";
 import { categories } from "@/lib/categories";
 import { startOfMonth } from "date-fns/startOfMonth";
 import { endOfMonth } from "date-fns/endOfMonth";
@@ -133,11 +133,15 @@ const Index = () => {
         console.log("[Index] Loading data for user:", user.id);
       }
       userIdRef.current = user.id;
-      setCategoriesLoaded(false);
 
       // INSTANT: Try to load from cache first (synchronous, instant)
       const cachedTransactions = getCachedTransactions(user.id);
       const cachedSettings = getCachedSettings(user.id);
+      
+      // Only block with skeleton if NO cached data exists
+      if (!cachedSettings) {
+        setCategoriesLoaded(false);
+      }
       
       if (cachedTransactions) {
         setTransactions(cachedTransactions);
@@ -150,6 +154,7 @@ const Index = () => {
       if (cachedSettings) {
         setCurrency(cachedSettings.currency_symbol);
         setViewType(cachedSettings.default_view as ViewType || "monthly");
+        setCategoriesLoaded(true); // Trust cache, show UI immediately
       }
 
       // PARALLEL: Always fetch fresh data in background
@@ -159,10 +164,11 @@ const Index = () => {
       const twoMonthsAgo = new Date();
       twoMonthsAgo.setMonth(twoMonthsAgo.getMonth() - 2);
 
+      // Pass user.id to eliminate redundant getUser() calls
       const [loaded, settings, budget] = await Promise.all([
-        loadTransactions({ since: twoMonthsAgo }),
-        loadSettings(),
-        getCurrentMonthBudget()
+        loadTransactions({ since: twoMonthsAgo, userId: user.id }),
+        loadSettings(user.id),
+        loadBudget(user.id)
       ]);
 
       setTransactions(loaded);

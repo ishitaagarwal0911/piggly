@@ -1,21 +1,88 @@
 import { supabase } from '@/integrations/supabase/client';
 import { Budget, BudgetSummary } from '@/types/budget';
 import { Transaction } from '@/types/transaction';
-import { startOfMonth } from 'date-fns/startOfMonth';
 import { endOfMonth } from 'date-fns/endOfMonth';
 import { differenceInDays } from 'date-fns/differenceInDays';
 
-export const saveBudget = async (budget: Omit<Budget, 'id' | 'createdAt' | 'updatedAt'>): Promise<Budget | null> => {
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return null;
+// Budget cache for instant loading
+const BUDGET_CACHE_KEY = 'piggly_cache_budget_v1.0';
 
-  const monthStart = startOfMonth(budget.month);
-  
+interface BudgetCache {
+  budget: Budget;
+  userId: string;
+  timestamp: number;
+}
+
+const cacheBudget = (budget: Budget, userId: string): void => {
+  try {
+    const cacheData: BudgetCache = {
+      budget,
+      userId,
+      timestamp: Date.now(),
+    };
+    localStorage.setItem(BUDGET_CACHE_KEY, JSON.stringify(cacheData));
+  } catch (error) {
+    console.warn('Failed to cache budget:', error);
+  }
+};
+
+const getCachedBudget = (userId: string): Budget | null => {
+  try {
+    const cached = localStorage.getItem(BUDGET_CACHE_KEY);
+    if (!cached) return null;
+
+    const { budget, userId: cachedUserId } = JSON.parse(cached) as BudgetCache;
+    if (cachedUserId !== userId) return null;
+
+    // Reconstruct Date objects
+    return {
+      ...budget,
+      month: new Date(budget.month),
+      createdAt: new Date(budget.createdAt),
+      updatedAt: budget.updatedAt ? new Date(budget.updatedAt) : undefined,
+    };
+  } catch (error) {
+    console.warn('Failed to read cached budget:', error);
+    return null;
+  }
+};
+
+const clearBudgetCache = (): void => {
+  try {
+    localStorage.removeItem(BUDGET_CACHE_KEY);
+  } catch (error) {
+    console.warn('Failed to clear budget cache:', error);
+  }
+};
+
+// Fixed month value for single global budget (unique constraint workaround)
+const GLOBAL_BUDGET_MONTH = '1970-01-01';
+
+const formatBudget = (data: any): Budget => ({
+  id: data.id,
+  userId: data.user_id,
+  month: new Date(data.month),
+  overallBudget: Number(data.overall_budget),
+  categoryBudgets: data.category_budgets as Record<string, number>,
+  createdAt: new Date(data.created_at),
+  updatedAt: data.updated_at ? new Date(data.updated_at) : undefined,
+});
+
+/**
+ * Save the user's single global budget
+ */
+export const saveBudget = async (
+  budget: Omit<Budget, 'id' | 'createdAt' | 'updatedAt'>,
+  userId?: string
+): Promise<Budget | null> => {
+  const uid = userId || budget.userId || (await supabase.auth.getUser()).data.user?.id;
+  if (!uid) return null;
+
   const { data, error } = await supabase
     .from('budgets')
     .upsert({
-      user_id: user.id,
-      month: monthStart.toISOString().split('T')[0],
+      user_id: uid,
+      month: GLOBAL_BUDGET_MONTH, // Fixed value for single global budget
       overall_budget: budget.overallBudget,
       category_budgets: budget.categoryBudgets,
     }, {
@@ -29,85 +96,62 @@ export const saveBudget = async (budget: Omit<Budget, 'id' | 'createdAt' | 'upda
     return null;
   }
 
-  return {
-    id: data.id,
-    userId: data.user_id,
-    month: new Date(data.month),
-    overallBudget: Number(data.overall_budget),
-    categoryBudgets: data.category_budgets as Record<string, number>,
-    createdAt: new Date(data.created_at),
-    updatedAt: data.updated_at ? new Date(data.updated_at) : undefined,
-  };
+  const savedBudget = formatBudget(data);
+  cacheBudget(savedBudget, uid);
+  return savedBudget;
 };
 
-export const loadBudget = async (month: Date): Promise<Budget | null> => {
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return null;
+/**
+ * Load the user's single global budget
+ */
+export const loadBudget = async (userId?: string): Promise<Budget | null> => {
+  const uid = userId || (await supabase.auth.getUser()).data.user?.id;
+  if (!uid) return null;
 
-  const monthStart = startOfMonth(month);
-  
+  // Check cache first for instant loading
+  const cached = getCachedBudget(uid);
+  if (cached) return cached;
+
+  // Get the user's single budget (no month filter needed - just get latest)
   const { data, error } = await supabase
     .from('budgets')
     .select('*')
-    .eq('user_id', user.id)
-    .eq('month', monthStart.toISOString().split('T')[0])
+    .eq('user_id', uid)
+    .order('created_at', { ascending: false })
+    .limit(1)
     .maybeSingle();
 
-  if (data) {
-    return {
-      id: data.id,
-      userId: data.user_id,
-      month: new Date(data.month),
-      overallBudget: Number(data.overall_budget),
-      categoryBudgets: data.category_budgets as Record<string, number>,
-      createdAt: new Date(data.created_at),
-      updatedAt: data.updated_at ? new Date(data.updated_at) : undefined,
-    };
+  if (error || !data) {
+    return null;
   }
 
-  // No budget for this month - try to copy from previous month (for current/future months only)
-  const currentMonthStart = startOfMonth(new Date());
-  if (monthStart >= currentMonthStart) {
-    const previousMonth = new Date(monthStart);
-    previousMonth.setMonth(previousMonth.getMonth() - 1);
-    
-    const { data: prevBudget } = await supabase
-      .from('budgets')
-      .select('*')
-      .eq('user_id', user.id)
-      .eq('month', startOfMonth(previousMonth).toISOString().split('T')[0])
-      .maybeSingle();
-
-    if (prevBudget) {
-      // Auto-create new budget based on previous month
-      const newBudget = await saveBudget({
-        userId: user.id,
-        month: monthStart,
-        overallBudget: Number(prevBudget.overall_budget),
-        categoryBudgets: prevBudget.category_budgets as Record<string, number>,
-      });
-      return newBudget;
-    }
-  }
-
-  return null;
+  const budget = formatBudget(data);
+  cacheBudget(budget, uid);
+  return budget;
 };
 
-export const getCurrentMonthBudget = async (): Promise<Budget | null> => {
-  return loadBudget(new Date());
+/**
+ * @deprecated Use loadBudget() instead - budget is now global, not per-month
+ */
+export const getCurrentMonthBudget = async (userId?: string): Promise<Budget | null> => {
+  return loadBudget(userId);
 };
 
-export const deleteBudget = async (month: Date): Promise<boolean> => {
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return false;
+/**
+ * Delete the user's budget
+ */
+export const deleteBudget = async (userId?: string): Promise<boolean> => {
+  const uid = userId || (await supabase.auth.getUser()).data.user?.id;
+  if (!uid) return false;
 
-  const monthStart = startOfMonth(month);
-  
   const { error } = await supabase
     .from('budgets')
     .delete()
-    .eq('user_id', user.id)
-    .eq('month', monthStart.toISOString().split('T')[0]);
+    .eq('user_id', uid);
+
+  if (!error) {
+    clearBudgetCache();
+  }
 
   return !error;
 };

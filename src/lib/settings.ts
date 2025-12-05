@@ -91,18 +91,22 @@ export const loadSettings = async (userId?: string): Promise<AppSettings> => {
       return localCached;
     }
 
-    // Load from database
-    const { data: settingsData } = await supabase
-      .from('user_settings')
-      .select('*')
-      .eq('user_id', uid)
-      .maybeSingle();
+    // Load from database - run queries in PARALLEL for performance
+    const [settingsResult, categoriesResult] = await Promise.all([
+      supabase
+        .from('user_settings')
+        .select('*')
+        .eq('user_id', uid)
+        .maybeSingle(),
+      supabase
+        .from('categories')
+        .select('*')
+        .eq('user_id', uid)
+        .order('order_index', { ascending: true })
+    ]);
 
-    const { data: categoriesData } = await supabase
-      .from('categories')
-      .select('*')
-      .eq('user_id', uid)
-      .order('order_index', { ascending: true });
+    const settingsData = settingsResult.data;
+    const categoriesData = categoriesResult.data;
 
     const categories: CustomCategory[] = (categoriesData || []).map(c => ({
       id: c.id,
