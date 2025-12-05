@@ -21,7 +21,7 @@ import { Budget } from '@/types/budget';
 import { loadSettings, addCategory } from '@/lib/settings';
 import { saveBudget, deleteBudget } from '@/lib/budget';
 import { toast } from 'sonner';
-import { startOfMonth } from 'date-fns';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface BudgetSetupSheetProps {
   open: boolean;
@@ -44,6 +44,7 @@ export const BudgetSetupSheet = ({
   initialBudget,
   onSave,
 }: BudgetSetupSheetProps) => {
+  const { user } = useAuth();
   const [overallBudget, setOverallBudget] = useState('');
   const [categoryBudgets, setCategoryBudgets] = useState<Record<string, string>>({});
   const [categories, setCategories] = useState<Category[]>([]);
@@ -59,7 +60,8 @@ export const BudgetSetupSheet = ({
   useEffect(() => {
     if (open) {
       setCategoriesLoading(true);
-      loadSettings().then(settings => {
+      // Pass userId for performance
+      loadSettings(user?.id).then(settings => {
         const expenseCategories = settings.categories.filter(c => c.type === 'expense');
         setCategories(expenseCategories);
         setCategoriesLoading(false);
@@ -136,8 +138,8 @@ export const BudgetSetupSheet = ({
 
     setSaving(true);
     const budgetData: Omit<Budget, 'id' | 'createdAt' | 'updatedAt'> = {
-      userId: '', // Will be set by saveBudget
-      month: startOfMonth(new Date()),
+      userId: user?.id || '',
+      month: new Date(), // Not used for storage anymore (single global budget)
       overallBudget: budgetValue,
       categoryBudgets: Object.entries(categoryBudgets).reduce(
         (acc, [id, amount]) => {
@@ -149,7 +151,7 @@ export const BudgetSetupSheet = ({
       ),
     };
 
-    const saved = await saveBudget(budgetData);
+    const saved = await saveBudget(budgetData, user?.id);
     setSaving(false);
 
     if (saved) {
@@ -163,7 +165,7 @@ export const BudgetSetupSheet = ({
 
   const handleConfirmDelete = async () => {
     setSaving(true);
-    const deleted = await deleteBudget(startOfMonth(new Date()));
+    const deleted = await deleteBudget(user?.id);
     setSaving(false);
     setShowDeleteConfirm(false);
     
