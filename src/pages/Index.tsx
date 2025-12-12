@@ -20,7 +20,7 @@ import { toast } from "sonner";
 import { useSwipeGesture } from "@/hooks/useSwipeGesture";
 import piggyTransparent from "@/assets/piggly_header_icon.png";
 import { Budget, BudgetSummary } from "@/types/budget";
-import { loadBudget, calculateBudgetSummary } from "@/lib/budget";
+import { loadBudget, calculateBudgetSummary, getCachedBudget } from "@/lib/budget";
 import { categories } from "@/lib/categories";
 import { startOfMonth } from "date-fns/startOfMonth";
 import { endOfMonth } from "date-fns/endOfMonth";
@@ -157,6 +157,13 @@ const Index = () => {
         setCategoriesLoaded(true); // Trust cache, show UI immediately
       }
 
+      // INSTANT: Load cached budget for immediate UI
+      const cachedBudget = getCachedBudget(user.id);
+      if (cachedBudget) {
+        setCurrentBudget(cachedBudget);
+        setBudgetLoading(false);
+      }
+
       // PARALLEL: Always fetch fresh data in background
       setIsSyncing(true);
 
@@ -175,10 +182,7 @@ const Index = () => {
       setViewType(settings.defaultView);
       setCurrency(settings.currency.symbol);
       setCurrentBudget(budget);
-      
-      if (!budget) {
-        setBudgetLoading(false);
-      }
+      setBudgetLoading(false); // Always set to false after load completes
       
       setCategoriesLoaded(true);
       setDataLoading(false);
@@ -304,8 +308,6 @@ const Index = () => {
   // Calculate budget summary when transactions or budget changes
   useEffect(() => {
     if (currentBudget && viewType === 'monthly') {
-      setBudgetLoading(true); // Show loading during calculation
-      
       const monthStart = startOfMonth(currentDate);
       const monthEnd = endOfMonth(currentDate);
       

@@ -47,13 +47,15 @@ const getCachedBudget = (userId: string): Budget | null => {
   }
 };
 
-const clearBudgetCache = (): void => {
+export const clearBudgetCache = (): void => {
   try {
     localStorage.removeItem(BUDGET_CACHE_KEY);
   } catch (error) {
     console.warn('Failed to clear budget cache:', error);
   }
 };
+
+export { getCachedBudget };
 
 // Fixed month value for single global budget (unique constraint workaround)
 const GLOBAL_BUDGET_MONTH = '1970-01-01';
